@@ -14,10 +14,10 @@ func main() {
 	startTime := time.Now()
 
 	popSize := config.PopSize
-	selectionSize := config.SelectionSize
+	// selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
-	mutationRate := config.MutationRate
-	crossoverRate := config.CrossoverRate
+	// mutationRate := config.MutationRate
+	// crossoverRate := config.CrossoverRate
 
 	classes := class_adapt.InitClasses()
 	classHours := models.GetClassHours()
@@ -45,23 +45,23 @@ func main() {
 		// 打印当前代中最好个体的适应度值
 		log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
 
-		// 选择
-		selected := genetic_algorithm.Selection(population, selectionSize)
+		// // 选择
+		// selected := genetic_algorithm.Selection(population, selectionSize)
 
-		// 交叉
-		offspring, err := genetic_algorithm.Crossover(selected, crossoverRate)
-		if err != nil {
-			log.Panic(err)
-		}
+		// // 交叉
+		// offspring, err := genetic_algorithm.Crossover(selected, crossoverRate)
+		// if err != nil {
+		// 	log.Panic(err)
+		// }
 
-		// 变异
-		offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
-		if err != nil {
-			log.Panic(err)
-		}
+		// // 变异
+		// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
+		// if err != nil {
+		// 	log.Panic(err)
+		// }
 
-		// 更新种群
-		population = genetic_algorithm.UpdatePopulation(population, offspring)
+		// // 更新种群
+		// population = genetic_algorithm.UpdatePopulation(population, offspring)
 	}
 
 	// 打印最好的个体

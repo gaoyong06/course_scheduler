@@ -1,9 +1,9 @@
 package config
 
 const (
-	PopSize       = 200
+	PopSize       = 1
 	SelectionSize = 100
-	MaxGen        = 200
+	MaxGen        = 1
 	MutationRate  = 0.1
 	CrossoverRate = 0.2
 )

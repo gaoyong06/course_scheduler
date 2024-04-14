@@ -72,14 +72,14 @@ func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val) error 
 
 // 课班适应性矩阵分配
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
-func AssignClassMatrix(classeSNs []string, classHours map[int]int, classMatrix map[string]map[int]map[int]map[int]types.Val) (int, error) {
+func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix map[string]map[int]map[int]map[int]types.Val) (int, error) {
 
 	timeTable := initTimeTable()
 
 	var numAssignedClasses int
-	for _, sn := range classeSNs {
+	for _, sn := range classSNs {
 
-		fmt.Printf("assignClassMatrix sn: %s\n", sn)
+		fmt.Printf("allocateClassMatrix sn: %s\n", sn)
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return numAssignedClasses, err
@@ -88,99 +88,99 @@ func AssignClassMatrix(classeSNs []string, classHours map[int]int, classMatrix m
 		subjectID := SN.SubjectID
 		numClassHours := classHours[subjectID]
 
-		// 遍历课时
+		// Loop through class hours.
 		for i := 0; i < numClassHours; i++ {
-			maxScore := 0
 
-			// 设置初始值
-			selectedTeacherID, selectedVenueID, selectedTimeSlot := -1, -1, -1
-
-			// 匹配结果值
-			for teacherID, venueMap := range classMatrix[sn] {
-				for venueID, timeSlotMap := range venueMap {
-					for timeSlot, val := range timeSlotMap {
-
-						// 检查时间段是否已被占用
-						if timeTable.Used[timeSlot] {
-							continue // 跳过已被占用的时间段
-						}
-
-						// 是适应性矩阵中可用的点位, 课班可用当前适应性矩阵的元素下标
-						score := val.Score
-						if score > maxScore {
-							maxScore = score
-							selectedTeacherID = teacherID
-							selectedVenueID = venueID
-							selectedTimeSlot = timeSlot
-						}
-					}
-				}
+			// Find the best available time slot.
+			selectedTeacherID, selectedVenueID, selectedTimeSlot, maxScore, err := findBestAvailableTimeSlot(sn, classMatrix, timeTable)
+			if err != nil {
+				return numAssignedClasses, err
 			}
 
-			// 如果maxScore为0，随机取一个可用的Teacher, Classroom, TimeSlot
-			// 选取可用的teacherIDs,venueIDs,timeSlots
-			teacherIDs := models.ClassTeacherIDs(SN)
-			venueIDs := models.ClassVenueIDs(SN)
-			// timeSlots := classTimeSlots(teacherIDs, venueIDs)
-
-			// 过滤掉已经被占用的时间段
-			var availableTimeSlots []int
-			for timeSlot, used := range timeTable.Used {
-				if !used {
-					availableTimeSlots = append(availableTimeSlots, timeSlot)
-				}
-			}
-
-			// fmt.Printf("availableTimeSlots: %#v\n", availableTimeSlots)
-
-			var teacherID, venueID, timeSlot int
-
+			// If no available time slot found, try to find a random available one.
 			if maxScore == 0 {
-				// 添加一个计数器，避免无限循环
-				total := len(teacherIDs) * len(venueIDs) * len(availableTimeSlots)
-				fmt.Printf("total: %d\n", total)
-				for j := 0; j < total; j++ {
-
-					teacherID = teacherIDs[rand.Intn(len(teacherIDs))]
-					venueID = venueIDs[rand.Intn(len(venueIDs))]
-
-					// TODO: 这是有错误
-					// timeSlot = availableTimeSlots[rand.Intn(len(availableTimeSlots))]
-					timeSlot = availableTimeSlots[j]
-
-					val := classMatrix[sn][teacherID][venueID][timeSlot]
-					// fmt.Printf("timeSlot: %d, timeTable.Used[timeSlot]: %v, val.Score: %d\n", timeSlot, timeTable.Used[timeSlot], val.Score)
-					if !timeTable.Used[timeSlot] && val.Score == 0 {
-						selectedTeacherID = teacherID
-						selectedVenueID = venueID
-						selectedTimeSlot = timeSlot
-						break
-					}
+				selectedTeacherID, selectedVenueID, selectedTimeSlot, err = findRandomAvailableTimeSlot(sn, classMatrix, timeTable)
+				if err != nil {
+					return numAssignedClasses, err
 				}
 			}
 
+			// Update the time table and class matrix.
 			if selectedTeacherID > 0 && selectedVenueID > 0 && selectedTimeSlot >= 0 {
-				// 打印选择的老师、教室和时间段
-				// fmt.Printf("Class: %s, Hour: %d, Teacher: %s, Classroom: %s, TimeSlot: %s, Score: %d\n", class, i+1, selectedTeacher, selectedClassroom, selectedTimeSlot, maxScore)
-
-				// 更新适应性矩阵
-				temp := classMatrix[sn][selectedTeacherID][selectedVenueID][selectedTimeSlot]
-				temp.Used = 1
-				// fmt.Printf("sn: %s, selectedTeacherID: %d, selectedVenueID: %d, selectedTimeSlot: %d\n", sn, selectedTeacherID, selectedVenueID, selectedTimeSlot)
-				classMatrix[sn][selectedTeacherID][selectedVenueID][selectedTimeSlot] = temp
-				timeTable.Used[selectedTimeSlot] = true
+				updateTimeTableAndClassMatrix(sn, selectedTeacherID, selectedVenueID, selectedTimeSlot, classMatrix, timeTable)
 				numAssignedClasses++
 			} else {
-
-				fmt.Println("============= classMatrix ==============")
-				fmt.Printf("============= sn: %s, teacherID: %d, venueID: %d\n", sn, teacherID, venueID)
-				fmt.Printf("%#v\n", classMatrix[sn][teacherID][venueID])
-
 				return numAssignedClasses, fmt.Errorf("failed sn: %s, classHour: %d,  numClassHours: %d", sn, i+1, numClassHours)
 			}
 		}
 	}
 	return numAssignedClasses, nil
+}
+
+// findBestAvailableTimeSlot finds the best available time slot for a given class SN.
+func findBestAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, int, error) {
+	maxScore := 0
+	selectedTeacherID, selectedVenueID, selectedTimeSlot := -1, -1, -1
+
+	for teacherID, venueMap := range classMatrix[sn] {
+		for venueID, timeSlotMap := range venueMap {
+			for timeSlot, val := range timeSlotMap {
+				if timeTable.Used[timeSlot] {
+					continue
+				}
+				score := val.Score
+				if score > maxScore {
+					maxScore = score
+					selectedTeacherID = teacherID
+					selectedVenueID = venueID
+					selectedTimeSlot = timeSlot
+				}
+			}
+		}
+	}
+
+	return selectedTeacherID, selectedVenueID, selectedTimeSlot, maxScore, nil
+}
+
+// findRandomAvailableTimeSlot finds a random available time slot for a given class SN.
+func findRandomAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, error) {
+
+	SN, err := types.ParseSN(sn)
+	if err != nil {
+		return -1, -1, -1, err
+	}
+
+	teacherIDs := models.ClassTeacherIDs(SN)
+	venueIDs := models.ClassVenueIDs(SN)
+
+	var availableTimeSlots []int
+	for timeSlot, used := range timeTable.Used {
+		if !used {
+			availableTimeSlots = append(availableTimeSlots, timeSlot)
+		}
+	}
+
+	total := len(teacherIDs) * len(venueIDs) * len(availableTimeSlots)
+	for j := 0; j < total; j++ {
+		teacherID := teacherIDs[rand.Intn(len(teacherIDs))]
+		venueID := venueIDs[rand.Intn(len(venueIDs))]
+		timeSlot := availableTimeSlots[j]
+
+		val := classMatrix[sn][teacherID][venueID][timeSlot]
+		if !timeTable.Used[timeSlot] && val.Score == 0 {
+			return teacherID, venueID, timeSlot, nil
+		}
+	}
+
+	return -1, -1, -1, fmt.Errorf("no available time slot found")
+}
+
+// updateTimeTableAndClassMatrix updates the time table and class matrix with the selected teacher, venue, and time slot.
+func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) {
+	temp := classMatrix[sn][teacherID][venueID][timeSlot]
+	temp.Used = 1
+	classMatrix[sn][teacherID][venueID][timeSlot] = temp
+	timeTable.Used[timeSlot] = true
 }
 
 // 打印classMatrix

@@ -11,7 +11,7 @@ type TimeTable struct {
 }
 
 // 初始化时间表
-func initTimeTable() TimeTable {
+func initTimeTable() *TimeTable {
 
 	var timeSlots []int
 	used := make(map[int]bool)
@@ -23,7 +23,7 @@ func initTimeTable() TimeTable {
 		}
 	}
 
-	timeTable := TimeTable{
+	timeTable := &TimeTable{
 		TimeSlots: timeSlots,
 		Used:      used,
 	}

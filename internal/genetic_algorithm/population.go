@@ -55,7 +55,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			log.Println("Match scores calculated")
 
 			// 课班适应性矩阵分配
-			numAssignedClasses, err = class_adapt.AssignClassMatrix(classeSNs, classHours, classMatrix)
+			numAssignedClasses, err = class_adapt.AllocateClassMatrix(classeSNs, classHours, classMatrix)
 			fmt.Printf("numAssignedClasses: %d\n", numAssignedClasses)
 
 			if err == nil {
@@ -70,8 +70,8 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		// 生成个体
 		individual := newIndividual(classMatrix)
 
-		fmt.Println("================================")
-		individual.PrintSchedule()
+		// fmt.Println("================================")
+		// individual.PrintSchedule()
 
 		population = append(population, individual)
 		log.Println("Individual initialized")
