@@ -72,14 +72,17 @@ func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val) error 
 
 // 课班适应性矩阵分配
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
+// AllocateClassMatrix allocates class hours based on the class adaptability matrix.
 func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix map[string]map[int]map[int]map[int]types.Val) (int, error) {
 
 	timeTable := initTimeTable()
 
 	var numAssignedClasses int
+	var numBestTimeSlots, numRandomTimeSlots int
+
 	for _, sn := range classSNs {
 
-		fmt.Printf("allocateClassMatrix sn: %s\n", sn)
+		fmt.Printf("assignClassMatrix sn: %s\n", sn)
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return numAssignedClasses, err
@@ -103,6 +106,9 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 				if err != nil {
 					return numAssignedClasses, err
 				}
+				numRandomTimeSlots++
+			} else {
+				numBestTimeSlots++
 			}
 
 			// Update the time table and class matrix.
@@ -114,6 +120,10 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 			}
 		}
 	}
+
+	fmt.Printf("Number of best time slots assigned: %d\n", numBestTimeSlots)
+	fmt.Printf("Number of random time slots assigned: %d\n", numRandomTimeSlots)
+
 	return numAssignedClasses, nil
 }
 
@@ -160,11 +170,16 @@ func findRandomAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[i
 		}
 	}
 
+	// Shuffle availableTimeSlots to make the selection more random and dispersed.
+	rand.Shuffle(len(availableTimeSlots), func(i, j int) {
+		availableTimeSlots[i], availableTimeSlots[j] = availableTimeSlots[j], availableTimeSlots[i]
+	})
+
 	total := len(teacherIDs) * len(venueIDs) * len(availableTimeSlots)
 	for j := 0; j < total; j++ {
 		teacherID := teacherIDs[rand.Intn(len(teacherIDs))]
 		venueID := venueIDs[rand.Intn(len(venueIDs))]
-		timeSlot := availableTimeSlots[j]
+		timeSlot := availableTimeSlots[j%len(availableTimeSlots)] // Use modulo to ensure all available time slots are traversed.
 
 		val := classMatrix[sn][teacherID][venueID][timeSlot]
 		if !timeTable.Used[timeSlot] && val.Score == 0 {
