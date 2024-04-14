@@ -18,6 +18,9 @@ type Individual struct {
 }
 
 // 生成个体
+// classMatrix 课班适应性矩阵
+// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
+// key: [9][13][9][40],
 func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) *Individual {
 
 	// fmt.Println("================ classMatrix =====================")
@@ -195,6 +198,90 @@ func (i *Individual) PrintSchedule() {
 		}
 		fmt.Println()
 		fmt.Println("---+-------------------------------------------")
+	}
+}
+
+// 验证个体是否满足所有约束条件
+// 返回值map[int]int 1 满足约束条件，0 不满足约束条件，-1 表示未知或未检查
+func (i *Individual) ValidateConstraints() (int, map[int]int, error) {
+
+	score := 0
+	constraintsMet := make(map[int]int)
+	classMatrix := i.toClassMatrix()
+
+	// 遍历个体的所有基因
+	for _, chromosome := range i.Chromosomes {
+		// 遍历每个基因的所有课程
+		for _, gene := range chromosome.Genes {
+			// 计算该基因对应的课程的适应度值
+			score, err := evaluation.CalcScore(classMatrix, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			if err != nil {
+				return score, constraintsMet, err
+			}
+
+			// 检查每个约束条件是否满足
+			// 约束条件1: 一年级(1)班 语文 王老师 第1节 固排
+			if gene.ClassSN == "1_1_1" && gene.TeacherID == 1 && gene.TimeSlot == 0 {
+				constraintsMet[1] = 1
+			}
+
+			// 约束条件2: 三年级(1)班 第7节 禁排 班会
+			if gene.ClassSN == "14_3_1" && gene.TimeSlot != 6 {
+				constraintsMet[2] = 1
+			}
+
+			// 3. 三年级(2)班 第8节 禁排 班会
+			if gene.ClassSN == "14_3_2" && gene.TimeSlot != 7 {
+				constraintsMet[3] = 1
+			}
+
+			// 4. 四年级 第8节 禁排 班会
+			if gene.ClassSN == "14_3_2" && gene.TimeSlot != 7 {
+				constraintsMet[3] = 1
+			}
+
+			// 5. 四年级(1)班 语文 王老师 第1节 禁排
+			if gene.ClassSN == "1_4_1" && gene.TeacherID == 1 && gene.TimeSlot != 0 {
+				constraintsMet[3] = 1
+			}
+
+			// 6. 五年级 数学 李老师 第2节 固排
+			if gene.ClassSN == "2_5_0" && gene.TeacherID == 2 && gene.TimeSlot == 1 {
+				constraintsMet[3] = 1
+			}
+
+			//
+			// ... 继续检查其他约束条件
+		}
+	}
+
+	// 初始化未检查的约束条件为true
+	for i := 1; i <= 38; i++ {
+		if _, ok := constraintsMet[i]; !ok {
+			constraintsMet[i] = -1
+		}
+	}
+	return score, constraintsMet, nil
+}
+
+// 打印个体满足的约束条件
+func (i *Individual) PrintConstraints() {
+
+	_, constraintsMet, err := i.ValidateConstraints()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("个体满足的约束条件:")
+	for constraint, met := range constraintsMet {
+		if met == 1 {
+			fmt.Printf("约束条件%d: 满足\n", constraint)
+		} else if met == 0 {
+			fmt.Printf("约束条件%d: 不满足\n", constraint)
+		} else if met == -1 {
+			fmt.Printf("约束条件%d: 未知\n", constraint)
+		}
 	}
 }
 
