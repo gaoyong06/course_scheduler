@@ -156,8 +156,8 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, sn stri
 		penalty = math.MaxInt32
 		return score - penalty, nil
 	}
-	// 18. 副课 周一~周五 第7节 尽量不排
-	if lo.Contains(subject.SubjectGroupIDs, 3) && lesson == 7 {
+	// 18. 主课 周一~周五 第7节 尽量不排
+	if lo.Contains(subject.SubjectGroupIDs, 2) && lesson == 7 {
 		penalty++
 	}
 
