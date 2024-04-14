@@ -14,10 +14,10 @@ func main() {
 	startTime := time.Now()
 
 	popSize := config.PopSize
-	// selectionSize := config.SelectionSize
+	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
 	// mutationRate := config.MutationRate
-	// crossoverRate := config.CrossoverRate
+	crossoverRate := config.CrossoverRate
 
 	classes := class_adapt.InitClasses()
 	classHours := models.GetClassHours()
@@ -45,14 +45,16 @@ func main() {
 		// 打印当前代中最好个体的适应度值
 		log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
 
-		// // 选择
-		// selected := genetic_algorithm.Selection(population, selectionSize)
+		// 选择
+		selected := genetic_algorithm.Selection(population, selectionSize)
 
-		// // 交叉
-		// offspring, err := genetic_algorithm.Crossover(selected, crossoverRate)
-		// if err != nil {
-		// 	log.Panic(err)
-		// }
+		// 交叉
+		crossoverRet := genetic_algorithm.Crossover(selected, crossoverRate)
+		// population, err = genetic_algorithm.Crossover(selected, crossoverRate)
+		if crossoverRet.Error != nil {
+			log.Panic(crossoverRet.Error)
+		}
+		log.Printf("crossoverRet: %#v\n", crossoverRet)
 
 		// // 变异
 		// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
@@ -60,8 +62,16 @@ func main() {
 		// 	log.Panic(err)
 		// }
 
-		// // 更新种群
-		// population = genetic_algorithm.UpdatePopulation(population, offspring)
+		// 更新种群
+		population = genetic_algorithm.UpdatePopulation(population, crossoverRet.Offsprings)
+	}
+
+	// 检查是否有时间段冲突
+	conflictExists, conflictDetails := bestIndividual.HasTimeSlotConflicts()
+	if conflictExists {
+		log.Printf("Individual has time slot conflicts: %v\n", conflictDetails)
+	} else {
+		log.Println("Individual does not have time slot conflicts")
 	}
 
 	// 打印最好的个体
