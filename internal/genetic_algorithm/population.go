@@ -137,23 +137,21 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 // 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
 // population 种群
 // bestIndividual 当前最佳个体
-func EvaluateAndUpdateBest(population []*Individual, bestIndividual *Individual) error {
-
+func EvaluateAndUpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, error) {
 	var err error
 	for _, individual := range population {
 		// 评估适应度
 		individual.Fitness, err = individual.EvaluateFitness()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
-		if individual.Fitness > bestIndividual.Fitness {
+		if individual.Fitness > (*bestIndividual).Fitness {
 			newBestIndividual := *individual
 			bestIndividual = &newBestIndividual
 		}
 	}
-
-	return nil
+	return bestIndividual, nil
 }

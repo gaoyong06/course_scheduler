@@ -35,18 +35,18 @@ func main() {
 	}
 
 	// 定义最佳个体
-	bestIndividual := new(genetic_algorithm.Individual)
+	bestIndividual := &genetic_algorithm.Individual{}
 
 	for gen := 0; gen < maxGen; gen++ {
 
 		// 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
-		err := genetic_algorithm.EvaluateAndUpdateBest(population, bestIndividual)
+		bestIndividual, err = genetic_algorithm.EvaluateAndUpdateBest(population, bestIndividual)
 		if err != nil {
 			log.Panic(err)
 		}
 
 		// 打印当前代中最好个体的适应度值
-		// log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
+		log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
 
 		// 选择
 		// 选择的个体是原个体数量的一半
