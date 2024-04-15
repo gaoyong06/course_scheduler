@@ -1,7 +1,9 @@
+// crossover.go
 package genetic_algorithm
 
 import (
 	"course_scheduler/internal/evaluation"
+	"fmt"
 	"math/rand"
 )
 
@@ -35,12 +37,19 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 			offspring1, offspring2 := crossoverIndividuals(selected[i], selected[i+1], crossPoint)
 
 			// Repair time slot conflicts
-			offspring1.RepairTimeSlotConflicts()
-			offspring2.RepairTimeSlotConflicts()
-			// conflictCount1, repairs1 := offspring1.RepairTimeSlotConflicts()
-			// conflictCount2, repairs2 := offspring2.RepairTimeSlotConflicts()
-			// fmt.Printf("conflictCount1: %d, repairs1: %#v\n", conflictCount1, repairs1)
-			// fmt.Printf("conflictCount2: %d, repairs2: %#v\n", conflictCount2, repairs2)
+			// offspring1.RepairTimeSlotConflicts1()
+			// offspring2.RepairTimeSlotConflicts1()
+			fmt.Println("offspring1 开始修复冲突")
+			conflictCount1, repairs1, err1 := offspring1.RepairTimeSlotConflicts()
+			fmt.Printf("offspring1 结束修复冲突 conflictCount1: %d, repairs1: %#v, isRepaired1: %v\n", conflictCount1, repairs1, err1)
+
+			fmt.Println("\n")
+
+			fmt.Println("offspring2 开始修复冲突")
+			conflictCount2, repairs2, err2 := offspring2.RepairTimeSlotConflicts()
+
+			fmt.Printf("offspring2 结束修复冲突 conflictCount2: %d, repairs2: %#v, isRepaired2: %v\n", conflictCount2, repairs2, err2)
+			fmt.Println("\n\n\n")
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {

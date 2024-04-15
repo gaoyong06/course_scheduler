@@ -70,6 +70,12 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		// 生成个体
 		individual := newIndividual(classMatrix)
 
+		// 检查个体是否有时间段冲突
+		conflictExists, conflictDetails := individual.HasTimeSlotConflicts()
+		if conflictExists {
+			return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
+		}
+
 		// fmt.Println("================================")
 		// individual.PrintSchedule()
 

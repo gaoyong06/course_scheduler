@@ -228,12 +228,14 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 		fmt.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
 
 		// 遍历冲突 冲突时间段:冲突次数
-		for k, v := range conflictsMap {
-			for i := 0; i < v; i++ {
-				repaired := false // Flag to indicate if the conflict has been repaired
+		for conflictSlot, conflictNum := range conflictsMap {
+			for i := 0; i < conflictNum; i++ {
+
+				// 在修复冲突时，可能会存在多个基因占用同一个时间段，导致修复时重复计算冲突数量
+				repaired := false
 				for _, chromosome := range individual.Chromosomes {
 					for j := 0; j < len(chromosome.Genes); j++ {
-						if k == chromosome.Genes[j].TimeSlot && !repaired {
+						if conflictSlot == chromosome.Genes[j].TimeSlot && !repaired {
 							// 从未占用的时间段中随机选择一个时间段
 							newTimeSlot := lo.Sample(unusedTimeSlots)
 							if !usedTimeSlots[newTimeSlot] {
@@ -243,9 +245,9 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 								unusedTimeSlots = lo.Filter(unusedTimeSlots, func(x int, index int) bool {
 									return x != newTimeSlot
 								})
-								repairs = append(repairs, []int{k, newTimeSlot})
+								repairs = append(repairs, []int{conflictSlot, newTimeSlot})
 								// 修复了一个冲突，冲突次数减一
-								conflictsMap[k]--
+								conflictsMap[conflictSlot]--
 								repaired = true // Set the flag to true
 							}
 						}
@@ -256,11 +258,11 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 	}
 
 	// 检查是否所有冲突都已修复
-	for k, v := range conflictsMap {
-		if v > 0 {
+	for conflictSlot, conflictNum := range conflictsMap {
+		if conflictNum > 0 {
 
 			fmt.Printf("unusedTimeSlots: %#v\n", unusedTimeSlots)
-			return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", k, v)
+			return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", conflictSlot, conflictNum)
 		}
 	}
 
