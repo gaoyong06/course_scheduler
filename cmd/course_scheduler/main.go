@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -13,6 +14,7 @@ import (
 func main() {
 	startTime := time.Now()
 
+	// 参数定义
 	popSize := config.PopSize
 	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
@@ -20,32 +22,27 @@ func main() {
 	crossoverRate := config.CrossoverRate
 	bestRatio := config.BestRatio
 
+	// 课班初始化
 	classes := class_adapt.InitClasses()
+
+	// 周课时初始化
 	classHours := models.GetClassHours()
 
+	// 初始化种群
 	population, err := genetic_algorithm.InitPopulation(classes, classHours, popSize)
 	if err != nil {
 		log.Panic(err)
 	}
 
+	// 定义最佳个体
 	bestIndividual := new(genetic_algorithm.Individual)
 
 	for gen := 0; gen < maxGen; gen++ {
 
-		// 评估适应度
-		for _, individual := range population {
-			individual.Fitness, err = individual.EvaluateFitness()
-			if err != nil {
-				log.Panic(err)
-			}
-
-			// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
-			// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
-			if individual.Fitness > bestIndividual.Fitness {
-				newBestIndividual := *individual
-				bestIndividual = &newBestIndividual
-			}
-
+		// 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
+		err := genetic_algorithm.EvaluateAndUpdateBest(population, bestIndividual)
+		if err != nil {
+			log.Panic(err)
 		}
 
 		// 打印当前代中最好个体的适应度值
@@ -55,14 +52,14 @@ func main() {
 		// 选择的个体是原个体数量的一半
 		selected := genetic_algorithm.Selection(population, selectionSize, bestRatio)
 		if len(selected) > 0 {
+
 			// 交叉
 			// 交叉前后的个体数量不变
 			crossoverRet := genetic_algorithm.Crossover(selected, crossoverRate)
-			// population, err = genetic_algorithm.Crossover(selected, crossoverRate)
 			if crossoverRet.Error != nil {
 				log.Panic(crossoverRet.Error)
 			}
-			// log.Printf("Generation %d: Best Fitness = %d, crossoverRet len(selected):%d, len(offsprings): %d, prepareCrossover: %d, executedCrossover: %d, error: %s\n", gen+1, bestIndividual.Fitness, len(selected), len(crossoverRet.Offsprings), crossoverRet.PrepareCrossover, crossoverRet.ExecutedCrossover, crossoverRet.Error)
+			log.Printf("Generation %d: Best Fitness = %d, crossoverRet len(selected):%d, len(offsprings): %d, prepareCrossover: %d, executedCrossover: %d, error: %s\n", gen+1, bestIndividual.Fitness, len(selected), len(crossoverRet.Offsprings), crossoverRet.PrepareCrossover, crossoverRet.ExecutedCrossover, crossoverRet.Error)
 
 			// // 变异
 			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
@@ -73,15 +70,8 @@ func main() {
 			// 更新种群
 			// 更新前后的个体数量不变
 			population = genetic_algorithm.UpdatePopulation(population, crossoverRet.Offsprings)
-		}
-	}
 
-	// 检查是否有时间段冲突
-	conflictExists, conflictDetails := bestIndividual.HasTimeSlotConflicts()
-	if conflictExists {
-		log.Printf("Individual has time slot conflicts: %v\n", conflictDetails)
-	} else {
-		log.Println("Individual does not have time slot conflicts")
+		}
 	}
 
 	// 打印最好的个体

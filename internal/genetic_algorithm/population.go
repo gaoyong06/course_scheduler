@@ -1,3 +1,4 @@
+// population.go
 package genetic_algorithm
 
 import (
@@ -68,12 +69,9 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		log.Println("Class matrix assigned")
 
 		// 生成个体
-		individual := newIndividual(classMatrix)
-
-		// 检查个体是否有时间段冲突
-		conflictExists, conflictDetails := individual.HasTimeSlotConflicts()
-		if conflictExists {
-			return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
+		individual, err := newIndividual(classMatrix)
+		if err != nil {
+			return nil, err
 		}
 
 		// fmt.Println("================================")
@@ -88,6 +86,22 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 
 // 更新种群
 func UpdatePopulation(population []*Individual, offspring []*Individual) []*Individual {
+
+	for _, item := range population {
+
+		a, b := item.HasTimeSlotConflicts()
+		if a {
+			fmt.Printf("!!!!! 更新种群 population中有冲突 ,%v\n", b)
+		}
+	}
+
+	for _, item := range offspring {
+
+		a, b := item.HasTimeSlotConflicts()
+		if a {
+			fmt.Printf("!!!!! 更新种群 offspring中有冲突 ,%v\n", b)
+		}
+	}
 
 	size := len(population)
 
@@ -109,5 +123,37 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 		}
 	}
 
+	for _, item := range newPopulation {
+
+		a, b := item.HasTimeSlotConflicts()
+		if a {
+			fmt.Printf("!!!!! 更新种群 newPopulation中有冲突 ,%v\n", b)
+		}
+	}
+
 	return newPopulation
+}
+
+// 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
+// population 种群
+// bestIndividual 当前最佳个体
+func EvaluateAndUpdateBest(population []*Individual, bestIndividual *Individual) error {
+
+	var err error
+	for _, individual := range population {
+		// 评估适应度
+		individual.Fitness, err = individual.EvaluateFitness()
+		if err != nil {
+			return err
+		}
+
+		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
+		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
+		if individual.Fitness > bestIndividual.Fitness {
+			newBestIndividual := *individual
+			bestIndividual = &newBestIndividual
+		}
+	}
+
+	return nil
 }

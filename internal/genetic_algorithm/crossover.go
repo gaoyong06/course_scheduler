@@ -19,10 +19,6 @@ type CrossoverResult struct {
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-// 交叉
-// 每个课班是一个染色体
-// 交叉在不同个体的，相同课班的染色体之间进行
-// 交叉后个体的数量不变
 func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 
 	offspring := make([]*Individual, 0, len(selected))
@@ -36,20 +32,14 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 			crossPoint := rand.Intn(len(selected[i].Chromosomes))
 			offspring1, offspring2 := crossoverIndividuals(selected[i], selected[i+1], crossPoint)
 
-			// Repair time slot conflicts
-			// offspring1.RepairTimeSlotConflicts1()
-			// offspring2.RepairTimeSlotConflicts1()
-			fmt.Println("offspring1 开始修复冲突")
-			conflictCount1, repairs1, err1 := offspring1.RepairTimeSlotConflicts()
-			fmt.Printf("offspring1 结束修复冲突 conflictCount1: %d, repairs1: %#v, isRepaired1: %v\n", conflictCount1, repairs1, err1)
+			// 修复因为交叉产生的冲突
+			offspring1.RepairTimeSlotConflicts()
+			offspring2.RepairTimeSlotConflicts()
 
-			fmt.Println("\n")
-
-			fmt.Println("offspring2 开始修复冲突")
-			conflictCount2, repairs2, err2 := offspring2.RepairTimeSlotConflicts()
-
-			fmt.Printf("offspring2 结束修复冲突 conflictCount2: %d, repairs2: %#v, isRepaired2: %v\n", conflictCount2, repairs2, err2)
-			fmt.Println("\n\n\n")
+			// conflictCount1, repairs1, err1 := offspring1.RepairTimeSlotConflicts()
+			// fmt.Printf("offspring1 结束修复冲突 conflictCount1: %d, repairs1: %#v, isRepaired1: %v\n", conflictCount1, repairs1, err1)
+			// conflictCount2, repairs2, err2 := offspring2.RepairTimeSlotConflicts()
+			// fmt.Printf("offspring2 结束修复冲突 conflictCount2: %d, repairs2: %#v, isRepaired2: %v\n", conflictCount2, repairs2, err2)
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
@@ -73,7 +63,6 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 	}
 
 	// fmt.Printf("Prepare crossover: %d, Executed crossover: %d\n", prepareCrossover, executedCrossover)
-
 	return CrossoverResult{
 		Offsprings:        offspring,
 		PrepareCrossover:  prepareCrossover,
@@ -97,6 +86,17 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int) 
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件
 func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
+
+	// 检查交叉后的个体是否有时间段冲突
+	hasConflicts1, conflictDetails1 := offspring1.HasTimeSlotConflicts()
+	if hasConflicts1 {
+		return false, fmt.Errorf("offspring1 has time slot conflicts: %v", conflictDetails1)
+	}
+
+	hasConflicts2, conflictDetails2 := offspring2.HasTimeSlotConflicts()
+	if hasConflicts2 {
+		return false, fmt.Errorf("offspring2 has time slot conflicts: %v", conflictDetails2)
+	}
 
 	// Check consistency of gene.Class between offspring1 and offspring2
 	if len(offspring1.Chromosomes) != len(offspring2.Chromosomes) {

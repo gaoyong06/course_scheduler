@@ -24,7 +24,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) *Individual {
+func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -76,9 +76,15 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) *In
 
 	fmt.Printf("Total number of chromosomes: %d\n", len(individual.Chromosomes))
 	fmt.Printf("Total number of genes: %d\n", totalGenes)
-
 	individual.SortChromosomes()
-	return individual
+
+	// 检查个体是否有时间段冲突
+	conflictExists, conflictDetails := individual.HasTimeSlotConflicts()
+	if conflictExists {
+		return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
+	}
+
+	return individual, nil
 }
 
 func (i *Individual) toClassMatrix() map[string]map[int]map[int]map[int]types.Val {
@@ -224,8 +230,8 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 			return usedTimeSlots[x]
 		})
 
-		fmt.Printf("=== 有冲突, 开始修复 ============\n")
-		fmt.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
+		// fmt.Printf("=== 有冲突, 开始修复 ============\n")
+		// fmt.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
 
 		// 遍历冲突 冲突时间段:冲突次数
 		for conflictSlot, conflictNum := range conflictsMap {
@@ -248,7 +254,7 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 								repairs = append(repairs, []int{conflictSlot, newTimeSlot})
 								// 修复了一个冲突，冲突次数减一
 								conflictsMap[conflictSlot]--
-								repaired = true // Set the flag to true
+								repaired = true
 							}
 						}
 					}
@@ -322,6 +328,7 @@ func (i *Individual) PrintSchedule() {
 	}
 }
 
+// === 未完成 start
 // 验证个体是否满足所有约束条件
 // 返回值map[int]int 1 满足约束条件，0 不满足约束条件，-1 表示未知或未检查
 func (i *Individual) ValidateConstraints() (int, map[int]int, error) {
@@ -384,6 +391,8 @@ func (i *Individual) ValidateConstraints() (int, map[int]int, error) {
 	}
 	return score, constraintsMet, nil
 }
+
+// === 未完成 end
 
 // 打印个体满足的约束条件
 func (i *Individual) PrintConstraints() {
