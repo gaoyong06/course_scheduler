@@ -83,18 +83,21 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 // 更新种群
 func UpdatePopulation(population []*Individual, offspring []*Individual) []*Individual {
 
+	size := len(population)
+
 	// 将新生成的个体添加到种群中
 	population = append(population, offspring...)
+
 	// 根据适应度值进行排序
 	sort.Slice(population, func(i, j int) bool {
 		return population[i].Fitness > population[j].Fitness
 	})
 
 	// Create a new slice to store non-nil individuals
-	newPopulation := make([]*Individual, 0, len(population)/2)
+	newPopulation := make([]*Individual, 0, size)
 
 	// Copy non-nil individuals to the new slice
-	for _, individual := range population[:len(population)/2] {
+	for _, individual := range population[:size] {
 		if individual != nil {
 			newPopulation = append(newPopulation, individual)
 		}
