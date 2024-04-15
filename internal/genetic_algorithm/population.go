@@ -87,22 +87,6 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 // 更新种群
 func UpdatePopulation(population []*Individual, offspring []*Individual) []*Individual {
 
-	for _, item := range population {
-
-		a, b := item.HasTimeSlotConflicts()
-		if a {
-			fmt.Printf("!!!!! 更新种群 population中有冲突 ,%v\n", b)
-		}
-	}
-
-	for _, item := range offspring {
-
-		a, b := item.HasTimeSlotConflicts()
-		if a {
-			fmt.Printf("!!!!! 更新种群 offspring中有冲突 ,%v\n", b)
-		}
-	}
-
 	size := len(population)
 
 	// 将新生成的个体添加到种群中
@@ -120,14 +104,6 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 	for _, individual := range population[:size] {
 		if individual != nil {
 			newPopulation = append(newPopulation, individual)
-		}
-	}
-
-	for _, item := range newPopulation {
-
-		a, b := item.HasTimeSlotConflicts()
-		if a {
-			fmt.Printf("!!!!! 更新种群 newPopulation中有冲突 ,%v\n", b)
 		}
 	}
 

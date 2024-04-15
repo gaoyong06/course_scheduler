@@ -8,11 +8,12 @@ import (
 )
 
 // 交叉操作返回值
+// 交叉操作返回值
 type CrossoverResult struct {
-	Offsprings        []*Individual // 交叉操作后返回个体
-	PrepareCrossover  int           // 准备执行交叉操作的次数
-	ExecutedCrossover int           // 实际执行交叉操作的次数
-	Error             error         // 错误信息
+	Offspring []*Individual // 交叉操作后生成的新个体
+	Prepared  int           // 准备执行交叉操作的次数
+	Executed  int           // 实际执行交叉操作的次数
+	Err       error         // 错误信息
 }
 
 // 交叉
@@ -22,53 +23,54 @@ type CrossoverResult struct {
 func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 
 	offspring := make([]*Individual, 0, len(selected))
-	prepareCrossover := 0
-	executedCrossover := 0
+	prepared := 0
+	executed := 0
 
 	for i := 0; i < len(selected); i += 2 {
-
 		if rand.Float64() < crossoverRate {
-			prepareCrossover++
+			prepared++
 			crossPoint := rand.Intn(len(selected[i].Chromosomes))
-			offspring1, offspring2 := crossoverIndividuals(selected[i], selected[i+1], crossPoint)
-
-			// 修复因为交叉产生的冲突
+			// 复制一份新的个体
+			parent1 := selected[i].Copy()
+			parent2 := selected[i+1].Copy()
+			// 修复时间段冲突
+			parent1.RepairTimeSlotConflicts()
+			parent2.RepairTimeSlotConflicts()
+			// 交叉操作
+			offspring1, offspring2 := crossoverIndividuals(parent1, parent2, crossPoint)
+			// 修复时间段冲突
 			offspring1.RepairTimeSlotConflicts()
 			offspring2.RepairTimeSlotConflicts()
-
-			// conflictCount1, repairs1, err1 := offspring1.RepairTimeSlotConflicts()
-			// fmt.Printf("offspring1 结束修复冲突 conflictCount1: %d, repairs1: %#v, isRepaired1: %v\n", conflictCount1, repairs1, err1)
-			// conflictCount2, repairs2, err2 := offspring2.RepairTimeSlotConflicts()
-			// fmt.Printf("offspring2 结束修复冲突 conflictCount2: %d, repairs2: %#v, isRepaired2: %v\n", conflictCount2, repairs2, err2)
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
 				return CrossoverResult{
-					Offsprings:        offspring,
-					PrepareCrossover:  prepareCrossover,
-					ExecutedCrossover: executedCrossover,
-					Error:             err,
+					Offspring: offspring,
+					Prepared:  prepared,
+					Executed:  executed,
+					Err:       err,
 				}
 			}
-
 			if isValid {
 				offspring = append(offspring, offspring1, offspring2)
-				executedCrossover++
+				executed++
 			} else {
 				offspring = append(offspring, selected[i], selected[i+1])
 			}
+
 		} else {
-			offspring = append(offspring, selected[i], selected[i+1])
+			// 复制一份新的个体
+			offspring = append(offspring, selected[i].Copy(), selected[i+1].Copy())
 		}
 	}
 
-	// fmt.Printf("Prepare crossover: %d, Executed crossover: %d\n", prepareCrossover, executedCrossover)
 	return CrossoverResult{
-		Offsprings:        offspring,
-		PrepareCrossover:  prepareCrossover,
-		ExecutedCrossover: executedCrossover,
-		Error:             nil,
+		Offspring: offspring,
+		Prepared:  prepared,
+		Executed:  executed,
+		Err:       nil,
 	}
+
 }
 
 // 两个个体之间的交叉操作
