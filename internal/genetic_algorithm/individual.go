@@ -1,3 +1,4 @@
+// individual.go
 package genetic_algorithm
 
 import (
@@ -189,10 +190,9 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 	}
 }
 
-// 修复时间段冲突
-func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int) {
-
-	// 记录冲突的总数和修复明细数据
+// 修复时间段冲突，并返回是否已修复的标记
+func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
+	// 记录冲突的总数
 	var conflictCount int
 	// 修复的时间段对[[a,b],[c,d]], a修复为b, c修复为d
 	var repairs [][]int
@@ -218,27 +218,35 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int) {
 
 	// 有冲突, 开始修复
 	if conflictCount > 0 {
+
 		// 生成未占用的时间段
 		unusedTimeSlots = lo.Reject(unusedTimeSlots, func(x int, index int) bool {
 			return usedTimeSlots[x]
 		})
 
+		fmt.Printf("=== 有冲突, 开始修复 ============\n")
+		fmt.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
+
+		// 遍历冲突 冲突时间段:冲突次数
 		for k, v := range conflictsMap {
 			for i := 0; i < v; i++ {
-
+				repaired := false // Flag to indicate if the conflict has been repaired
 				for _, chromosome := range individual.Chromosomes {
-					for i := 0; i < len(chromosome.Genes); i++ {
-						if k == chromosome.Genes[i].TimeSlot {
+					for j := 0; j < len(chromosome.Genes); j++ {
+						if k == chromosome.Genes[j].TimeSlot && !repaired {
 							// 从未占用的时间段中随机选择一个时间段
 							newTimeSlot := lo.Sample(unusedTimeSlots)
 							if !usedTimeSlots[newTimeSlot] {
 								// 将其中一个基因的时间段调整到新选择的时间段
-								chromosome.Genes[i].TimeSlot = newTimeSlot
+								chromosome.Genes[j].TimeSlot = newTimeSlot
 								usedTimeSlots[newTimeSlot] = true
 								unusedTimeSlots = lo.Filter(unusedTimeSlots, func(x int, index int) bool {
 									return x != newTimeSlot
 								})
 								repairs = append(repairs, []int{k, newTimeSlot})
+								// 修复了一个冲突，冲突次数减一
+								conflictsMap[k]--
+								repaired = true // Set the flag to true
 							}
 						}
 					}
@@ -246,7 +254,18 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int) {
 			}
 		}
 	}
-	return conflictCount, repairs
+
+	// 检查是否所有冲突都已修复
+	for k, v := range conflictsMap {
+		if v > 0 {
+
+			fmt.Printf("unusedTimeSlots: %#v\n", unusedTimeSlots)
+			return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", k, v)
+		}
+	}
+
+	// 返回冲突总数、修复情况、是否已修复的标记
+	return conflictCount, repairs, nil
 }
 
 // 打印课程表
