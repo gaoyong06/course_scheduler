@@ -47,7 +47,7 @@ func main() {
 		}
 
 		// 打印当前代中最好个体的适应度值
-		log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
+		// log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
 
 		// 选择
 		// 选择的个体是原个体数量的一半

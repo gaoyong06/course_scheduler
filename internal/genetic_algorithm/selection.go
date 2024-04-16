@@ -40,6 +40,8 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) [
 
 	// 将排名前 bestCount 个个体添加到 selected 中
 	for i := 0; i < bestCount; i++ {
+
+		// fmt.Printf("Selection best population: %d, fitness: %d\n", i+1, population[i].Fitness)
 		selected = append(selected, population[i])
 	}
 
