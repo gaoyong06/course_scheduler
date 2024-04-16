@@ -171,7 +171,7 @@ func (i *Individual) EvaluateFitness() (int, error) {
 			if err != nil {
 				return fitness, err
 			}
-			fitness += score
+			fitness += score.FinalScore
 		}
 	}
 

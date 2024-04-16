@@ -59,7 +59,7 @@ func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val) error 
 						return err
 					}
 					// duration := time.Since(start) // 计算耗时
-					val.Score = score
+					val.Score = score.FinalScore
 					classMatrix[sn][teacherID][venueID][timeSlot] = val
 					// log.Printf("Match score for (%s, %d, %d, %d) calculated: %d (took %v)\n", sn, teacherID, venueID, timeSlot, score, duration)
 				}

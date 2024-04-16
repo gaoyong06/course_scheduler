@@ -71,7 +71,7 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 		return false, err
 	}
 
-	if score < 0 {
+	if score.FinalScore < 0 {
 		return false, err
 	}
 

@@ -1,3 +1,4 @@
+// subject.go
 package models
 
 import "fmt"
@@ -33,6 +34,8 @@ func GetSubjects() []Subject {
 	return subjects
 }
 
+// 获取课时信息
+// 每周各个科目,分别ji
 func GetClassHours() map[int]int {
 
 	// 课时

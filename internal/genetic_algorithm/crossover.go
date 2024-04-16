@@ -122,7 +122,7 @@ func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 				return false, err
 			}
 
-			if score < 0 {
+			if score.FinalScore < 0 {
 				return false, err
 			}
 		}
@@ -137,7 +137,7 @@ func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 				return false, err
 			}
 
-			if score < 0 {
+			if score.FinalScore < 0 {
 				return false, err
 			}
 		}
