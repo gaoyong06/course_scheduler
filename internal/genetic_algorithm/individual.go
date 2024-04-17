@@ -8,10 +8,12 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 )
 
 // Individual 个体结构体，代表一个完整的课表排课方案
@@ -175,6 +177,24 @@ func (i *Individual) EvaluateFitness() (int, error) {
 		}
 	}
 
+	// 计算科目分散度得分
+	subjectDispersionScore, err := i.calcSubjectDispersionScore()
+	if err != nil {
+		return fitness, nil
+	}
+
+	// 计算教师分散度得分
+	teacherDispersionScore := i.calcTeacherDispersionScore()
+
+	// 乘以系数并转为整数,
+	subjectDispersionScoreInt := int(math.Round(subjectDispersionScore * 100))
+	teacherDispersionScoreInt := int(math.Round(teacherDispersionScore * 100))
+
+	fitness += subjectDispersionScoreInt
+	fitness += teacherDispersionScoreInt
+
+	fmt.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
+
 	// fitness是个非负数
 	if fitness < 0 {
 		fitness = 0
@@ -184,8 +204,6 @@ func (i *Individual) EvaluateFitness() (int, error) {
 	return fitness, nil
 }
 
-// 检查是否有时间段冲突
-// 检查是否有时间段冲突
 // 检查是否有时间段冲突
 func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 
@@ -292,6 +310,126 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 
 	// 返回冲突总数、修复情况、是否已修复的标记
 	return conflictCount, repairs, nil
+}
+
+// 计算各个课程班级的分散度
+func (i *Individual) calcSubjectStandardDeviation() (map[string]float64, error) {
+	subjectTimeSlots := make(map[string][]int) // 记录每个班级的每个科目的课时数
+	subjectCount := make(map[string]int)       // 记录每个班级的每个科目在每个时间段内的课时数
+
+	// 遍历每个基因，统计每个班级的每个科目在每个时间段的排课情况
+	for _, chromosome := range i.Chromosomes {
+		classSN := chromosome.ClassSN
+		for _, gene := range chromosome.Genes {
+			subjectTimeSlots[classSN] = append(subjectTimeSlots[classSN], gene.TimeSlot)
+		}
+		subjectCount[classSN] = len(chromosome.Genes)
+	}
+
+	return calcStandardDeviation(subjectTimeSlots, subjectCount)
+}
+
+// 计算各个教师的分散度
+func (i *Individual) calcTeacherStandardDeviation() (map[string]float64, error) {
+	teacherTimeSlots := make(map[string][]int)
+	teacherCount := make(map[string]int)
+
+	for _, chromosome := range i.Chromosomes {
+		for _, gene := range chromosome.Genes {
+			teacherID := cast.ToString(gene.TeacherID)
+			teacherTimeSlots[teacherID] = append(teacherTimeSlots[teacherID], gene.TimeSlot)
+			teacherCount[teacherID]++
+		}
+	}
+
+	return calcStandardDeviation(teacherTimeSlots, teacherCount)
+}
+
+func calcStandardDeviation(timeSlotsMap map[string][]int, countMap map[string]int) (map[string]float64, error) {
+	stdDevMap := make(map[string]float64)
+
+	// Calculate the standard deviation for each subject or teacher
+	for key, timeSlots := range timeSlotsMap {
+		mean := float64(len(timeSlots)) / float64(constants.NUM_TIMESLOTS)
+		variance := 0.0
+		for _, timeSlot := range timeSlots {
+			variance += math.Pow(float64(timeSlot)-mean, 2)
+		}
+		stdDev := math.Sqrt(variance / float64(constants.NUM_TIMESLOTS))
+		stdDevMap[key] = stdDev
+	}
+
+	return stdDevMap, nil
+}
+
+// 计算一个个体（全校所有年级所有班级的课程表）的科目分散度
+func (i Individual) calcSubjectDispersionScore() (float64, error) {
+	// 调用 calcSubjectStandardDeviation 方法计算每个班级的科目分散度
+	classSubjectStdDev, err := i.calcSubjectStandardDeviation()
+	if err != nil {
+		return 0.0, err
+	}
+
+	// 计算所有班级的科目分散度的平均值
+	totalStdDev := 0.0
+	numClasses := len(classSubjectStdDev)
+	for _, stdDev := range classSubjectStdDev {
+		totalStdDev += stdDev
+	}
+	if numClasses > 0 {
+		totalStdDev /= float64(numClasses)
+	}
+
+	return totalStdDev, nil
+}
+
+// 计算教师分散度得分
+// 通过计算信息熵来计算
+func (i *Individual) calcTeacherDispersionScore() float64 {
+
+	teacherDispersion := make(map[int]map[int]bool) // 记录每个教师在每个时间段是否已经排课
+	teacherCount := make(map[int]int)               // 记录每个教师的课时数
+
+	// 遍历每个基因，统计每个教师在每个时间段的排课情况
+	for _, chromosome := range i.Chromosomes {
+		for _, gene := range chromosome.Genes {
+			teacherID := gene.TeacherID
+			teacherCount[teacherID]++
+			if teacherDispersion[teacherID] == nil {
+				teacherDispersion[teacherID] = make(map[int]bool)
+				for i := 0; i < constants.NUM_TIMESLOTS; i++ {
+					teacherDispersion[teacherID][i] = false
+				}
+			}
+			teacherDispersion[teacherID][gene.TimeSlot] = true
+		}
+	}
+
+	totalTeacherCount := 0 // 总课时数
+	for _, count := range teacherCount {
+		totalTeacherCount += count
+	}
+
+	dispersionScore := 0.0
+	// 计算每个教师的分散度得分
+	for teacher, timeSlots := range teacherDispersion {
+		// 计算每个时间段的概率
+		timeSlotProb := make(map[int]float64)
+		numTimeSlots := float64(len(timeSlots))
+		for timeSlot := range timeSlots {
+			timeSlotProb[timeSlot] = float64(teacherCount[teacher]) / float64(totalTeacherCount) / numTimeSlots
+		}
+
+		// 计算信息熵
+		entropy := 0.0
+		for _, prob := range timeSlotProb {
+			entropy -= prob * math.Log2(prob)
+		}
+
+		// 计算分散度得分
+		dispersionScore += entropy / math.Log2(numTimeSlots)
+	}
+	return dispersionScore
 }
 
 // 打印课程表

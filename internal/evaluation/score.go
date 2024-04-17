@@ -105,19 +105,6 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, sn stri
 		return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
 	}
 
-	// 计算科目分散度得分
-	subjectDispersionScore, err := calcSubjectDispersionScore(SN.SubjectID, classMatrix)
-	if err != nil {
-		return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
-	}
-	score += subjectDispersionScore
-	scoreDetails = append(scoreDetails, ScoreDetail{Name: "subject_dispersion", Score: subjectDispersionScore, Penalty: 0})
-
-	// 计算教师分散度得分
-	teacherDistributionScore := calcTeacherDistributionScore(teacherID, classMatrix)
-	score += teacherDistributionScore
-	scoreDetails = append(scoreDetails, ScoreDetail{Name: "teacher_distribution", Score: teacherDistributionScore, Penalty: 0})
-
 	// 计算最终得分
 	finalScore := score - penalty
 
@@ -601,76 +588,4 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string
 	}
 	// 如果没有找到课程B在课程A之后的上课时间，则返回false
 	return false, nil
-}
-
-// 计算科目分散度得分
-// 同一个科目在一周有多个课时，分散性越高得分越高，反之得分越低
-func calcSubjectDispersionScore(subjectID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (int, error) {
-	subjectTimeSlots := make(map[int]bool) // map to store the time slots for the subject
-	for sn, classMap := range classMatrix {
-
-		SN, err := types.ParseSN(sn)
-		if err != nil {
-			return 0, err
-		}
-
-		for _, teacherMap := range classMap {
-			for _, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
-					if val.Used == 1 && SN.SubjectID == subjectID {
-						subjectTimeSlots[timeSlot] = true
-					}
-				}
-			}
-		}
-	}
-
-	// no classes for this subject
-	if len(subjectTimeSlots) == 0 {
-		return 0, nil
-	}
-	// calculate the dispersion score
-	// the more time slots are used, the higher the dispersion score
-	return len(subjectTimeSlots), nil
-}
-
-// 计算教师分散度得分
-// 同一个教师，一周的教学次数（上课次数），分布越均匀得分越高，反正得分越低
-func calcTeacherDistributionScore(teacherID int, classMatrix map[string]map[int]map[int]map[int]types.Val) int {
-
-	teacherTimeSlots := make(map[int]int) // map to store the number of classes for each time slot for the teacher
-	for _, classMap := range classMatrix {
-		for id, teacherMap := range classMap {
-			if teacherID != id {
-				continue // not the teacher we're looking for
-			}
-			for _, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
-					if val.Used == 1 {
-						teacherTimeSlots[timeSlot]++
-					}
-				}
-			}
-		}
-	}
-
-	// no classes for this teacher
-	if len(teacherTimeSlots) == 0 {
-		return 0
-	}
-
-	// calculate the distribution score
-	// the more evenly distributed the classes are, the higher the distribution score
-	// we'll use the standard deviation as a measure of distribution
-	// a lower standard deviation means a more even distribution
-	var totalClasses int
-	for _, numClasses := range teacherTimeSlots {
-		totalClasses += numClasses
-	}
-	var sumSquares float64
-	for _, numClasses := range teacherTimeSlots {
-		sumSquares += math.Pow(float64(numClasses)-float64(totalClasses)/float64(len(teacherTimeSlots)), 2)
-	}
-	stdDev := math.Sqrt(sumSquares / float64(len(teacherTimeSlots)))
-	return int(math.Max(0, 5-stdDev)) // map the standard deviation to a score between 0 and 5
 }

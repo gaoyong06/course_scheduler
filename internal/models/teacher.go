@@ -66,7 +66,9 @@ func ClassTeacherIDs(SN *types.SN) []int {
 }
 
 // 老师不可排课的时间范围
-func teacherUnavailableSlots(teacher int) []int {
+func teacherUnavailableSlots(
+
+) []int {
 	var timeSlots []int
 	return timeSlots
 }
