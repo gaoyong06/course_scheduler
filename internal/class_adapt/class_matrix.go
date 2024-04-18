@@ -82,7 +82,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 
 	for _, sn := range classSNs {
 
-		fmt.Printf("assignClassMatrix sn: %s\n", sn)
+		// fmt.Printf("assignClassMatrix sn: %s\n", sn)
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return numAssignedClasses, err

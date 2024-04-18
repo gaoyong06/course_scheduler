@@ -7,6 +7,8 @@ import (
 	"course_scheduler/internal/evaluation"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -18,8 +20,8 @@ import (
 
 // Individual 个体结构体，代表一个完整的课表排课方案
 type Individual struct {
-	Chromosomes []Chromosome // 染色体序列
-	Fitness     int          // 适应度
+	Chromosomes []*Chromosome // 染色体序列
+	Fitness     int           // 适应度
 }
 
 // 生成个体
@@ -34,7 +36,7 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*I
 	// 所有课班选择点位完毕后即可得到一个随机课表，作为种群一个个体
 	individual := &Individual{
 		// 种群的个体中每个课班选择作为一个染色体
-		Chromosomes: []Chromosome{},
+		Chromosomes: []*Chromosome{},
 	}
 
 	totalGenes := 0
@@ -70,10 +72,10 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*I
 			}
 		}
 
-		fmt.Printf("Chromosome for class %s has %d genes\n", sn, numGenesInChromosome)
+		// fmt.Printf("Chromosome for class %s has %d genes\n", sn, numGenesInChromosome)
 
 		// 种群的个体中每个课班选择作为一个染色体
-		individual.Chromosomes = append(individual.Chromosomes, chromosome)
+		individual.Chromosomes = append(individual.Chromosomes, &chromosome)
 	}
 
 	fmt.Printf("Total number of chromosomes: %d\n", len(individual.Chromosomes))
@@ -86,17 +88,24 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*I
 		return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
 	}
 
+	// 设置适应度
+	fitness, err := individual.EvaluateFitness()
+	if err != nil {
+		return nil, err
+	}
+	individual.Fitness = fitness
+
 	return individual, nil
 }
 
 // Copy 复制一个 Individual 实例
 func (i *Individual) Copy() *Individual {
 
-	copiedChromosomes := make([]Chromosome, len(i.Chromosomes))
+	copiedChromosomes := make([]*Chromosome, len(i.Chromosomes))
 	for j, chromosome := range i.Chromosomes {
 		copiedGenes := make([]Gene, len(chromosome.Genes))
 		copy(copiedGenes, chromosome.Genes)
-		copiedChromosomes[j] = Chromosome{
+		copiedChromosomes[j] = &Chromosome{
 			ClassSN: chromosome.ClassSN,
 			Genes:   copiedGenes,
 		}
@@ -105,6 +114,38 @@ func (i *Individual) Copy() *Individual {
 		Chromosomes: copiedChromosomes,
 		Fitness:     i.Fitness,
 	}
+}
+
+// UniqueId 生成唯一的标识符字符串
+func (i *Individual) UniqueId() string {
+
+	// 为了确保生成的标识符是唯一的，我们首先对 Chromosomes 切片进行排序
+	sortedChromosomes := make([]*Chromosome, len(i.Chromosomes))
+
+	for i, chromosome := range i.Chromosomes {
+		sortedChromosomes[i] = chromosome.Copy()
+	}
+	// copy(sortedChromosomes, i.Chromosomes)
+	sort.Slice(sortedChromosomes, func(i, j int) bool {
+		return sortedChromosomes[i].ClassSN < sortedChromosomes[j].ClassSN
+	})
+
+	// 将排序后的 Chromosomes 转换为 JSON 字符串
+	jsonData, err := json.Marshal(sortedChromosomes)
+	if err != nil {
+
+		fmt.Printf("ERROR: json marshal failed. %s", err.Error())
+		return ""
+
+	}
+
+	// Hash the resulting string to generate a fixed-length identifier
+	hasher := sha256.New()
+	hasher.Write([]byte(jsonData))
+
+	uniqueId := fmt.Sprintf("%x", hasher.Sum(nil))
+	lastFour := uniqueId[len(uniqueId)-4:]
+	return lastFour
 }
 
 func (i *Individual) toClassMatrix() map[string]map[int]map[int]map[int]types.Val {
@@ -193,7 +234,7 @@ func (i *Individual) EvaluateFitness() (int, error) {
 	fitness += subjectDispersionScoreInt
 	fitness += teacherDispersionScoreInt
 
-	fmt.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
+	// fmt.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
 
 	// fitness是个非负数
 	if fitness < 0 {
@@ -232,7 +273,7 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 	}
 }
 
-// 修复时间段冲突，并返回是否已修复的标记
+// 修复时间段冲突总数, 修复是否段明细, 错误信息
 func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 	// 记录冲突的总数
 	var conflictCount int

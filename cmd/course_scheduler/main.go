@@ -37,14 +37,12 @@ func main() {
 
 	// 定义最佳个体
 	bestIndividual := &genetic_algorithm.Individual{}
+	uniqueId := ""
 
 	for gen := 0; gen < maxGen; gen++ {
 
-		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-		bestIndividual, err = genetic_algorithm.EvaluateAndUpdateBest(currentPopulation, bestIndividual)
-		if err != nil {
-			log.Panic(err)
-		}
+		// 获取当前最近个体标识符
+		uniqueId = bestIndividual.UniqueId()
 
 		// 打印当前代中最好个体的适应度值
 		// log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
@@ -65,7 +63,7 @@ func main() {
 			if crossoverRet.Err != nil {
 				log.Panic(crossoverRet.Err)
 			}
-			log.Printf("Generation %d: Best Fitness = %d, crossoverRet len(selected):%d, len(offspring): %d, prepared: %d, executed: %d, error: %s\n", gen+1, bestIndividual.Fitness, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			log.Printf("Generation %d: Best uniqueId: %s, Fitness = %d, crossoverRet len(selected):%d, len(offspring): %d, prepared: %d, executed: %d, error: %s\n", gen+1, uniqueId, bestIndividual.Fitness, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// // 变异
 			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
@@ -82,8 +80,14 @@ func main() {
 		}
 	}
 
+	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
+	bestIndividual, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
+	if err != nil {
+		log.Panic(err)
+	}
+
 	// 打印最好的个体
-	log.Printf("最佳个体适应度: %d\n", bestIndividual.Fitness)
+	log.Printf("最佳个体适应度: %d, uniqueId: %s\n", bestIndividual.Fitness, uniqueId)
 	bestIndividual.PrintSchedule()
 
 	// 计算总运行时间

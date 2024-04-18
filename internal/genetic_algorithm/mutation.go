@@ -18,8 +18,8 @@ func Mutation(selected []*Individual, mutationRate float64) ([]*Individual, erro
 			geneIndex := rand.Intn(len(selected[i].Chromosomes[chromosomeIndex].Genes))
 
 			// Get the chromosome and gene to be mutated
-			chromosome := &selected[i].Chromosomes[chromosomeIndex]
-			gene := &chromosome.Genes[geneIndex]
+			chromosome := selected[i].Chromosomes[chromosomeIndex]
+			gene := chromosome.Genes[geneIndex]
 
 			// Find available options for the given class
 			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome)
@@ -28,7 +28,7 @@ func Mutation(selected []*Individual, mutationRate float64) ([]*Individual, erro
 			}
 
 			// Validate the mutation
-			isValid, err := validateMutation(selected[i], *gene, unusedTeacherID, unusedVenueID, unusedTimeSlot)
+			isValid, err := validateMutation(selected[i], gene, unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, err
 			}

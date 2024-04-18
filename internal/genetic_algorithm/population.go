@@ -87,6 +87,14 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 // 更新种群
 func UpdatePopulation(population []*Individual, offspring []*Individual) []*Individual {
 
+	for i := 0; i < len(population); i++ {
+		fmt.Printf("---> UpdatePopulation 父代 population[%d]: %s, fitness: %d\n", i, population[i].UniqueId(), population[i].Fitness)
+	}
+
+	for i := 0; i < len(offspring); i++ {
+		fmt.Printf("---> UpdatePopulation 子代 offspring[%d]: %s, fitness: %d\n", i, offspring[i].UniqueId(), offspring[i].Fitness)
+	}
+
 	size := len(population)
 
 	// 将新生成的个体添加到种群中
@@ -107,20 +115,22 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 		}
 	}
 
+	for i := 0; i < len(newPopulation); i++ {
+		fmt.Printf("---> UpdatePopulation 下一代 newPopulation[%d]: %s, fitness: %d\n", i, newPopulation[i].UniqueId(), newPopulation[i].Fitness)
+	}
+
 	return newPopulation
 }
 
 // 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
 // population 种群
 // bestIndividual 当前最佳个体
-func EvaluateAndUpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, error) {
-	var err error
-	for _, individual := range population {
-		// 评估适应度
-		individual.Fitness, err = individual.EvaluateFitness()
-		if err != nil {
-			return nil, err
-		}
+func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, error) {
+
+	fmt.Println("==== UpdateBest")
+	for i, individual := range population {
+
+		fmt.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
 
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
@@ -129,5 +139,6 @@ func EvaluateAndUpdateBest(population []*Individual, bestIndividual *Individual)
 			bestIndividual = &newBestIndividual
 		}
 	}
+	fmt.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
 	return bestIndividual, nil
 }
