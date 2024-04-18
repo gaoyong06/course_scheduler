@@ -10,7 +10,7 @@ import (
 // 变异
 // 每个课班是一个染色体
 // 替换时间
-func Mutation(selected []*Individual, mutationRate float64) ([]*Individual, error) {
+func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int) ([]*Individual, error) {
 	for i := range selected {
 		if rand.Float64() < mutationRate {
 			// Randomly select a chromosome and gene index for mutation
@@ -28,7 +28,7 @@ func Mutation(selected []*Individual, mutationRate float64) ([]*Individual, erro
 			}
 
 			// Validate the mutation
-			isValid, err := validateMutation(selected[i], gene, unusedTeacherID, unusedVenueID, unusedTimeSlot)
+			isValid, err := validateMutation(selected[i], gene, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
 			if err != nil {
 				return nil, err
 			}
@@ -51,7 +51,7 @@ func Mutation(selected []*Individual, mutationRate float64) ([]*Individual, erro
 }
 
 // validateMutation 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件
-func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unusedVenueID, unusedTimeSlot int) (bool, error) {
+func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
 	// Check if the mutation will result in a valid gene
 	newGene := gene
 	if unusedTeacherID != 0 {
@@ -66,7 +66,7 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 
 	// Calculate the score for the new gene
 	classMatrix := individual.toClassMatrix()
-	score, err := evaluation.CalcScore(classMatrix, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+	score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 	if err != nil {
 		return false, err
 	}

@@ -1,7 +1,6 @@
 package genetic_algorithm
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -35,7 +34,7 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) [
 		bestCount = int(math.Max(float64(popSize)*bestRatio, 1))
 	}
 
-	fmt.Printf("Selection best count: %d\n", bestCount)
+	// fmt.Printf("Selection best count: %d\n", bestCount)
 
 	// 按照适应度进行排序
 	sort.Slice(population, func(i, j int) bool {

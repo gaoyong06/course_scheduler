@@ -30,7 +30,7 @@ type CalcScoreResult struct {
 // 匹配结果值
 // 将: 匹配结果值越大越好，匹配结果值为“-1”表示课班不可用当前适应性矩阵的元素下标
 // 修改为: 匹配结果值越大越好，匹配结果值也可能会是负数
-func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, teacherID, venueID, timeSlot int) (*CalcScoreResult, error) {
+func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int, sn string, teacherID, venueID, timeSlot int) (*CalcScoreResult, error) {
 
 	scoreDetails := []ScoreDetail{}
 
@@ -105,9 +105,29 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, sn stri
 		return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
 	}
 
+	// 科目课时小于天数
+	if classHours[subject.SubjectID] <= constants.NUM_DAYS {
+		ret, err := isSubjectSameDay(subject.SubjectID, classMatrix)
+		if err != nil {
+			return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
+		}
+		if ret {
+			name := fmt.Sprintf("subject_same_day_%d", subject.SubjectID)
+			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+		}
+	} else {
+		ret, err := isSubjectConsecutive(subject.SubjectID, classMatrix)
+		if err != nil {
+			return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
+		}
+		if !ret {
+			name := fmt.Sprintf("subject_not_consecutive_%d", subject.SubjectID)
+			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+		}
+	}
+
 	// 计算最终得分
 	finalScore := score - penalty
-
 	calcScoreResult := CalcScoreResult{FinalScore: finalScore, Details: scoreDetails}
 
 	// 保存缓存
@@ -323,7 +343,6 @@ func teacherClassLimit(teacherID, day, lesson int, classMatrix map[string]map[in
 			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: 1})
 		}
 	}
-
 	return score, penalty, scoreDetails
 }
 
@@ -587,5 +606,67 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string
 		}
 	}
 	// 如果没有找到课程B在课程A之后的上课时间，则返回false
+	return false, nil
+}
+
+// 检查同一科目是否在同一天安排了多次
+func isSubjectSameDay(subjectID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+
+	// 科目每天排课次数 科目:次数
+	subjectDays := make(map[int]int)
+	for sn, classMap := range classMatrix {
+		SN, err := types.ParseSN(sn)
+		if err != nil {
+			return false, err
+		}
+		if SN.SubjectID != subjectID {
+			continue
+		}
+		for _, teacherMap := range classMap {
+			for _, venueMap := range teacherMap {
+				for timeSlot, val := range venueMap {
+					if val.Used == 1 {
+						day := timeSlot / constants.NUM_CLASSES
+						subjectDays[day]++
+					}
+				}
+			}
+		}
+	}
+	for _, count := range subjectDays {
+		if count > 1 {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// 检查科目是否连续排课
+func isSubjectConsecutive(subjectID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+	subjectTimeSlots := make([]int, 0)
+	for sn, classMap := range classMatrix {
+		SN, err := types.ParseSN(sn)
+		if err != nil {
+			return false, err
+		}
+		if SN.SubjectID != subjectID {
+			continue
+		}
+		for _, teacherMap := range classMap {
+			for _, venueMap := range teacherMap {
+				for timeSlot, val := range venueMap {
+					if val.Used == 1 {
+						subjectTimeSlots = append(subjectTimeSlots, timeSlot)
+					}
+				}
+			}
+		}
+	}
+	sort.Ints(subjectTimeSlots)
+	for i := 0; i < len(subjectTimeSlots)-1; i++ {
+		if subjectTimeSlots[i]+1 == subjectTimeSlots[i+1] {
+			return true, nil
+		}
+	}
 	return false, nil
 }

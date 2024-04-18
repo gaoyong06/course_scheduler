@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*Individual, error) {
+func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -89,7 +89,7 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val) (*I
 	}
 
 	// 设置适应度
-	fitness, err := individual.EvaluateFitness()
+	fitness, err := individual.EvaluateFitness(classHours)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (i *Individual) SortChromosomes() {
 }
 
 // 评估适应度
-func (i *Individual) EvaluateFitness() (int, error) {
+func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 
 	classMatrix := i.toClassMatrix()
 
@@ -210,7 +210,7 @@ func (i *Individual) EvaluateFitness() (int, error) {
 		for _, gene := range chromosome.Genes {
 			// 计算该基因对应的课程的适应度值
 
-			score, err := evaluation.CalcScore(classMatrix, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 			if err != nil {
 				return fitness, err
 			}
@@ -228,8 +228,8 @@ func (i *Individual) EvaluateFitness() (int, error) {
 	teacherDispersionScore := i.calcTeacherDispersionScore()
 
 	// 乘以系数并转为整数,
-	subjectDispersionScoreInt := int(math.Round(subjectDispersionScore * 100))
-	teacherDispersionScoreInt := int(math.Round(teacherDispersionScore * 100))
+	subjectDispersionScoreInt := int(math.Round(subjectDispersionScore * 10))
+	teacherDispersionScoreInt := int(math.Round(teacherDispersionScore * 10))
 
 	fitness += subjectDispersionScoreInt
 	fitness += teacherDispersionScoreInt

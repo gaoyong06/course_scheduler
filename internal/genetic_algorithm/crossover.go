@@ -20,7 +20,7 @@ type CrossoverResult struct {
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
+func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int) CrossoverResult {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -37,7 +37,7 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 			parent2 := selected[i+1].Copy()
 
 			// 交叉操作
-			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint)
+			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, classHours)
 			if err != nil {
 				return CrossoverResult{
 					Offspring: offspring,
@@ -53,7 +53,7 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 
 			// 交叉操作后,顺利修复时间段冲突
 			if err1 == nil && err2 == nil {
-				isValid, err := validateCrossover(offspring1, offspring2)
+				isValid, err := validateCrossover(offspring1, offspring2, classHours)
 				if err != nil {
 					return CrossoverResult{
 						Offspring: offspring,
@@ -93,7 +93,7 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 
 // 两个个体之间进行交叉操作，生成两个子代个体
 // 返回两个子代个体和错误信息（如果有）
-func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int) (*Individual, *Individual, error) {
+func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, classHours map[int]int) (*Individual, *Individual, error) {
 
 	// 检查交叉点是否在有效范围内
 	if crossPoint <= 0 || crossPoint >= len(individual1.Chromosomes) {
@@ -149,8 +149,8 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int) 
 	offspring2.SortChromosomes()
 
 	// 评估子代个体的适应度并赋值
-	fitness1, err1 := offspring1.EvaluateFitness()
-	fitness2, err2 := offspring2.EvaluateFitness()
+	fitness1, err1 := offspring1.EvaluateFitness(classHours)
+	fitness2, err2 := offspring2.EvaluateFitness(classHours)
 
 	if err1 != nil || err2 != nil {
 		return nil, nil, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
@@ -164,7 +164,7 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int) 
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件
-func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
+func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]int) (bool, error) {
 
 	// Check consistency of gene.Class between offspring1 and offspring2
 	if len(offspring1.Chromosomes) != len(offspring2.Chromosomes) {
@@ -183,7 +183,7 @@ func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 	for _, chromosome := range offspring1.Chromosomes {
 		for _, gene := range chromosome.Genes {
 
-			score, err := evaluation.CalcScore(classMatrix1, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 			if err != nil {
 				return false, err
 			}
@@ -198,7 +198,7 @@ func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 	for _, chromosome := range offspring2.Chromosomes {
 		for _, gene := range chromosome.Genes {
 
-			score, err := evaluation.CalcScore(classMatrix2, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 			if err != nil {
 				return false, err
 			}

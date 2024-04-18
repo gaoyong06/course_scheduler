@@ -19,7 +19,7 @@ func main() {
 	popSize := config.PopSize
 	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
-	// mutationRate := config.MutationRate
+	mutationRate := config.MutationRate
 	crossoverRate := config.CrossoverRate
 	bestRatio := config.BestRatio
 
@@ -66,17 +66,18 @@ func main() {
 			// 	log.Panic(err)
 			// }
 
-			crossoverRet := genetic_algorithm.Crossover(selectedPopulation, crossoverRate)
+			crossoverRet := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
 			if crossoverRet.Err != nil {
 				log.Panic(crossoverRet.Err)
 			}
-			log.Printf("Generation %d: crossoverRet len(selected):%d, len(offspring): %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			// log.Printf("Generation %d: crossoverRet len(selected):%d, len(offspring): %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
-			// // 变异
-			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate)
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
+			// 变异
+			offspring := crossoverRet.Offspring
+			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
+			if err != nil {
+				log.Panic(err)
+			}
 
 			// 更新种群
 			// 更新前后的个体数量不变

@@ -45,7 +45,7 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 }
 
 // 匹配结果值
-func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val) error {
+func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
 
 	log.Println("Calculating match scores...")
 	for sn, teacherMap := range classMatrix {
@@ -54,7 +54,7 @@ func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val) error 
 				for timeSlot, val := range timeSlotMap {
 
 					// start := time.Now() // 记录开始时间
-					score, err := evaluation.CalcScore(classMatrix, sn, teacherID, venueID, timeSlot)
+					score, err := evaluation.CalcScore(classMatrix, classHours, sn, teacherID, venueID, timeSlot)
 					if err != nil {
 						return err
 					}

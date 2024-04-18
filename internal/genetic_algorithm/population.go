@@ -49,7 +49,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			log.Println("Class matrix initialized")
 
 			// 匹配结果值
-			err = class_adapt.MatchScore(classMatrix)
+			err = class_adapt.MatchScore(classMatrix, classHours)
 			if err != nil {
 				return nil, err
 			}
@@ -69,7 +69,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		log.Println("Class matrix assigned")
 
 		// 生成个体
-		individual, err := newIndividual(classMatrix)
+		individual, err := newIndividual(classMatrix, classHours)
 		if err != nil {
 			return nil, err
 		}
