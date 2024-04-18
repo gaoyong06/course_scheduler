@@ -67,7 +67,7 @@ func Crossover(selected []*Individual, crossoverRate float64) CrossoverResult {
 					executed++
 
 					// 打印交叉明细
-					fmt.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+					// fmt.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 				} else {
 

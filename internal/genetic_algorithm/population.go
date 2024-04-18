@@ -115,7 +115,6 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 // bestIndividual 当前最佳个体
 func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, error) {
 
-	fmt.Println("==== UpdateBest")
 	for _, individual := range population {
 
 		// fmt.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
@@ -127,6 +126,6 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 			bestIndividual = &newBestIndividual
 		}
 	}
-	fmt.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
+	// fmt.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
 	return bestIndividual, nil
 }
