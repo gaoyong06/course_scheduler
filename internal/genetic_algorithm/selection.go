@@ -29,9 +29,6 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) [
 		return nil
 	}
 
-	// 初始化选择结果集合
-	selected := make([]*Individual, 0, selectionSize)
-
 	// 保留最佳个体
 	bestCount := 0
 	if bestRatio > 0 {
@@ -46,31 +43,21 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) [
 	})
 
 	// 将排名前 bestCount 个个体添加到 selected 中
-	for i := 0; i < bestCount; i++ {
-
-		fmt.Printf("Selection best population: %d, fitness: %d\n", i+1, population[i].Fitness)
-		selected = append(selected, population[i])
-	}
+	selected := population[:bestCount]
+	restPopulation := population[bestCount:]
 
 	// 竞标赛模式选择
 	// 选择操作做了去重,避免同一个个体被多次选中
 	for i := bestCount; i < selectionSize; i++ {
 		var individual1, individual2 *Individual
-		for {
-			candidate := population[rand.Intn(len(population))]
-			if !contains(selected, candidate) {
-				individual1 = candidate
-				break
-			}
-		}
 
-		for {
-			candidate := population[rand.Intn(len(population))]
-			if !contains(selected, candidate) {
-				individual2 = candidate
-				break
-			}
-		}
+		index1 := rand.Intn(len(restPopulation))
+		individual1 = restPopulation[index1]
+		restPopulation = append(restPopulation[:index1], restPopulation[index1+1:]...)
+
+		index2 := rand.Intn(len(restPopulation))
+		individual2 = restPopulation[index2]
+		restPopulation = append(restPopulation[:index2], restPopulation[index2+1:]...)
 
 		if individual1.Fitness > individual2.Fitness {
 			selected = append(selected, individual1)
@@ -80,14 +67,4 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) [
 	}
 
 	return selected
-}
-
-// 是否包含
-func contains(slice []*Individual, item *Individual) bool {
-	for _, a := range slice {
-		if a.UniqueId() == item.UniqueId() {
-			return true
-		}
-	}
-	return false
 }
