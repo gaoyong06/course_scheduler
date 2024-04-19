@@ -57,7 +57,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 
 			// 课班适应性矩阵分配
 			numAssignedClasses, err = class_adapt.AllocateClassMatrix(classeSNs, classHours, classMatrix)
-			fmt.Printf("numAssignedClasses: %d\n", numAssignedClasses)
+			log.Printf("numAssignedClasses: %d\n", numAssignedClasses)
 
 			if err == nil {
 				break
@@ -117,7 +117,7 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 
 	for _, individual := range population {
 
-		// fmt.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
+		// log.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
 
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
@@ -126,6 +126,35 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 			bestIndividual = &newBestIndividual
 		}
 	}
-	// fmt.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
+	// log.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
 	return bestIndividual, nil
+}
+
+// countDuplicates 种群中相同个体的数量
+func CountDuplicates(population []*Individual) int {
+	duplicates := checkDuplicates(population)
+	return len(duplicates)
+}
+
+// hasDuplicates 种群中是否有相同的个体
+func HasDuplicates(population []*Individual) bool {
+	duplicates := checkDuplicates(population)
+	return len(duplicates) > 0
+}
+
+// checkDuplicates 种群中重复个体的映射，以其唯一ID为键
+func checkDuplicates(population []*Individual) map[string][]*Individual {
+	duplicates := make(map[string][]*Individual)
+	ids := make(map[string]*Individual)
+
+	for _, individual := range population {
+		id := individual.UniqueId()
+		if existing, ok := ids[id]; ok {
+			duplicates[id] = []*Individual{existing, individual}
+		} else {
+			ids[id] = individual
+		}
+	}
+
+	return duplicates
 }

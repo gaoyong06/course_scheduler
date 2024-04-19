@@ -26,7 +26,9 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 	prepared := 0
 	executed := 0
 
-	for i := 0; i < len(selected); i += 2 {
+	// log.Printf("=== Crossover selected %d, crossoverRate: %.02f\n", len(selected), crossoverRate)
+
+	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
 
 			prepared++
@@ -46,6 +48,12 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 					Err:       err,
 				}
 			}
+
+			// for k := 0; k < len(selected); k++ {
+			// 	log.Printf("=== Crossover selected[%d], %s\n", k, selected[k].UniqueId())
+			// }
+
+			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 			// 修复时间段冲突
 			_, _, err1 := offspring1.RepairTimeSlotConflicts()
@@ -67,7 +75,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 					executed++
 
 					// 打印交叉明细
-					// fmt.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+					// log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 				} else {
 

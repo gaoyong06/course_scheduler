@@ -1,6 +1,8 @@
 package genetic_algorithm
 
 import (
+	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -10,60 +12,98 @@ import (
 // population 种群
 // selectionSize 选择数量
 // bestRatio 保留最佳个体概率
-func Selection(population []*Individual, selectionSize int, bestRatio float64) []*Individual {
+func Selection(population []*Individual, selectionSize int, bestRatio float64) ([]*Individual, error) {
 
 	// 个体数量
 	popSize := len(population)
 
-	// 计算总适应度得分
-	totalFitness := 0
-	for _, individual := range population {
-		totalFitness += individual.Fitness
-	}
-
-	// fmt.Printf("Selection len(population): %d, totalFitness: %d\n", len(population), totalFitness)
-
-	// 如果总适应度得分为 0，那么返回一个空的选择结果集合
-	if totalFitness == 0 {
-		return nil
-	}
+	// 冲突个体数量
+	dupCount := CountDuplicates(population)
 
 	// 保留最佳个体
 	bestCount := 0
 	if bestRatio > 0 {
 		bestCount = int(math.Max(float64(popSize)*bestRatio, 1))
 	}
+	log.Printf("Selection current population size: %d, duplicates count: %d, best count: %d\n", popSize, dupCount, bestCount)
 
-	// fmt.Printf("Selection best count: %d\n", bestCount)
+	selected := make([]*Individual, 0, selectionSize)
+	ids := make(map[string]bool)
 
 	// 按照适应度进行排序
 	sort.Slice(population, func(i, j int) bool {
 		return population[i].Fitness > population[j].Fitness
 	})
 
-	// 将排名前 bestCount 个个体添加到 selected 中
-	selected := population[:bestCount]
-	restPopulation := population[bestCount:]
+	// 将排名前 bestCount 个个体选中
+	for i := 0; i < bestCount; i++ {
 
-	// 竞标赛模式选择
-	// 选择操作做了去重,避免同一个个体被多次选中
-	for i := bestCount; i < selectionSize; i++ {
-		var individual1, individual2 *Individual
-
-		index1 := rand.Intn(len(restPopulation))
-		individual1 = restPopulation[index1]
-		restPopulation = append(restPopulation[:index1], restPopulation[index1+1:]...)
-
-		index2 := rand.Intn(len(restPopulation))
-		individual2 = restPopulation[index2]
-		restPopulation = append(restPopulation[:index2], restPopulation[index2+1:]...)
-
-		if individual1.Fitness > individual2.Fitness {
-			selected = append(selected, individual1)
-		} else {
-			selected = append(selected, individual2)
+		individual := population[i]
+		id := individual.UniqueId()
+		if !ids[id] {
+			selected = append(selected, individual)
+			ids[id] = true
 		}
 	}
 
-	return selected
+	// 使用锦标赛选择选择其余的个体
+	count := 0
+	for len(selected) < selectionSize {
+		index1 := rand.Intn(popSize)
+		index2 := rand.Intn(popSize)
+		if population[index1].Fitness > population[index2].Fitness {
+			individual := population[index1]
+			id := individual.UniqueId()
+			if !ids[id] {
+				selected = append(selected, individual)
+				ids[id] = true
+			}
+		} else {
+			individual := population[index2]
+			id := individual.UniqueId()
+			if !ids[id] {
+				selected = append(selected, individual)
+				ids[id] = true
+			}
+		}
+		count++
+		if count > 10*popSize {
+			break
+		}
+	}
+
+	// Validate the selection.
+	// err := validateSelection(population, selected, selectionSize)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return selected, nil
+}
+
+// validateSelection 检查选择是否有效
+func validateSelection(population, selected []*Individual, selectionSize int) error {
+
+	if len(selected) != selectionSize {
+		return fmt.Errorf("selection size failed")
+	}
+
+	// 检查选择是否包含种群中的最佳个体
+	bestIndividual := population[0]
+	found := false
+	for _, individual := range selected {
+		if individual.UniqueId() == bestIndividual.UniqueId() {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("selection does not contain the best individual from the population")
+	}
+
+	// 检查选择是否包含重复的个体
+	if HasDuplicates(selected) {
+		return fmt.Errorf("selection contains duplicate individuals")
+	}
+	return nil
 }

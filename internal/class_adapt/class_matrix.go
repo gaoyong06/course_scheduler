@@ -24,7 +24,7 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
 		sn := class.SN.Generate()
 
-		// fmt.Printf("initClassMatrix sn: %s, len(teacherIDs): %d, len(venueIDs): %d, len(timeSlots): %d\n", sn, len(teacherIDs), len(venueIDs), len(timeSlots))
+		// log.Printf("initClassMatrix sn: %s, len(teacherIDs): %d, len(venueIDs): %d, len(timeSlots): %d\n", sn, len(teacherIDs), len(venueIDs), len(timeSlots))
 
 		classMatrix[sn] = make(map[int]map[int]map[int]types.Val)
 		for j := 0; j < len(teachers); j++ {
@@ -82,7 +82,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 
 	for _, sn := range classSNs {
 
-		// fmt.Printf("assignClassMatrix sn: %s\n", sn)
+		// log.Printf("assignClassMatrix sn: %s\n", sn)
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return numAssignedClasses, err
@@ -121,8 +121,8 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 		}
 	}
 
-	fmt.Printf("Number of best time slots assigned: %d\n", numBestTimeSlots)
-	fmt.Printf("Number of random time slots assigned: %d\n", numRandomTimeSlots)
+	log.Printf("Number of best time slots assigned: %d\n", numBestTimeSlots)
+	log.Printf("Number of random time slots assigned: %d\n", numRandomTimeSlots)
 
 	return numAssignedClasses, nil
 }
@@ -202,14 +202,14 @@ func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, 
 func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) {
 
 	for classSN, teacherMap := range classMatrix {
-		fmt.Printf("%s:\n", classSN)
+		log.Printf("%s:\n", classSN)
 		for teacherID, venueMap := range teacherMap {
-			fmt.Printf("\tTeacher ID: %d\n", teacherID)
+			log.Printf("\tTeacher ID: %d\n", teacherID)
 			for venueID, timeSlotMap := range venueMap {
-				fmt.Printf("\t\tVenue ID: %d\n", venueID)
+				log.Printf("\t\tVenue ID: %d\n", venueID)
 				for timeSlot, val := range timeSlotMap {
 					if val.Used == 1 {
-						fmt.Printf("\t\t\tTime Slot: %d, Score: %d, Used: %t\n", timeSlot, val.Score, val.Used == 1)
+						log.Printf("\t\t\tTime Slot: %d, Score: %d, Used: %t\n", timeSlot, val.Score, val.Used == 1)
 					}
 
 				}

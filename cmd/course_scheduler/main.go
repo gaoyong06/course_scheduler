@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -19,7 +18,7 @@ func main() {
 	popSize := config.PopSize
 	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
-	mutationRate := config.MutationRate
+	// mutationRate := config.MutationRate
 	crossoverRate := config.CrossoverRate
 	bestRatio := config.BestRatio
 
@@ -34,6 +33,10 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// 当前种群内容重复的数量
+	dupCount := genetic_algorithm.CountDuplicates(currentPopulation)
+	log.Printf("Population size %d: duplicates count %d\n", popSize, dupCount)
 
 	// 定义最佳个体
 	bestIndividual := &genetic_algorithm.Individual{}
@@ -56,8 +59,16 @@ func main() {
 
 		// 选择
 		// 选择的个体是原个体数量的一半
-		selectedPopulation := genetic_algorithm.Selection(currentPopulation, selectionSize, bestRatio)
-		if len(selectedPopulation) > 0 {
+		selectedPopulation, err := genetic_algorithm.Selection(currentPopulation, selectionSize, bestRatio)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		selectedCount := len(selectedPopulation)
+
+		log.Printf("Current population size: %d, duplicates count: %d, selected count: %d\n", popSize, dupCount, selectedCount)
+
+		if selectedCount > 0 {
 
 			// 交叉
 			// 交叉前后的个体数量不变
@@ -70,14 +81,14 @@ func main() {
 			if crossoverRet.Err != nil {
 				log.Panic(crossoverRet.Err)
 			}
-			// log.Printf("Generation %d: crossoverRet len(selected):%d, len(offspring): %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			log.Printf("Generation: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// 变异
-			offspring := crossoverRet.Offspring
-			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
-			if err != nil {
-				log.Panic(err)
-			}
+			// offspring := crossoverRet.Offspring
+			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
+			// if err != nil {
+			// 	log.Panic(err)
+			// }
 
 			// 更新种群
 			// 更新前后的个体数量不变
@@ -108,7 +119,7 @@ func xy(population []*genetic_algorithm.Individual, key string) {
 	for _, item := range population {
 		a, b := item.HasTimeSlotConflicts()
 		if a {
-			fmt.Printf("【xy】!!!!!!! %s population中有冲突 ,%v\n", key, b)
+			log.Printf("【xy】!!!!!!! %s population中有冲突 ,%v\n", key, b)
 		}
 	}
 }

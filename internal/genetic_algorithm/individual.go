@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"sort"
 	"strings"
@@ -72,14 +73,14 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val, cla
 			}
 		}
 
-		// fmt.Printf("Chromosome for class %s has %d genes\n", sn, numGenesInChromosome)
+		// log.Printf("Chromosome for class %s has %d genes\n", sn, numGenesInChromosome)
 
 		// 种群的个体中每个课班选择作为一个染色体
 		individual.Chromosomes = append(individual.Chromosomes, &chromosome)
 	}
 
-	fmt.Printf("Total number of chromosomes: %d\n", len(individual.Chromosomes))
-	fmt.Printf("Total number of genes: %d\n", totalGenes)
+	log.Printf("Total number of chromosomes: %d\n", len(individual.Chromosomes))
+	log.Printf("Total number of genes: %d\n", totalGenes)
 	individual.SortChromosomes()
 
 	// 检查个体是否有时间段冲突
@@ -134,7 +135,7 @@ func (i *Individual) UniqueId() string {
 	jsonData, err := json.Marshal(sortedChromosomes)
 	if err != nil {
 
-		fmt.Printf("ERROR: json marshal failed. %s", err.Error())
+		log.Printf("ERROR: json marshal failed. %s", err.Error())
 		return ""
 
 	}
@@ -204,7 +205,7 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 	}
 
 	// 遍历个体的所有基因
-	// fmt.Printf("individual.Chromosomes: %d\n", len(i.Chromosomes))
+	// log.Printf("individual.Chromosomes: %d\n", len(i.Chromosomes))
 	for _, chromosome := range i.Chromosomes {
 		// 遍历每个基因的所有课程
 		for _, gene := range chromosome.Genes {
@@ -234,7 +235,7 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 	fitness += subjectDispersionScoreInt
 	fitness += teacherDispersionScoreInt
 
-	// fmt.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
+	// log.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
 
 	// fitness是个非负数
 	if fitness < 0 {
@@ -307,8 +308,8 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 			return usedTimeSlots[x]
 		})
 
-		// fmt.Printf("=== 有冲突, 开始修复 ============\n")
-		// fmt.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
+		// log.Printf("=== 有冲突, 开始修复 ============\n")
+		// log.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
 
 		// 遍历冲突 冲突时间段:冲突次数
 		for conflictSlot, conflictNum := range conflictsMap {
@@ -344,7 +345,7 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 	for conflictSlot, conflictNum := range conflictsMap {
 		if conflictNum > 0 {
 
-			fmt.Printf("unusedTimeSlots: %#v\n", unusedTimeSlots)
+			log.Printf("unusedTimeSlots: %#v\n", unusedTimeSlots)
 			return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", conflictSlot, conflictNum)
 		}
 	}
@@ -473,6 +474,8 @@ func (i *Individual) calcTeacherDispersionScore() float64 {
 	return dispersionScore
 }
 
+//
+
 // 打印课程表
 func (i *Individual) PrintSchedule() {
 
@@ -498,27 +501,27 @@ func (i *Individual) PrintSchedule() {
 			}
 
 			if schedule[day][period] != "" {
-				fmt.Printf("CONFLICT! timeSlot: %d,  day: %d, period: %d\n", gene.TimeSlot, day, period)
+				log.Printf("CONFLICT! timeSlot: %d,  day: %d, period: %d\n", gene.TimeSlot, day, period)
 			}
 			schedule[day][period] = fmt.Sprintf("%s(%d)", subject.Name, gene.TimeSlot)
 		}
 	}
 
 	fmt.Println("========= schedule =======")
-	fmt.Printf("%#v\n", schedule)
+	// log.Printf("%#v\n", schedule)
 
 	// Print the schedule
-	fmt.Printf("课程表: 共%d节课\n", count)
+	log.Printf("课程表: 共%d节课\n", count)
 	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 	fmt.Println("---+-------------------------------------------")
 	for c := 0; c < constants.NUM_CLASSES; c++ {
-		fmt.Printf("%-2d |", c+1)
+		log.Printf("%-2d |", c+1)
 		for d := 0; d < constants.NUM_DAYS; d++ {
 			class, ok := schedule[d][c]
 			if !ok {
 				class = ""
 			}
-			fmt.Printf(" %-16s |", class)
+			log.Printf(" %-16s |", class)
 		}
 		fmt.Println()
 		fmt.Println("---+-------------------------------------------")
