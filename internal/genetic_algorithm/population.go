@@ -113,21 +113,26 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 // 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
 // population 种群
 // bestIndividual 当前最佳个体
-func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, error) {
+// 返回值: 最佳个体,是否发生替换,错误信息
+func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, bool, error) {
 
+	replaced := false
 	for _, individual := range population {
 
 		// log.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
-
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
 		if individual.Fitness > (*bestIndividual).Fitness {
-			newBestIndividual := *individual
-			bestIndividual = &newBestIndividual
+
+			log.Printf("UpdateBest individual.Fitness: %d, bestIndividual.Fitness: %d\n", individual.Fitness, bestIndividual.Fitness)
+			newBestIndividual := individual.Copy()
+			bestIndividual = newBestIndividual
+			replaced = true
 		}
 	}
+
 	// log.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
-	return bestIndividual, nil
+	return bestIndividual, replaced, nil
 }
 
 // countDuplicates 种群中相同个体的数量

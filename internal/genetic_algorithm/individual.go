@@ -521,7 +521,7 @@ func (i *Individual) PrintSchedule() {
 			if !ok {
 				class = ""
 			}
-			log.Printf(" %-16s |", class)
+			fmt.Printf(" %-16s |", class)
 		}
 		fmt.Println()
 		fmt.Println("---+-------------------------------------------")

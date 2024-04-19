@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 )
 
 func main() {
+
 	startTime := time.Now()
 
 	// 参数定义
@@ -41,6 +43,8 @@ func main() {
 	// 定义最佳个体
 	bestIndividual := &genetic_algorithm.Individual{}
 	uniqueId := ""
+	bestGen := -1
+	replaced := false
 
 	for gen := 0; gen < maxGen; gen++ {
 
@@ -48,14 +52,19 @@ func main() {
 		uniqueId = bestIndividual.UniqueId()
 
 		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-		bestIndividual, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
+		bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
 		if err != nil {
 			log.Panic(err)
 		}
 
+		// 如果 bestIndividual 被替换，则记录当前 gen 值
+		if replaced {
+			bestGen = gen
+		}
+
 		// 打印当前代中最好个体的适应度值
 		// log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
-		log.Printf("Generation %d: Best uniqueId= %s, Fitness = %d\n", gen+1, uniqueId, bestIndividual.Fitness)
+		log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", gen+1, uniqueId, bestGen, bestIndividual.Fitness)
 
 		// 选择
 		// 选择的个体是原个体数量的一半
@@ -81,7 +90,7 @@ func main() {
 			if crossoverRet.Err != nil {
 				log.Panic(crossoverRet.Err)
 			}
-			log.Printf("Generation: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen+1, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// 变异
 			// offspring := crossoverRet.Offspring
@@ -97,13 +106,23 @@ func main() {
 			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
 			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
 		}
+
+		fmt.Printf("\n\n")
 	}
 
 	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-	bestIndividual, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
+	bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
 	if err != nil {
 		log.Panic(err)
 	}
+	// 如果 bestIndividual 被替换，则记录当前 gen 值
+	if replaced {
+		bestGen = maxGen
+	}
+
+	// 打印当前代中最好个体的适应度值
+	// log.Printf("Generation %d: Best Fitness = %d\n", gen+1, bestIndividual.Fitness)
+	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", maxGen, uniqueId, bestGen, bestIndividual.Fitness)
 
 	// 打印最好的个体
 	log.Printf("最佳个体适应度: %d, uniqueId: %s\n", bestIndividual.Fitness, uniqueId)
