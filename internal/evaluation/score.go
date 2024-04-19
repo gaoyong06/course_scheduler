@@ -114,6 +114,7 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 		if ret {
 			name := fmt.Sprintf("subject_same_day_%d", subject.SubjectID)
 			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+			return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 		}
 	} else {
 		ret, err := isSubjectConsecutive(subject.SubjectID, classMatrix)
@@ -123,6 +124,7 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 		if !ret {
 			name := fmt.Sprintf("subject_not_consecutive_%d", subject.SubjectID)
 			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+			return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 		}
 	}
 
