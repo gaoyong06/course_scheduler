@@ -1,3 +1,4 @@
+// gene.go
 package genetic_algorithm
 
 type Gene struct {

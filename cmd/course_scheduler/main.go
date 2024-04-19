@@ -123,7 +123,7 @@ func main() {
 
 	// 打印当前代中最好个体的适应度值
 	// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
-	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", maxGen, uniqueId, bestGen, bestIndividual.Fitness)
+	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", maxGen-1, uniqueId, bestGen, bestIndividual.Fitness)
 
 	// 打印最好的个体
 	log.Printf("最佳个体适应度: %d, uniqueId: %s\n", bestIndividual.Fitness, uniqueId)
