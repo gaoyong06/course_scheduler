@@ -507,7 +507,7 @@ func (i *Individual) PrintSchedule() {
 		}
 	}
 
-	fmt.Println("========= schedule =======")
+	log.Println("========= schedule =======")
 	// log.Printf("%#v\n", schedule)
 
 	// Print the schedule
@@ -515,7 +515,7 @@ func (i *Individual) PrintSchedule() {
 	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 	fmt.Println("---+-------------------------------------------")
 	for c := 0; c < constants.NUM_CLASSES; c++ {
-		log.Printf("%-2d |", c+1)
+		fmt.Printf("%-2d |", c+1)
 		for d := 0; d < constants.NUM_DAYS; d++ {
 			class, ok := schedule[d][c]
 			if !ok {
