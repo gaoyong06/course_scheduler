@@ -220,7 +220,8 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 	}
 
 	// 计算科目分散度得分
-	subjectDispersionScore, err := i.calcSubjectDispersionScore()
+	// TODO: 改config
+	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, 2)
 	if err != nil {
 		return fitness, nil
 	}
@@ -405,7 +406,7 @@ func calcStandardDeviation(timeSlotsMap map[string][]int, countMap map[string]in
 }
 
 // 计算一个个体（全校所有年级所有班级的课程表）的科目分散度
-func (i Individual) calcSubjectDispersionScore() (float64, error) {
+func (i Individual) calcSubjectDispersionScore(punishSamePeriod bool, samePeriodThreshold int) (float64, error) {
 	// 调用 calcSubjectStandardDeviation 方法计算每个班级的科目分散度
 	classSubjectStdDev, err := i.calcSubjectStandardDeviation()
 	if err != nil {
@@ -422,7 +423,32 @@ func (i Individual) calcSubjectDispersionScore() (float64, error) {
 		totalStdDev /= float64(numClasses)
 	}
 
-	return totalStdDev, nil
+	// 统计每节课出现的课程数量
+	periodCount := make(map[int]int)
+	for _, chromosome := range i.Chromosomes {
+		for _, gene := range chromosome.Genes {
+			period := gene.TimeSlot % constants.NUM_CLASSES
+			periodCount[period]++
+		}
+	}
+
+	// 计算惩罚项
+	punishment := 0.0
+	if punishSamePeriod {
+		// threshold := 2 // 阈值，超过此阈值则惩罚
+		for _, count := range periodCount {
+			if count > samePeriodThreshold {
+				punishment += math.Pow(float64(count-samePeriodThreshold), 2)
+			}
+		}
+
+		// 将惩罚项缩放到一个合适的数量级
+		punishment /= 100.0
+	}
+
+	// fmt.Printf("totalStdDev: %0.2f, punishment: %0.2f\n", totalStdDev, punishment)
+	// 返回总分散度得分，包括平均分散度和惩罚项
+	return totalStdDev - punishment, nil
 }
 
 // 计算教师分散度得分

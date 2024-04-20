@@ -62,13 +62,14 @@ func ClassTeacherIDs(SN *types.SN) []int {
 			teacherIDs = append(teacherIDs, teacher.TeacherID)
 		}
 	}
+
+	// fmt.Printf("ClassTeacherIDs subjectID: %d, teacherIDs: %v\n", subjectID, teacherIDs)
+
 	return teacherIDs
 }
 
 // 老师不可排课的时间范围
-func teacherUnavailableSlots(
-
-) []int {
+func teacherUnavailableSlots() []int {
 	var timeSlots []int
 	return timeSlots
 }

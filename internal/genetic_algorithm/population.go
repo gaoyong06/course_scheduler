@@ -4,6 +4,7 @@ package genetic_algorithm
 import (
 	"course_scheduler/internal/class_adapt"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
 	"math/rand"
@@ -54,6 +55,9 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 				return nil, err
 			}
 			log.Println("Match scores calculated")
+
+			utils.PrintClassMatrix(classMatrix)
+			// panic("FUCK!! ZZ")
 
 			// 课班适应性矩阵分配
 			numAssignedClasses, err = class_adapt.AllocateClassMatrix(classeSNs, classHours, classMatrix)

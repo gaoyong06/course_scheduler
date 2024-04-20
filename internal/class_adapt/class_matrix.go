@@ -1,3 +1,4 @@
+// class_matrix.go
 package class_adapt
 
 import (
@@ -15,7 +16,6 @@ import (
 func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.Val {
 
 	classMatrix := make(map[string]map[int]map[int]map[int]types.Val)
-	teachers := models.GetTeachers()
 
 	for i := 0; i < len(classes); i++ {
 		class := classes[i]
@@ -27,9 +27,8 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 		// log.Printf("initClassMatrix sn: %s, len(teacherIDs): %d, len(venueIDs): %d, len(timeSlots): %d\n", sn, len(teacherIDs), len(venueIDs), len(timeSlots))
 
 		classMatrix[sn] = make(map[int]map[int]map[int]types.Val)
-		for j := 0; j < len(teachers); j++ {
-			teacher := teachers[j]
-			teacherID := teacher.TeacherID
+		for j := 0; j < len(teacherIDs); j++ {
+			teacherID := teacherIDs[j]
 			classMatrix[sn][teacherID] = make(map[int]map[int]types.Val)
 			for k := 0; k < len(venueIDs); k++ {
 				venueID := venueIDs[k]
@@ -41,6 +40,7 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 			}
 		}
 	}
+
 	return classMatrix
 }
 
@@ -196,24 +196,4 @@ func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, 
 	temp.Used = 1
 	classMatrix[sn][teacherID][venueID][timeSlot] = temp
 	timeTable.Used[timeSlot] = true
-}
-
-// 打印classMatrix
-func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) {
-
-	for classSN, teacherMap := range classMatrix {
-		log.Printf("%s:\n", classSN)
-		for teacherID, venueMap := range teacherMap {
-			log.Printf("\tTeacher ID: %d\n", teacherID)
-			for venueID, timeSlotMap := range venueMap {
-				log.Printf("\t\tVenue ID: %d\n", venueID)
-				for timeSlot, val := range timeSlotMap {
-					if val.Used == 1 {
-						log.Printf("\t\t\tTime Slot: %d, Score: %d, Used: %t\n", timeSlot, val.Score, val.Used == 1)
-					}
-
-				}
-			}
-		}
-	}
 }

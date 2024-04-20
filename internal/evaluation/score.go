@@ -107,25 +107,51 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 
 	// 科目课时小于天数
 	if classHours[subject.SubjectID] <= constants.NUM_DAYS {
+
+		// 科目课时小于天数,禁止同一天排多次相同科目的课
 		ret, err := isSubjectSameDay(subject.SubjectID, classMatrix)
 		if err != nil {
 			return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
 		}
 		if ret {
 			name := fmt.Sprintf("subject_same_day_%d", subject.SubjectID)
-			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+			penalty = math.MaxInt32
+			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: penalty})
 			return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 		}
 	} else {
+
+		// 科目课时大于天数, 禁止同一天排多次课是非连续的(要排成连堂课)
 		ret, err := isSubjectConsecutive(subject.SubjectID, classMatrix)
 		if err != nil {
 			return &CalcScoreResult{FinalScore: 0, Details: scoreDetails}, err
 		}
 		if !ret {
 			name := fmt.Sprintf("subject_not_consecutive_%d", subject.SubjectID)
-			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: math.MaxInt32})
+			penalty = math.MaxInt32
+			scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: penalty})
 			return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 		}
+	}
+
+	// Check if the period has exceeded the threshold.
+	periodThreshold := 2 // Set your threshold here.
+	periodCount := countPeriodClasses(classMatrix, sn, teacherID, venueID)
+
+	period := timeSlot % constants.NUM_CLASSES
+	// count是当前现有的数量,所以要使用count >= periodThreshold
+	// 不能使用count > periodThreshold
+	if count, ok := periodCount[period]; ok && count >= periodThreshold {
+
+		SN, _ := types.ParseSN(sn)
+		if SN.SubjectID == 1 {
+			fmt.Printf("#### sn: %s, count: %d, timeSlot: %d, period: %d\n", sn, count, timeSlot, period)
+		}
+
+		name := fmt.Sprintf("period_exceeded_threshold_%d", period)
+		penalty = math.MaxInt32
+		scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: penalty})
+		return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 	}
 
 	// 计算最终得分
@@ -671,4 +697,24 @@ func isSubjectConsecutive(subjectID int, classMatrix map[string]map[int]map[int]
 		}
 	}
 	return false, nil
+}
+
+// countPeriodClasses 计算每个时间段的科目数量
+func countPeriodClasses(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, teacherID, venueID int) map[int]int {
+
+	periodCount := make(map[int]int)
+
+	for timeSlot, val := range classMatrix[sn][teacherID][venueID] {
+
+		// 这是不能使用val.Used==1来做判断
+		// 因为val.Used的赋值是在AllocateClassMatrix阶段执行的
+		// 此时还没有执行到AllocateClassMatrix
+		// 所以,此时val.Used都是0
+		if val.Score > 0 {
+			period := timeSlot % constants.NUM_CLASSES
+			periodCount[period]++
+		}
+	}
+
+	return periodCount
 }
