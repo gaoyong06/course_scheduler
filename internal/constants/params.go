@@ -8,3 +8,7 @@ const (
 	NUM_CLASSES_PER_GRADE = 1                      // 每年级班级数
 	NUM_TIMESLOTS         = NUM_DAYS * NUM_CLASSES // 每周课程表格子数
 )
+
+const (
+	PERIOD_THRESHOLD = 2 // 相同节次排课数量限制
+)
