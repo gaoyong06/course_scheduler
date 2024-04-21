@@ -35,9 +35,9 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 	scoreDetails := []ScoreDetail{}
 
 	// 检查缓存
-	if cachedScore, ok := getCachedScore(sn, teacherID, venueID, timeSlot); ok {
-		return cachedScore, nil
-	}
+	// if cachedScore, ok := getCachedScore(sn, teacherID, venueID, timeSlot); ok {
+	// 	return cachedScore, nil
+	// }
 
 	score := 0   // 得分
 	penalty := 0 // 惩罚分
@@ -109,7 +109,7 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 	if classHours[subject.SubjectID] <= constants.NUM_DAYS {
 
 		// 科目课时小于天数,禁止同一天排多次相同科目的课
-		penalty, scoreDetails, err = checkSubjectSameDay(subject.SubjectID, classMatrix, penalty, scoreDetails)
+		penalty, scoreDetails = checkSubjectSameDay(classMatrix, sn, timeSlot, penalty, scoreDetails)
 	} else {
 
 		// 科目课时大于天数, 禁止同一天排多次课是非连续的(要排成连堂课)
@@ -121,6 +121,7 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 	}
 
 	if penalty == math.MaxInt32 {
+
 		return &CalcScoreResult{FinalScore: score - penalty, Details: scoreDetails}, nil
 	}
 
@@ -131,11 +132,6 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 	// count是当前现有的数量,所以要使用count >= periodThreshold
 	// 不能使用count > periodThreshold
 	if count, ok := periodCount[period]; ok && count >= constants.PERIOD_THRESHOLD {
-
-		SN, _ := types.ParseSN(sn)
-		if SN.SubjectID == 1 {
-			fmt.Printf("#### sn: %s, count: %d, timeSlot: %d, period: %d\n", sn, count, timeSlot, period)
-		}
 
 		name := fmt.Sprintf("period_exceeded_threshold_%d", period)
 		penalty = math.MaxInt32
@@ -150,7 +146,7 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHo
 	calcScoreResult := CalcScoreResult{FinalScore: finalScore, Details: scoreDetails}
 
 	// 保存缓存
-	saveCachedScore(sn, teacherID, venueID, timeSlot, calcScoreResult)
+	// saveCachedScore(sn, teacherID, venueID, timeSlot, calcScoreResult)
 	return &calcScoreResult, nil
 }
 
@@ -635,36 +631,31 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string
 	return false, nil
 }
 
-// 检查同一科目是否在同一天安排了多次
-func isSubjectSameDay(subjectID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+// 检查同一科目是否在同一天已经排课
+func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, timeSlot int) bool {
 
-	// 科目每天排课次数 科目:次数
-	subjectDays := make(map[int]int)
-	for sn, classMap := range classMatrix {
-		SN, err := types.ParseSN(sn)
-		if err != nil {
-			return false, err
-		}
-		if SN.SubjectID != subjectID {
-			continue
-		}
-		for _, teacherMap := range classMap {
-			for _, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
-					if val.Used == 1 {
-						day := timeSlot / constants.NUM_CLASSES
-						subjectDays[day]++
+	count := 0
+	day := timeSlot / constants.NUM_CLASSES
+
+	for _, teacherMap := range classMatrix[sn] {
+		for _, venueMap := range teacherMap {
+			for timeSlot1, val := range venueMap {
+
+				if val.Score > 1 {
+					day1 := timeSlot1 / constants.NUM_CLASSES
+					if day == day1 && timeSlot != timeSlot1 {
+						count++
 					}
 				}
 			}
 		}
 	}
-	for _, count := range subjectDays {
-		if count > 1 {
-			return true, nil
-		}
+
+	if count > 0 {
+		return true
 	}
-	return false, nil
+
+	return false
 }
 
 // 检查科目是否连续排课
@@ -724,10 +715,6 @@ func checkPeriodThreshold(classMatrix map[string]map[int]map[int]map[int]types.V
 	period := timeSlot % constants.NUM_CLASSES
 
 	if count, ok := periodCount[period]; ok && count >= constants.PERIOD_THRESHOLD {
-		SN, _ := types.ParseSN(sn)
-		if SN.SubjectID == 1 {
-			fmt.Printf("#### sn: %s, count: %d, timeSlot: %d, period: %d\n", sn, count, timeSlot, period)
-		}
 
 		name := fmt.Sprintf("period_exceeded_threshold_%d", period)
 		penalty = math.MaxInt32
@@ -737,19 +724,18 @@ func checkPeriodThreshold(classMatrix map[string]map[int]map[int]map[int]types.V
 	return penalty, scoreDetails
 }
 
-// 检查同一天是否安排相同的科目多次
-func checkSubjectSameDay(subjectID int, classMatrix map[string]map[int]map[int]map[int]types.Val, penalty int, scoreDetails []ScoreDetail) (int, []ScoreDetail, error) {
+// 检查同一天是否安排科目的排课
+func checkSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, timeSlot, penalty int, scoreDetails []ScoreDetail) (int, []ScoreDetail) {
 
-	ret, err := isSubjectSameDay(subjectID, classMatrix)
-	if err != nil {
-		return 0, nil, err
-	}
+	ret := isSubjectSameDay(classMatrix, sn, timeSlot)
 	if ret {
-		name := fmt.Sprintf("subject_same_day_%d", subjectID)
-		penalty := math.MaxInt32
+
+		// fmt.Printf("### checkSubjectSameDay subjectID: %d\n", 1)
+		name := fmt.Sprintf("subject_same_day_%d", 1)
+		penalty = math.MaxInt32
 		scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: penalty})
 	}
-	return penalty, scoreDetails, nil
+	return penalty, scoreDetails
 }
 
 // 检查同一科目一天安排多次是否是连堂
@@ -759,8 +745,10 @@ func checkSubjectConsecutive(subjectID int, classMatrix map[string]map[int]map[i
 		return 0, nil, err
 	}
 	if !ret {
+
+		fmt.Printf("### checkSubjectConsecutive subjectID: %d\n", subjectID)
 		name := fmt.Sprintf("subject_not_consecutive_%d", subjectID)
-		penalty := math.MaxInt32
+		penalty = math.MaxInt32
 		scoreDetails = append(scoreDetails, ScoreDetail{Name: name, Score: 0, Penalty: penalty})
 	}
 	return penalty, scoreDetails, nil
