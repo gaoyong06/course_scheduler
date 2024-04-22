@@ -14,6 +14,7 @@ import (
 
 // 初始化种群
 func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populationSize int) ([]*Individual, error) {
+
 	var classeSNs []string
 	for _, class := range classes {
 		sn := class.SN.Generate()
@@ -50,7 +51,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			log.Println("Class matrix initialized")
 
 			// 计算课班适应性矩阵各个元素固定约束条件下的得分
-			err = class_adapt.CalcFixedScores(classMatrix, classHours)
+			err = class_adapt.CalcFixedScores(classMatrix)
 			if err != nil {
 				return nil, err
 			}
