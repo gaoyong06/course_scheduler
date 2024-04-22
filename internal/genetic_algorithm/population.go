@@ -32,8 +32,11 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		var numAssignedClasses int
 		var classMatrix map[string]map[int]map[int]map[int]types.Val
 
+		// 设置最大重试次数
+		const maxRetries = 1000
+
 		// 如果 assignClassMatrix 返回了错误，就会重新执行打乱课程顺序、初始化课程矩阵、计算匹配结果值和分配课程矩阵这些步骤，直到没有返回错误为止
-		for {
+		for retryCount := 0; ; retryCount++ {
 			// 打乱课班排课顺序
 			for i := len(classes) - 1; i > 0; i-- {
 				j := rand.Intn(i + 1)
@@ -58,7 +61,6 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			log.Println("Fixed scores calculated")
 
 			utils.PrintClassMatrix(classMatrix)
-			// panic("FUCK!! ZZ")
 
 			// 课班适应性矩阵分配
 			numAssignedClasses, err = class_adapt.AllocateClassMatrix(classeSNs, classHours, classMatrix)
@@ -69,6 +71,11 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			}
 
 			log.Printf("assignClassMatrix err: %s, retrying...\n", err.Error())
+
+			// 检查重试次数是否达到最大值
+			if retryCount >= maxRetries {
+				return nil, fmt.Errorf("max retries (%d) reached while trying to allocate class matrix", maxRetries)
+			}
 		}
 
 		log.Println("Class matrix assigned")
