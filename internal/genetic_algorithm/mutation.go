@@ -74,7 +74,7 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 		return false, err
 	}
 
-	element := constraint.Element{
+	element := &types.Element{
 		ClassSN:   gene.ClassSN,
 		SubjectID: SN.SubjectID,
 		GradeID:   SN.GradeID,

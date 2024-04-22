@@ -197,7 +197,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				return false, err
 			}
 
-			element := constraint.Element{
+			element := &types.Element{
 				ClassSN:   gene.ClassSN,
 				SubjectID: SN.SubjectID,
 				GradeID:   SN.GradeID,
@@ -206,7 +206,6 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				VenueID:   gene.VenueID,
 				TimeSlot:  gene.TimeSlot,
 			}
-
 			// score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 			score, err := constraint.CalcScore(classMatrix1, element)
 
@@ -232,7 +231,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				return false, err
 			}
 
-			element := constraint.Element{
+			element := &types.Element{
 				ClassSN:   gene.ClassSN,
 				SubjectID: SN.SubjectID,
 				GradeID:   SN.GradeID,
@@ -241,6 +240,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				VenueID:   gene.VenueID,
 				TimeSlot:  gene.TimeSlot,
 			}
+
 			score, err := constraint.CalcScore(classMatrix2, element)
 
 			// score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)

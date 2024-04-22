@@ -169,7 +169,9 @@ func (i *Individual) toClassMatrix() map[string]map[int]map[int]map[int]types.Va
 			}
 
 			if _, ok := classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; !ok {
-				classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{Score: 0, Used: 0}
+
+				scoreInfo := &types.ScoreInfo{Score: 0}
+				classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 0}
 			}
 			if val, ok := classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; ok {
 				// 键存在，更新值
@@ -177,7 +179,8 @@ func (i *Individual) toClassMatrix() map[string]map[int]map[int]map[int]types.Va
 				classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = val
 			} else {
 				// 键不存在，创建新的值并赋值为 1
-				classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{Score: 0, Used: 1}
+				scoreInfo := &types.ScoreInfo{Score: 0}
+				classMatrix[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 1}
 			}
 		}
 	}
@@ -216,7 +219,7 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 				return 0, err
 			}
 
-			element := constraint.Element{
+			element := &types.Element{
 				ClassSN:   gene.ClassSN,
 				SubjectID: SN.SubjectID,
 				GradeID:   SN.GradeID,

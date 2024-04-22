@@ -10,7 +10,7 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var SSDRule1 = &Rule{
+var SSDRule1 = &types.Rule{
 	Name:     "SSDRule1",
 	Type:     "dynamic",
 	Fn:       ssdRule1Fn,
@@ -21,7 +21,7 @@ var SSDRule1 = &Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
 	// fmt.Printf("---> ssdRule1Fn %d", element.TimeSlot)
 

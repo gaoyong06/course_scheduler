@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-var SORule1 = &Rule{
+var SORule1 = &types.Rule{
 	Name:     "SORule1",
 	Type:     "dynamic",
 	Fn:       soRule1Fn,
@@ -18,7 +18,7 @@ var SORule1 = &Rule{
 }
 
 // 38. 体育 数学
-func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)

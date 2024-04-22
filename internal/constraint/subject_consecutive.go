@@ -11,7 +11,7 @@ import (
 	"sort"
 )
 
-var SCRule1 = &Rule{
+var SCRule1 = &types.Rule{
 	Name:     "SCRule1",
 	Type:     "dynamic",
 	Fn:       scRule1Fn,
@@ -22,7 +22,7 @@ var SCRule1 = &Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)

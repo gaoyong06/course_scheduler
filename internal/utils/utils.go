@@ -64,7 +64,7 @@ func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) 
 							TimeSlot: timeSlot,
 							Day:      day,
 							Period:   period,
-							Score:    val.Score,
+							Score:    val.ScoreInfo.Score,
 						}
 						items = append(items, item)
 					}

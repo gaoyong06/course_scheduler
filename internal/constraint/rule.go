@@ -6,43 +6,8 @@ import (
 	"sort"
 )
 
-// 课班适应性矩阵中的一个元素
-type Element struct {
-	ClassSN   string // 科目_年级_班级
-	SubjectID int    // 科目
-	GradeID   int    // 年级
-	ClassID   int    // 班级
-	TeacherID int    // 教室
-	VenueID   int    // 教室
-	TimeSlot  int    // 时间段
-}
-
-// 约束处理函数
-// 参数
-//
-//	ClassMatrix 课班适应性矩阵
-//	element 课班适应性矩阵元素
-//
-// 返回值
-//
-//	bool true: 满足前置条件, false: 不满足前置条件
-//	bool true: 满足约束,增加score, false: 不满足约束,增加penalty
-//	error 错误信息
-type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error)
-
-// Rule 表示评分规则
-type Rule struct {
-	Name     string       // 规则名称
-	Type     string       // 固定约束条件: fixed, 动态约束条件: dynamic
-	Fn       ConstraintFn // 约束条件处理方法 约束条件前置检查方法，返回值 true: 满足前置条件, false: 不满足前置条件, 返回值 true: 满足约束,增加score, false: 不满足约束,增加penalty
-	Score    int          // 得分
-	Penalty  int          // 惩罚分
-	Weight   int          // 权重
-	Priority int          // 优先级
-}
-
 // CalcFixed 计算固定约束条件得分
-func CalcFixed(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (int, error) {
+func CalcFixed(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (int, error) {
 
 	rules := getFixedRules()
 	sortRulesByPriority(rules)
@@ -52,22 +17,26 @@ func CalcFixed(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 		if rule.Type == "fixed" {
 			if preCheckPassed, result, err := rule.Fn(classMatrix, element); preCheckPassed && err == nil {
 
+				tempVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
+
 				if result {
 					score += rule.Score * rule.Weight
+					tempVal.ScoreInfo.Passed = append(tempVal.ScoreInfo.Passed, rule)
 				} else {
 					penalty += rule.Penalty * rule.Weight
+					tempVal.ScoreInfo.Failed = append(tempVal.ScoreInfo.Failed, rule)
 				}
+				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
 			}
 		}
 	}
+
 	finalScore := score - penalty
 	return finalScore, nil
 }
 
 // CalcDynamic 计算动态约束条件得分
-func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (int, error) {
-
-	// fmt.Println("### CalcDynamic")
+func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (int, error) {
 
 	rules := getDynamicRules()
 	sortRulesByPriority(rules)
@@ -76,11 +45,16 @@ func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 	for _, rule := range rules {
 		if rule.Type == "dynamic" {
 			if preCheckPassed, result, err := rule.Fn(classMatrix, element); preCheckPassed && err == nil {
+
+				tempVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
 				if result {
 					score += rule.Score * rule.Weight
+					tempVal.ScoreInfo.Passed = append(tempVal.ScoreInfo.Passed, rule)
 				} else {
 					penalty += rule.Penalty * rule.Weight
+					tempVal.ScoreInfo.Failed = append(tempVal.ScoreInfo.Failed, rule)
 				}
+				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
 			}
 		}
 	}
@@ -89,20 +63,26 @@ func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 }
 
 // 计算固定约束得分和动态约束得分
-func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (int, error) {
+func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (int, error) {
 
-	fixedScore, err1 := CalcFixed(classMatrix, element)
+	score1, err1 := CalcFixed(classMatrix, element)
 	if err1 != nil {
-		return 0, nil
+		return 0, err1
 	}
 
-	dynamicScore, err2 := CalcDynamic(classMatrix, element)
+	score2, err2 := CalcDynamic(classMatrix, element)
 	if err2 != nil {
-		return 0, nil
+		return 0, err1
 	}
 
-	finalScore := fixedScore + dynamicScore
-	return finalScore, nil
+	score := score1 + score2
+
+	// 更新val
+	tempVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
+	tempVal.ScoreInfo.Score = score
+	classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
+
+	return score, nil
 }
 
 // // 实时更新动态约束条件得分
@@ -112,18 +92,20 @@ func CalcScore(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 // 	// 实际更新逻辑
 // }
 
+// =================================================
+
 // SortRulesByPriority sorts rules by their priority
-func sortRulesByPriority(rules []*Rule) {
+func sortRulesByPriority(rules []*types.Rule) {
 	sort.Slice(rules, func(i, j int) bool {
 		return rules[i].Priority > rules[j].Priority // Higher priority first
 	})
 }
 
 // 所有固定约束条件
-func getFixedRules() []*Rule {
+func getFixedRules() []*types.Rule {
 
 	// var rules []*Rule
-	rules := []*Rule{
+	rules := []*types.Rule{
 		CRule1,
 		CRule2,
 		CRule3,
@@ -149,11 +131,11 @@ func getFixedRules() []*Rule {
 }
 
 // 所有动态约束条件
-func getDynamicRules() []*Rule {
+func getDynamicRules() []*types.Rule {
 
 	// var rules []*Rule
 
-	rules := []*Rule{
+	rules := []*types.Rule{
 		PCRule1,
 
 		SCRule1,

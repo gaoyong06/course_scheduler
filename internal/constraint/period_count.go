@@ -7,7 +7,7 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var PCRule1 = &Rule{
+var PCRule1 = &types.Rule{
 	Name:     "PCRule1",
 	Type:     "dynamic",
 	Fn:       pcRule1Fn,
@@ -18,10 +18,10 @@ var PCRule1 = &Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, e Element) (bool, bool, error) {
+func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
-	periodCount := countPeriodClasses(classMatrix, e.ClassSN, e.TeacherID, e.VenueID)
-	period := e.TimeSlot % constants.NUM_CLASSES
+	periodCount := countPeriodClasses(classMatrix, element.ClassSN, element.TeacherID, element.VenueID)
+	period := element.TimeSlot % constants.NUM_CLASSES
 
 	preCheckPassed := false
 	count := 0

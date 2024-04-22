@@ -7,7 +7,7 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var SMERule1 = &Rule{
+var SMERule1 = &types.Rule{
 	Name:     "SMERule1",
 	Type:     "dynamic",
 	Fn:       smeRule1Fn,
@@ -18,7 +18,7 @@ var SMERule1 = &Rule{
 }
 
 // 37. 活动 体育
-func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)

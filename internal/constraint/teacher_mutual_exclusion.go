@@ -7,7 +7,7 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var TMERule1 = &Rule{
+var TMERule1 = &types.Rule{
 	Name:     "TMERule1",
 	Type:     "dynamic",
 	Fn:       tmeRule1Fn,
@@ -17,7 +17,7 @@ var TMERule1 = &Rule{
 	Priority: 1,
 }
 
-var TMERule2 = &Rule{
+var TMERule2 = &types.Rule{
 	Name:     "TMERule2",
 	Type:     "dynamic",
 	Fn:       tmeRule2Fn,
@@ -28,7 +28,7 @@ var TMERule2 = &Rule{
 }
 
 // 31. 王老师 马老师
-func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 1 || teacherID == 5
 
@@ -41,7 +41,7 @@ func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 32. 李老师 黄老师
-func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 2 || teacherID == 6
 

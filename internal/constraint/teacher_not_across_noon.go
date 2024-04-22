@@ -6,7 +6,7 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var TNANRule1 = &Rule{
+var TNANRule1 = &types.Rule{
 	Name:     "TNANRule1",
 	Type:     "dynamic",
 	Fn:       tnanRule1Fn,
@@ -16,7 +16,7 @@ var TNANRule1 = &Rule{
 	Priority: 1,
 }
 
-var TNANRule2 = &Rule{
+var TNANRule2 = &types.Rule{
 	Name:     "TNANRule2",
 	Type:     "dynamic",
 	Fn:       tnanRule2Fn,
@@ -27,7 +27,7 @@ var TNANRule2 = &Rule{
 }
 
 // 33. 王老师
-func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 1
@@ -41,7 +41,7 @@ func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 }
 
 // 34. 李老师
-func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 2
 

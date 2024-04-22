@@ -34,7 +34,8 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 				classMatrix[sn][teacherID][venueID] = make(map[int]types.Val)
 				for l := 0; l < len(timeSlots); l++ {
 					timeSlot := timeSlots[l]
-					classMatrix[sn][teacherID][venueID][timeSlot] = types.Val{Score: 0, Used: 0}
+					scoreInfo := &types.ScoreInfo{Score: 0}
+					classMatrix[sn][teacherID][venueID][timeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 0}
 				}
 			}
 		}
@@ -79,6 +80,17 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 			// 更新时间表和课班适应性矩阵
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
 
+				// 测试
+				if maxScore < 0 {
+
+					val := classMatrix[sn][teacherID][venueID][timeSlot]
+					fmt.Printf("timeSlot: %d, sn: %s, failed rules: ", timeSlot, sn)
+					for _, rule := range val.ScoreInfo.Failed {
+						fmt.Printf("%s, ", rule.Name)
+					}
+					fmt.Println()
+				}
+
 				updateTimeTableAndClassMatrix(sn, teacherID, venueID, timeSlot, classMatrix, timeTable)
 				numAssignedClasses++
 
@@ -96,7 +108,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 // 查找当前课程的最佳可用时间段
 func findBestTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, int, error) {
 
-	maxScore := math.MinInt64
+	maxScore := math.MinInt32
 	teacherID, venueID, timeSlot := -1, -1, -1
 
 	for tid, venueMap := range classMatrix[sn] {
@@ -105,9 +117,9 @@ func findBestTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]
 				if timeTable.Used[t] {
 					continue
 				}
-				score := val.Score
-				if score > maxScore {
-					maxScore = score
+				valScore := val.ScoreInfo.Score
+				if valScore > maxScore {
+					maxScore = valScore
 					teacherID = tid
 					venueID = vid
 					timeSlot = t
@@ -120,7 +132,7 @@ func findBestTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]
 }
 
 // CalcScores 计算固定得分和动态得分
-func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFunc func(map[string]map[int]map[int]map[int]types.Val, constraint.Element) (int, error), isAddScore bool) error {
+func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFunc func(map[string]map[int]map[int]map[int]types.Val, *types.Element) (int, error), isAddScore bool) error {
 
 	for sn, teacherMap := range classMatrix {
 		SN, err := types.ParseSN(sn)
@@ -130,7 +142,7 @@ func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFu
 		for teacherID, venueMap := range teacherMap {
 			for venueID, timeSlotMap := range venueMap {
 				for timeSlot, val := range timeSlotMap {
-					element := constraint.Element{
+					element := &types.Element{
 						ClassSN:   sn,
 						SubjectID: SN.SubjectID,
 						GradeID:   SN.GradeID,
@@ -139,14 +151,15 @@ func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFu
 						VenueID:   venueID,
 						TimeSlot:  timeSlot,
 					}
+
 					score, err := calcFunc(classMatrix, element)
 					if err != nil {
 						return err
 					}
 					if isAddScore {
-						val.Score = val.Score + score
+						val.ScoreInfo.Score = val.ScoreInfo.Score + score
 					} else {
-						val.Score = score
+						val.ScoreInfo.Score = score
 					}
 					classMatrix[sn][teacherID][venueID][timeSlot] = val
 				}
@@ -169,9 +182,8 @@ func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, 
 	temp := classMatrix[sn][teacherID][venueID][timeSlot]
 	temp.Used = 1
 	classMatrix[sn][teacherID][venueID][timeSlot] = temp
+	timeTable.Used[timeSlot] = true
 
 	// 更新科班适应性矩阵元素动态元素条件得分
 	updateDynamicScores(classMatrix)
-
-	timeTable.Used[timeSlot] = true
 }
