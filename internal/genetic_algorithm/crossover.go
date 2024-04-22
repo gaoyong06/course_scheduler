@@ -2,7 +2,8 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/evaluation"
+	"course_scheduler/internal/constraint"
+	"course_scheduler/internal/types"
 	"fmt"
 	"math/rand"
 )
@@ -191,12 +192,32 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 	for _, chromosome := range offspring1.Chromosomes {
 		for _, gene := range chromosome.Genes {
 
-			score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			SN, err := types.ParseSN(gene.ClassSN)
 			if err != nil {
 				return false, err
 			}
 
-			if score.FinalScore < 0 {
+			element := constraint.Element{
+				ClassSN:   gene.ClassSN,
+				SubjectID: SN.SubjectID,
+				GradeID:   SN.GradeID,
+				ClassID:   SN.ClassID,
+				TeacherID: gene.TeacherID,
+				VenueID:   gene.VenueID,
+				TimeSlot:  gene.TimeSlot,
+			}
+
+			// score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			score, err := constraint.CalcScore(classMatrix1, element)
+
+			if err != nil {
+				return false, err
+			}
+
+			// if score.FinalScore < 0 {
+			// 	return false, err
+			// }
+			if score < 0 {
 				return false, err
 			}
 		}
@@ -206,14 +227,34 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 	for _, chromosome := range offspring2.Chromosomes {
 		for _, gene := range chromosome.Genes {
 
-			score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			SN, err := types.ParseSN(gene.ClassSN)
 			if err != nil {
 				return false, err
 			}
 
-			if score.FinalScore < 0 {
+			element := constraint.Element{
+				ClassSN:   gene.ClassSN,
+				SubjectID: SN.SubjectID,
+				GradeID:   SN.GradeID,
+				ClassID:   SN.ClassID,
+				TeacherID: gene.TeacherID,
+				VenueID:   gene.VenueID,
+				TimeSlot:  gene.TimeSlot,
+			}
+			score, err := constraint.CalcScore(classMatrix2, element)
+
+			// score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			if err != nil {
 				return false, err
 			}
+
+			if score < 0 {
+				return false, err
+			}
+
+			// if score.FinalScore < 0 {
+			// 	return false, err
+			// }
 		}
 	}
 	return true, nil

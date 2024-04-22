@@ -43,11 +43,11 @@ var TTLRule3 = &constraint.Rule{
 }
 
 // 23. 王老师 上午 最多1节
-func ttlRule1Fn(element constraint.Element) (bool, bool, error) {
+func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
-	count := countTeacherClassesInRange(1, 1, 4, element.ClassMatrix)
+	count := countTeacherClassesInRange(1, 1, 4, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 4
 	shouldPenalize := preCheckPassed && count > 1
@@ -55,11 +55,11 @@ func ttlRule1Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 24. 王老师 下午 最多2节
-func ttlRule2Fn(element constraint.Element) (bool, bool, error) {
+func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
-	count := countTeacherClassesInRange(1, 5, 8, element.ClassMatrix)
+	count := countTeacherClassesInRange(1, 5, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 5 && period <= 8
 	shouldPenalize := preCheckPassed && count > 2
@@ -67,11 +67,11 @@ func ttlRule2Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 25. 王老师 全天(不含晚自习) 最多3节
-func ttlRule3Fn(element constraint.Element) (bool, bool, error) {
+func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
-	count := countTeacherClassesInRange(1, 1, 8, element.ClassMatrix)
+	count := countTeacherClassesInRange(1, 1, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 8
 	shouldPenalize := preCheckPassed && count > 3

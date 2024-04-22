@@ -19,9 +19,9 @@ var PCRule1 = &constraint.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(e constraint.Element) (bool, bool, error) {
+func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, e constraint.Element) (bool, bool, error) {
 
-	periodCount := countPeriodClasses(e.ClassMatrix, e.ClassSN, e.TeacherID, e.VenueID)
+	periodCount := countPeriodClasses(classMatrix, e.ClassSN, e.TeacherID, e.VenueID)
 	period := e.TimeSlot % constants.NUM_CLASSES
 
 	preCheckPassed := false
@@ -49,7 +49,7 @@ func countPeriodClasses(classMatrix map[string]map[int]map[int]map[int]types.Val
 		// 因为val.Used的赋值是在AllocateClassMatrix阶段执行的
 		// 此时还没有执行到AllocateClassMatrix
 		// 所以,此时val.Used都是0
-		if val.Score > 0 {
+		if val.Used == 1 {
 			period := timeSlot % constants.NUM_CLASSES
 			periodCount[period]++
 		}

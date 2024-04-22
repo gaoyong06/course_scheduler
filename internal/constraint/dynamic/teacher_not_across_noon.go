@@ -28,27 +28,27 @@ var TNANRule2 = &constraint.Rule{
 }
 
 // 33. 王老师
-func tnanRule1Fn(element constraint.Element) (bool, bool, error) {
+func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 1
 
 	shouldPenalize := false
 	if preCheckPassed {
-		shouldPenalize = isTeacherInBothPeriods(1, 4, 5, element.ClassMatrix)
+		shouldPenalize = isTeacherInBothPeriods(1, 4, 5, classMatrix)
 	}
 
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 34. 李老师
-func tnanRule2Fn(element constraint.Element) (bool, bool, error) {
+func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 2
 
 	shouldPenalize := false
 	if preCheckPassed {
-		shouldPenalize = isTeacherInBothPeriods(2, 4, 5, element.ClassMatrix)
+		shouldPenalize = isTeacherInBothPeriods(2, 4, 5, classMatrix)
 	}
 
 	return preCheckPassed, !shouldPenalize, nil

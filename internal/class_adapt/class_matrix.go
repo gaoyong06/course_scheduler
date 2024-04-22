@@ -2,7 +2,7 @@
 package class_adapt
 
 import (
-	"course_scheduler/internal/evaluation"
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
@@ -44,31 +44,96 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 	return classMatrix
 }
 
-// 匹配结果值
-func MatchScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
-
-	log.Println("Calculating match scores...")
-	for sn, teacherMap := range classMatrix {
-		for teacherID, venueMap := range teacherMap {
-			for venueID, timeSlotMap := range venueMap {
-				for timeSlot, val := range timeSlotMap {
-
-					// start := time.Now() // 记录开始时间
-					score, err := evaluation.CalcScore(classMatrix, classHours, sn, teacherID, venueID, timeSlot)
-					if err != nil {
-						return err
-					}
-					// duration := time.Since(start) // 计算耗时
-					val.Score = score.FinalScore
-					classMatrix[sn][teacherID][venueID][timeSlot] = val
-					// log.Printf("Match score for (%s, %d, %d, %d) calculated: %d (took %v)\n", sn, teacherID, venueID, timeSlot, score, duration)
-				}
-			}
-		}
-	}
-	log.Println("Match scores calculation completed.")
-	return nil
+// 课班适应性矩阵各元素, 计算固定约束条件下的得分
+func CalcFixedScores(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
+	return calcScores(classMatrix, classHours, constraint.CalcFixed, false)
 }
+
+// // 课班适应性矩阵各元素, 计算固定约束条件下的得分
+// func CalcFixedScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
+
+// 	log.Println("Calculating fixed scores...")
+// 	for sn, teacherMap := range classMatrix {
+
+// 		SN, err := types.ParseSN(sn)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		for teacherID, venueMap := range teacherMap {
+// 			for venueID, timeSlotMap := range venueMap {
+// 				for timeSlot, val := range timeSlotMap {
+
+// 					// start := time.Now() // 记录开始时间
+// 					// score, err := evaluation.CalcScore(classMatrix, classHours, sn, teacherID, venueID, timeSlot)
+// 					element := constraint.Element{
+// 						ClassSN:   sn,
+// 						SubjectID: SN.SubjectID,
+// 						GradeID:   SN.GradeID,
+// 						ClassID:   SN.ClassID,
+// 						TeacherID: teacherID,
+// 						VenueID:   venueID,
+// 						TimeSlot:  timeSlot,
+// 					}
+// 					score, err := constraint.CalcFixed(classMatrix, element)
+// 					if err != nil {
+// 						return err
+// 					}
+// 					// duration := time.Since(start) // 计算耗时
+// 					// val.Score = score.FinalScore
+// 					val.Score = score
+// 					classMatrix[sn][teacherID][venueID][timeSlot] = val
+// 					// log.Printf("Match score for (%s, %d, %d, %d) calculated: %d (took %v)\n", sn, teacherID, venueID, timeSlot, score, duration)
+// 				}
+// 			}
+// 		}
+// 	}
+// 	log.Println("Fixed scores calculation completed.")
+// 	return nil
+// }
+
+// // 实时更新动态约束条件得分
+// func updateDynamicScore(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
+
+// 	log.Println("Calculating fixed scores...")
+// 	for sn, teacherMap := range classMatrix {
+
+// 		SN, err := types.ParseSN(sn)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		for teacherID, venueMap := range teacherMap {
+// 			for venueID, timeSlotMap := range venueMap {
+// 				for timeSlot, val := range timeSlotMap {
+
+// 					// start := time.Now() // 记录开始时间
+// 					element := constraint.Element{
+// 						ClassSN:   sn,
+// 						SubjectID: SN.SubjectID,
+// 						GradeID:   SN.GradeID,
+// 						ClassID:   SN.ClassID,
+// 						TeacherID: teacherID,
+// 						VenueID:   venueID,
+// 						TimeSlot:  timeSlot,
+// 					}
+// 					score, err := constraint.CalcDynamic(classMatrix, element)
+// 					if err != nil {
+// 						return err
+// 					}
+// 					// duration := time.Since(start) // 计算耗时
+
+// 					// 总分=固定得分+动态得分
+// 					val.Score = val.Score + score
+// 					classMatrix[sn][teacherID][venueID][timeSlot] = val
+// 					// log.Printf("Match score for (%s, %d, %d, %d) calculated: %d (took %v)\n", sn, teacherID, venueID, timeSlot, score, duration)
+// 				}
+// 			}
+// 		}
+// 	}
+// 	log.Println("Fixed scores calculation completed.")
+// 	return nil
+// }
 
 // 课班适应性矩阵分配
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
@@ -190,10 +255,63 @@ func findRandomAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[i
 	return -1, -1, -1, fmt.Errorf("no available time slot found")
 }
 
+// CalcScores 计算固定得分和动态得分
+func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int, calcFunc func(map[string]map[int]map[int]map[int]types.Val, constraint.Element) (int, error), isAddScore bool) error {
+
+	// log.Println("Calculating scores...")
+	for sn, teacherMap := range classMatrix {
+		SN, err := types.ParseSN(sn)
+		if err != nil {
+			return err
+		}
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				for timeSlot, val := range timeSlotMap {
+					element := constraint.Element{
+						ClassSN:   sn,
+						SubjectID: SN.SubjectID,
+						GradeID:   SN.GradeID,
+						ClassID:   SN.ClassID,
+						TeacherID: teacherID,
+						VenueID:   venueID,
+						TimeSlot:  timeSlot,
+					}
+					score, err := calcFunc(classMatrix, element)
+					if err != nil {
+						return err
+					}
+					if isAddScore {
+						val.Score = val.Score + score
+					} else {
+						val.Score = score
+					}
+					classMatrix[sn][teacherID][venueID][timeSlot] = val
+				}
+			}
+		}
+	}
+	// log.Println("Scores calculation completed.")
+	return nil
+}
+
+// UpdateDynamicScore 计算动态得分
+func updateDynamicScores(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
+	return calcScores(classMatrix, classHours, constraint.CalcDynamic, true)
+}
+
 // updateTimeTableAndClassMatrix updates the time table and class matrix with the selected teacher, venue, and time slot.
 func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) {
+
+	// 更新科班适应性矩阵元素分配信息
 	temp := classMatrix[sn][teacherID][venueID][timeSlot]
 	temp.Used = 1
 	classMatrix[sn][teacherID][venueID][timeSlot] = temp
+
+	// TODO: 这个参数要修改
+	classHours := models.GetClassHours()
+
+	// 更新科班适应性矩阵元素动态元素条件得分
+	updateDynamicScores(classMatrix, classHours)
+
 	timeTable.Used[timeSlot] = true
 }

@@ -22,7 +22,7 @@ var SSDRule1 = &constraint.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(element constraint.Element) (bool, bool, error) {
+func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
@@ -37,7 +37,7 @@ func ssdRule1Fn(element constraint.Element) (bool, bool, error) {
 	if preCheckPassed {
 
 		// 检查同一天是否安排科目的排课
-		ret := isSubjectSameDay(element.ClassMatrix, element.ClassSN, element.TimeSlot)
+		ret := isSubjectSameDay(classMatrix, element.ClassSN, element.TimeSlot)
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil
@@ -53,7 +53,7 @@ func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, 
 		for _, venueMap := range teacherMap {
 			for timeSlot1, val := range venueMap {
 
-				if val.Score > 1 {
+				if val.Used == 1 {
 					day1 := timeSlot1 / constants.NUM_CLASSES
 					if day == day1 && timeSlot != timeSlot1 {
 						count++
@@ -63,9 +63,5 @@ func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, 
 		}
 	}
 
-	if count > 0 {
-		return true
-	}
-
-	return false
+	return count > 0
 }

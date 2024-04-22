@@ -23,7 +23,7 @@ var SCRule1 = &constraint.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func scRule1Fn(element constraint.Element) (bool, bool, error) {
+func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
@@ -38,7 +38,7 @@ func scRule1Fn(element constraint.Element) (bool, bool, error) {
 	if preCheckPassed {
 
 		// 检查同一科目一天安排多次是否是连堂
-		ret, err := isSubjectConsecutive(subjectID, element.ClassMatrix)
+		ret, err := isSubjectConsecutive(subjectID, classMatrix)
 		if err != nil {
 			return false, false, err
 		}

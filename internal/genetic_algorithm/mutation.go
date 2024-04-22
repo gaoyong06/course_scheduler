@@ -3,8 +3,9 @@ package genetic_algorithm
 
 import (
 	"course_scheduler/internal/class_adapt"
-	"course_scheduler/internal/evaluation"
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
+	"course_scheduler/internal/types"
 	"math/rand"
 )
 
@@ -67,14 +68,35 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 
 	// Calculate the score for the new gene
 	classMatrix := individual.toClassMatrix()
-	score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+
+	SN, err := types.ParseSN(gene.ClassSN)
 	if err != nil {
 		return false, err
 	}
 
-	if score.FinalScore < 0 {
+	element := constraint.Element{
+		ClassSN:   gene.ClassSN,
+		SubjectID: SN.SubjectID,
+		GradeID:   SN.GradeID,
+		ClassID:   SN.ClassID,
+		TeacherID: newGene.TeacherID,
+		VenueID:   newGene.VenueID,
+		TimeSlot:  newGene.TimeSlot,
+	}
+	score, err := constraint.CalcScore(classMatrix, element)
+
+	// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+	if err != nil {
 		return false, err
 	}
+
+	if score < 0 {
+		return false, err
+	}
+
+	// if score.FinalScore < 0 {
+	// 	return false, err
+	// }
 
 	return true, nil
 }

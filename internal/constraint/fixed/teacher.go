@@ -7,6 +7,7 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
+	"course_scheduler/internal/types"
 	"math"
 )
 
@@ -61,7 +62,7 @@ var TRule5 = &constraint.Rule{
 }
 
 // 9. 数学组 周一 第4节 禁排 教研会
-func tRule1Fn(element constraint.Element) (bool, bool, error) {
+func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacher, err := models.FindTeacherByID(element.TeacherID)
 	if err != nil {
 		return false, false, err
@@ -75,7 +76,7 @@ func tRule1Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 10. 刘老师 周一 第4节 禁排 教研会
-func tRule2Fn(element constraint.Element) (bool, bool, error) {
+func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacher, err := models.FindTeacherByID(element.TeacherID)
 	if err != nil {
 		return false, false, err
@@ -89,7 +90,7 @@ func tRule2Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 11. 行政领导 周二 第7节 禁排 例会
-func tRule3Fn(element constraint.Element) (bool, bool, error) {
+func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacher, err := models.FindTeacherByID(element.TeacherID)
 	if err != nil {
 		return false, false, err
@@ -103,7 +104,7 @@ func tRule3Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 12. 马老师 周二 第7节 禁排 例会
-func tRule4Fn(element constraint.Element) (bool, bool, error) {
+func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacher, err := models.FindTeacherByID(element.TeacherID)
 	if err != nil {
 		return false, false, err
@@ -117,7 +118,7 @@ func tRule4Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 13. 王老师 周二 第2节 固排
-func tRule5Fn(element constraint.Element) (bool, bool, error) {
+func tRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacher, err := models.FindTeacherByID(element.TeacherID)
 	if err != nil {
 		return false, false, err

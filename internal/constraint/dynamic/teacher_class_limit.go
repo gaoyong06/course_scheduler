@@ -48,7 +48,7 @@ var TCLRule4 = &constraint.Rule{
 }
 
 // 27. 王老师 上午第4节 最多3次
-func tclRule1Fn(element constraint.Element) (bool, bool, error) {
+func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -56,7 +56,7 @@ func tclRule1Fn(element constraint.Element) (bool, bool, error) {
 
 	shouldPenalize := false
 	if preCheckPassed {
-		count := countTeacherClassInPeriod(teacherID, period, element.ClassMatrix)
+		count := countTeacherClassInPeriod(teacherID, period, classMatrix)
 		shouldPenalize = preCheckPassed && count > 3
 	}
 
@@ -64,7 +64,7 @@ func tclRule1Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 28. 李老师 上午第4节 最多3次
-func tclRule2Fn(element constraint.Element) (bool, bool, error) {
+func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -72,7 +72,7 @@ func tclRule2Fn(element constraint.Element) (bool, bool, error) {
 
 	shouldPenalize := false
 	if preCheckPassed {
-		count := countTeacherClassInPeriod(teacherID, period, element.ClassMatrix)
+		count := countTeacherClassInPeriod(teacherID, period, classMatrix)
 		shouldPenalize = preCheckPassed && count > 3
 	}
 
@@ -80,7 +80,7 @@ func tclRule2Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 29. 刘老师 上午第4节 最多3次
-func tclRule3Fn(element constraint.Element) (bool, bool, error) {
+func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -88,7 +88,7 @@ func tclRule3Fn(element constraint.Element) (bool, bool, error) {
 
 	shouldPenalize := false
 	if preCheckPassed {
-		count := countTeacherClassInPeriod(teacherID, period, element.ClassMatrix)
+		count := countTeacherClassInPeriod(teacherID, period, classMatrix)
 		shouldPenalize = preCheckPassed && count > 3
 	}
 
@@ -96,7 +96,7 @@ func tclRule3Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 30. 张老师 上午第4节 最多3次
-func tclRule4Fn(element constraint.Element) (bool, bool, error) {
+func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -104,7 +104,7 @@ func tclRule4Fn(element constraint.Element) (bool, bool, error) {
 
 	shouldPenalize := false
 	if preCheckPassed {
-		count := countTeacherClassInPeriod(teacherID, period, element.ClassMatrix)
+		count := countTeacherClassInPeriod(teacherID, period, classMatrix)
 		shouldPenalize = preCheckPassed && count > 3
 	}
 

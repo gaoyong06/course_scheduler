@@ -49,12 +49,12 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			classMatrix = class_adapt.InitClassMatrix(classes)
 			log.Println("Class matrix initialized")
 
-			// 匹配结果值
-			err = class_adapt.MatchScore(classMatrix, classHours)
+			// 计算课班适应性矩阵各个元素固定约束条件下的得分
+			err = class_adapt.CalcFixedScores(classMatrix, classHours)
 			if err != nil {
 				return nil, err
 			}
-			log.Println("Match scores calculated")
+			log.Println("Fixed scores calculated")
 
 			utils.PrintClassMatrix(classMatrix)
 			// panic("FUCK!! ZZ")

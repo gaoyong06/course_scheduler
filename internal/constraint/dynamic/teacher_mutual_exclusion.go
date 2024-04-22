@@ -29,26 +29,26 @@ var TMERule2 = &constraint.Rule{
 }
 
 // 31. 王老师 马老师
-func tmeRule1Fn(element constraint.Element) (bool, bool, error) {
+func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 1 || teacherID == 5
 
 	shouldPenalize := false
 	if preCheckPassed {
-		shouldPenalize = isTeacherSameDay(1, 5, element.ClassMatrix)
+		shouldPenalize = isTeacherSameDay(1, 5, classMatrix)
 	}
 
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 32. 李老师 黄老师
-func tmeRule2Fn(element constraint.Element) (bool, bool, error) {
+func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 2 || teacherID == 6
 
 	shouldPenalize := false
 	if preCheckPassed {
-		shouldPenalize = isTeacherSameDay(2, 6, element.ClassMatrix)
+		shouldPenalize = isTeacherSameDay(2, 6, classMatrix)
 	}
 
 	return preCheckPassed, !shouldPenalize, nil

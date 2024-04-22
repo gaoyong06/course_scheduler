@@ -19,7 +19,7 @@ var SORule1 = &constraint.Rule{
 }
 
 // 38. 体育 数学
-func soRule1Fn(element constraint.Element) (bool, bool, error) {
+func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
@@ -27,7 +27,7 @@ func soRule1Fn(element constraint.Element) (bool, bool, error) {
 	preCheckPassed := subjectID == 6 || subjectID == 2
 	shouldPenalize := false
 	if preCheckPassed {
-		ret, err := isSubjectABeforeSubjectB(6, 2, element.ClassMatrix)
+		ret, err := isSubjectABeforeSubjectB(6, 2, classMatrix)
 		if err != nil {
 			return false, false, err
 		}

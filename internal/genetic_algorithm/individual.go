@@ -4,7 +4,7 @@ package genetic_algorithm
 import (
 	"course_scheduler/internal/class_adapt"
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/evaluation"
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"crypto/sha256"
@@ -211,11 +211,28 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 		for _, gene := range chromosome.Genes {
 			// 计算该基因对应的课程的适应度值
 
-			score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			SN, err := types.ParseSN(gene.ClassSN)
+			if err != nil {
+				return 0, err
+			}
+
+			element := constraint.Element{
+				ClassSN:   gene.ClassSN,
+				SubjectID: SN.SubjectID,
+				GradeID:   SN.GradeID,
+				ClassID:   SN.ClassID,
+				TeacherID: gene.TeacherID,
+				VenueID:   gene.VenueID,
+				TimeSlot:  gene.TimeSlot,
+			}
+
+			// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
+			score, err := constraint.CalcScore(classMatrix, element)
 			if err != nil {
 				return fitness, err
 			}
-			fitness += score.FinalScore
+			// fitness += score.FinalScore
+			fitness += score
 		}
 	}
 

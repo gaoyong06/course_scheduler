@@ -19,7 +19,7 @@ var SMERule1 = &constraint.Rule{
 }
 
 // 37. 活动 体育
-func smeRule1Fn(element constraint.Element) (bool, bool, error) {
+func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
@@ -29,7 +29,7 @@ func smeRule1Fn(element constraint.Element) (bool, bool, error) {
 
 	shouldPenalize := false
 	if preCheckPassed {
-		ret, err := isSubjectsSameDay(14, 6, element.ClassMatrix)
+		ret, err := isSubjectsSameDay(14, 6, classMatrix)
 		if err != nil {
 			return false, false, err
 		}

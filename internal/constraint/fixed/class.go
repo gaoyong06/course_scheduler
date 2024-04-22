@@ -99,7 +99,7 @@ var CRule8 = &constraint.Rule{
 }
 
 // 1. 一年级(1)班 语文 王老师 第1节 固排
-func cRule1Fn(element constraint.Element) (bool, bool, error) {
+func cRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -110,7 +110,7 @@ func cRule1Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 2. 三年级(1)班 第7节 禁排 班会
-func cRule2Fn(element constraint.Element) (bool, bool, error) {
+func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -121,7 +121,7 @@ func cRule2Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 3. 三年级(2)班 第8节 禁排 班会
-func cRule3Fn(element constraint.Element) (bool, bool, error) {
+func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -133,7 +133,7 @@ func cRule3Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 4. 四年级 第8节 禁排 班会
-func cRule4Fn(element constraint.Element) (bool, bool, error) {
+func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -145,7 +145,7 @@ func cRule4Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 5. 四年级(1)班 语文 王老师 第1节 禁排
-func cRule5Fn(element constraint.Element) (bool, bool, error) {
+func cRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
 
@@ -156,7 +156,7 @@ func cRule5Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 6. 五年级 数学 李老师 第2节 固排
-func cRule6Fn(element constraint.Element) (bool, bool, error) {
+func cRule6Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 2
@@ -166,7 +166,7 @@ func cRule6Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 7. 五年级 数学 李老师 第3节 尽量排
-func cRule7Fn(element constraint.Element) (bool, bool, error) {
+func cRule7Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 3
@@ -176,7 +176,7 @@ func cRule7Fn(element constraint.Element) (bool, bool, error) {
 }
 
 // 8. 五年级 数学 李老师 第5节 固排
-func cRule8Fn(element constraint.Element) (bool, bool, error) {
+func cRule8Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
 	SN, _ := types.ParseSN(element.ClassSN)
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 5
