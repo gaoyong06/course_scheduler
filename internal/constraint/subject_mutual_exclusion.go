@@ -9,7 +9,7 @@ import (
 
 var SMERule1 = &Rule{
 	Name:     "SMERule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       smeRule1Fn,
 	Score:    0,
 	Penalty:  1,

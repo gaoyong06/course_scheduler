@@ -9,7 +9,7 @@ import (
 
 var TMERule1 = &Rule{
 	Name:     "TMERule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tmeRule1Fn,
 	Score:    0,
 	Penalty:  1,
@@ -19,7 +19,7 @@ var TMERule1 = &Rule{
 
 var TMERule2 = &Rule{
 	Name:     "TMERule2",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tmeRule2Fn,
 	Score:    0,
 	Penalty:  1,

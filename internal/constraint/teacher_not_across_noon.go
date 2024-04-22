@@ -8,7 +8,7 @@ import (
 
 var TNANRule1 = &Rule{
 	Name:     "TNANRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tnanRule1Fn,
 	Score:    0,
 	Penalty:  1,
@@ -18,7 +18,7 @@ var TNANRule1 = &Rule{
 
 var TNANRule2 = &Rule{
 	Name:     "TNANRule2",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tnanRule2Fn,
 	Score:    0,
 	Penalty:  1,

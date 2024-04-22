@@ -12,7 +12,7 @@ import (
 
 var SSDRule1 = &Rule{
 	Name:     "SSDRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       ssdRule1Fn,
 	Score:    0,
 	Penalty:  1,
@@ -22,6 +22,8 @@ var SSDRule1 = &Rule{
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
 func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
+
+	// fmt.Printf("---> ssdRule1Fn %d", element.TimeSlot)
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
@@ -37,6 +39,11 @@ func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 
 		// 检查同一天是否安排科目的排课
 		ret := isSubjectSameDay(classMatrix, element.ClassSN, element.TimeSlot)
+
+		// if element.ClassSN == "1_1_1" {
+		// 	fmt.Printf("ssdRule1Fn element.TimeSlot: %d\n", element.TimeSlot)
+		// }
+
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil

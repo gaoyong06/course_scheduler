@@ -8,7 +8,7 @@ import (
 
 var TCLRule1 = &Rule{
 	Name:     "TCLRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tclRule1Fn,
 	Score:    0,
 	Penalty:  1,
@@ -18,7 +18,7 @@ var TCLRule1 = &Rule{
 
 var TCLRule2 = &Rule{
 	Name:     "TCLRule2",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tclRule2Fn,
 	Score:    0,
 	Penalty:  1,
@@ -28,7 +28,7 @@ var TCLRule2 = &Rule{
 
 var TCLRule3 = &Rule{
 	Name:     "TCLRule3",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tclRule3Fn,
 	Score:    0,
 	Penalty:  1,
@@ -38,7 +38,7 @@ var TCLRule3 = &Rule{
 
 var TCLRule4 = &Rule{
 	Name:     "TCLRule4",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       tclRule4Fn,
 	Score:    0,
 	Penalty:  1,

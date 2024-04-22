@@ -9,7 +9,7 @@ import (
 
 var PCRule1 = &Rule{
 	Name:     "PCRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       pcRule1Fn,
 	Score:    0,
 	Penalty:  1,

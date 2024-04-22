@@ -11,7 +11,7 @@ import (
 var TTLRule1 = &Rule{
 
 	Name:     "TTLRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       ttlRule1Fn,
 	Score:    0,
 	Penalty:  1,
@@ -22,7 +22,7 @@ var TTLRule1 = &Rule{
 var TTLRule2 = &Rule{
 
 	Name:     "TTLRule2",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       ttlRule2Fn,
 	Score:    0,
 	Penalty:  1,
@@ -33,7 +33,7 @@ var TTLRule2 = &Rule{
 var TTLRule3 = &Rule{
 
 	Name:     "TTLRule3",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       ttlRule3Fn,
 	Score:    0,
 	Penalty:  1,

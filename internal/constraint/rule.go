@@ -67,6 +67,8 @@ func CalcFixed(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 // CalcDynamic 计算动态约束条件得分
 func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (int, error) {
 
+	// fmt.Println("### CalcDynamic")
+
 	rules := getDynamicRules()
 	sortRulesByPriority(rules)
 	score := 0
@@ -75,9 +77,9 @@ func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 		if rule.Type == "dynamic" {
 			if preCheckPassed, result, err := rule.Fn(classMatrix, element); preCheckPassed && err == nil {
 				if result {
-					score += rule.Score
+					score += rule.Score * rule.Weight
 				} else {
-					penalty += rule.Penalty
+					penalty += rule.Penalty * rule.Weight
 				}
 			}
 		}

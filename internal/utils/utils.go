@@ -53,7 +53,7 @@ func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) 
 
 	items := make([]ClassMatrixItem, 0)
 	for classSN, teacherMap := range classMatrix {
-		if classSN == "6_1_1" {
+		if classSN == "1_1_1" {
 			for _, venueMap := range teacherMap {
 				for _, timeSlotMap := range venueMap {
 					for timeSlot, val := range timeSlotMap {

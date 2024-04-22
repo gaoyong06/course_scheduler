@@ -7,6 +7,7 @@ import (
 	"course_scheduler/internal/types"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 )
 
@@ -140,6 +141,8 @@ func CalcFixedScores(classMatrix map[string]map[int]map[int]map[int]types.Val, c
 // AllocateClassMatrix allocates class hours based on the class adaptability matrix.
 func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix map[string]map[int]map[int]map[int]types.Val) (int, error) {
 
+	// log.Println("#### AllocateClassMatrix")
+
 	timeTable := initTimeTable()
 
 	var numAssignedClasses int
@@ -169,6 +172,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 			if maxScore == 0 {
 				selectedTeacherID, selectedVenueID, selectedTimeSlot, err = findRandomAvailableTimeSlot(sn, classMatrix, timeTable)
 				if err != nil {
+					panic("FUCK")
 					return numAssignedClasses, err
 				}
 				numRandomTimeSlots++
@@ -180,6 +184,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 			if selectedTeacherID > 0 && selectedVenueID > 0 && selectedTimeSlot >= 0 {
 				updateTimeTableAndClassMatrix(sn, selectedTeacherID, selectedVenueID, selectedTimeSlot, classMatrix, timeTable)
 				numAssignedClasses++
+				log.Printf("allocate classMatrix num assigned classes %d...\n", numAssignedClasses)
 			} else {
 				return numAssignedClasses, fmt.Errorf("failed sn: %s, classHour: %d,  numClassHours: %d", sn, i+1, numClassHours)
 			}
@@ -194,7 +199,7 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 
 // findBestAvailableTimeSlot finds the best available time slot for a given class SN.
 func findBestAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, int, error) {
-	maxScore := 0
+	maxScore := math.MinInt64
 	selectedTeacherID, selectedVenueID, selectedTimeSlot := -1, -1, -1
 
 	for teacherID, venueMap := range classMatrix[sn] {
@@ -216,6 +221,31 @@ func findBestAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int
 
 	return selectedTeacherID, selectedVenueID, selectedTimeSlot, maxScore, nil
 }
+
+// func findBestAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, int, error) {
+// 	// maxScore := 0
+// 	maxScore := math.Inf(-1)
+// 	selectedTeacherID, selectedVenueID, selectedTimeSlot := -1, -1, -1
+
+// 	for teacherID, venueMap := range classMatrix[sn] {
+// 		for venueID, timeSlotMap := range venueMap {
+// 			for timeSlot, val := range timeSlotMap {
+// 				if timeTable.Used[timeSlot] {
+// 					continue
+// 				}
+// 				score := val.Score
+// 				if score > maxScore {
+// 					maxScore = score
+// 					selectedTeacherID = teacherID
+// 					selectedVenueID = venueID
+// 					selectedTimeSlot = timeSlot
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	return selectedTeacherID, selectedVenueID, selectedTimeSlot, maxScore, nil
+// }
 
 // findRandomAvailableTimeSlot finds a random available time slot for a given class SN.
 func findRandomAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) (int, int, int, error) {
@@ -247,10 +277,13 @@ func findRandomAvailableTimeSlot(sn string, classMatrix map[string]map[int]map[i
 		timeSlot := availableTimeSlots[j%len(availableTimeSlots)] // Use modulo to ensure all available time slots are traversed.
 
 		val := classMatrix[sn][teacherID][venueID][timeSlot]
+		fmt.Printf("findRandomAvailableTimeSlot timeSlot: %d, used: %v, score: %d\n", timeSlot, timeTable.Used[timeSlot], val.Score)
 		if !timeTable.Used[timeSlot] && val.Score == 0 {
 			return teacherID, venueID, timeSlot, nil
 		}
 	}
+
+	fmt.Printf("availableTimeSlots: %#v\n", availableTimeSlots)
 
 	return -1, -1, -1, fmt.Errorf("no available time slot found")
 }
@@ -296,11 +329,15 @@ func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, classH
 
 // UpdateDynamicScore 计算动态得分
 func updateDynamicScores(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) error {
+
+	// fmt.Println("### updateDynamicScores")
 	return calcScores(classMatrix, classHours, constraint.CalcDynamic, true)
 }
 
 // updateTimeTableAndClassMatrix updates the time table and class matrix with the selected teacher, venue, and time slot.
 func updateTimeTableAndClassMatrix(sn string, teacherID, venueID, timeSlot int, classMatrix map[string]map[int]map[int]map[int]types.Val, timeTable *TimeTable) {
+
+	// fmt.Println("### updateTimeTableAndClassMatrix")
 
 	// 更新科班适应性矩阵元素分配信息
 	temp := classMatrix[sn][teacherID][venueID][timeSlot]

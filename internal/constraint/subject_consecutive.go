@@ -13,7 +13,7 @@ import (
 
 var SCRule1 = &Rule{
 	Name:     "SCRule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       scRule1Fn,
 	Score:    0,
 	Penalty:  1,

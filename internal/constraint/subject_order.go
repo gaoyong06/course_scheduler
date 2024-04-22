@@ -9,7 +9,7 @@ import (
 
 var SORule1 = &Rule{
 	Name:     "SORule1",
-	Type:     "fixed",
+	Type:     "dynamic",
 	Fn:       soRule1Fn,
 	Score:    0,
 	Penalty:  1,
