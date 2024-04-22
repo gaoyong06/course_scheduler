@@ -5,7 +5,6 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"math"
@@ -16,7 +15,7 @@ import (
 // 14. 语数英 周一~周五 第1节 优先排
 // 15. 语数英 周一~周五 第2节 优先排
 // 16. 语数英 周一~周五 第3节 优先排
-var SRule1 = &constraint.Rule{
+var SRule1 = &Rule{
 	Name:     "SRule1",
 	Type:     "fixed",
 	Fn:       sRule1Fn,
@@ -27,7 +26,7 @@ var SRule1 = &constraint.Rule{
 }
 
 // 副课 安排在第1,2,3节 扣分
-var SRule2 = &constraint.Rule{
+var SRule2 = &Rule{
 	Name:     "SRule2",
 	Type:     "fixed",
 	Fn:       sRule2Fn,
@@ -38,7 +37,7 @@ var SRule2 = &constraint.Rule{
 }
 
 // 17. 主课 周一~周五 第8节 禁排
-var SRule3 = &constraint.Rule{
+var SRule3 = &Rule{
 	Name:     "SRule3",
 	Type:     "fixed",
 	Fn:       sRule3Fn,
@@ -49,7 +48,7 @@ var SRule3 = &constraint.Rule{
 }
 
 // 18. 主课 周一~周五 第7节 尽量不排
-var SRule4 = &constraint.Rule{
+var SRule4 = &Rule{
 	Name:     "SRule4",
 	Type:     "fixed",
 	Fn:       sRule4Fn,
@@ -62,7 +61,7 @@ var SRule4 = &constraint.Rule{
 // 14. 语数英 周一~周五 第1节 优先排
 // 15. 语数英 周一~周五 第2节 优先排
 // 16. 语数英 周一~周五 第3节 优先排
-func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	subject, err := models.FindSubjectByID(SN.SubjectID)
@@ -79,7 +78,7 @@ func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 
 // 副课 安排在第1,2,3节 扣分
 // 满足该条件扣分, 不满足该该条件, 不增加分数, 也不扣分
-func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	subject, err := models.FindSubjectByID(SN.SubjectID)
@@ -95,7 +94,7 @@ func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 17. 主课 周一~周五 第8节 禁排
-func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	subject, err := models.FindSubjectByID(SN.SubjectID)
@@ -110,7 +109,7 @@ func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 18. 主课 周一~周五 第7节 尽量不排
-func sRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func sRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	SN, _ := types.ParseSN(element.ClassSN)
 	subject, err := models.FindSubjectByID(SN.SubjectID)

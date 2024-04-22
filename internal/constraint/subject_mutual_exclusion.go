@@ -4,11 +4,10 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 )
 
-var SMERule1 = &constraint.Rule{
+var SMERule1 = &Rule{
 	Name:     "SMERule1",
 	Type:     "fixed",
 	Fn:       smeRule1Fn,
@@ -19,7 +18,7 @@ var SMERule1 = &constraint.Rule{
 }
 
 // 37. 活动 体育
-func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)

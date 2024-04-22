@@ -122,9 +122,25 @@ func getFixedRules() []*Rule {
 
 	// var rules []*Rule
 	rules := []*Rule{
-		// CRule1,
-		// CRule2,
-		// ...
+		CRule1,
+		CRule2,
+		CRule3,
+		CRule4,
+		CRule5,
+		CRule6,
+		CRule7,
+		CRule8,
+
+		SRule1,
+		SRule2,
+		SRule3,
+		SRule4,
+
+		TRule1,
+		TRule2,
+		TRule3,
+		TRule4,
+		TRule5,
 	}
 
 	return rules
@@ -132,6 +148,35 @@ func getFixedRules() []*Rule {
 
 // 所有动态约束条件
 func getDynamicRules() []*Rule {
-	var rules []*Rule
+
+	// var rules []*Rule
+
+	rules := []*Rule{
+		PCRule1,
+
+		SCRule1,
+
+		SMERule1,
+
+		SORule1,
+
+		SSDRule1,
+
+		TCLRule1,
+		TCLRule2,
+		TCLRule3,
+		TCLRule4,
+
+		TMERule1,
+		TMERule2,
+
+		TNANRule1,
+		TNANRule2,
+
+		TTLRule1,
+		TTLRule2,
+		TTLRule3,
+	}
+
 	return rules
 }

@@ -3,11 +3,10 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 )
 
-var TNANRule1 = &constraint.Rule{
+var TNANRule1 = &Rule{
 	Name:     "TNANRule1",
 	Type:     "fixed",
 	Fn:       tnanRule1Fn,
@@ -17,7 +16,7 @@ var TNANRule1 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TNANRule2 = &constraint.Rule{
+var TNANRule2 = &Rule{
 	Name:     "TNANRule2",
 	Type:     "fixed",
 	Fn:       tnanRule2Fn,
@@ -28,7 +27,7 @@ var TNANRule2 = &constraint.Rule{
 }
 
 // 33. 王老师
-func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 1
@@ -42,7 +41,7 @@ func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 }
 
 // 34. 李老师
-func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 	teacherID := element.TeacherID
 	preCheckPassed := teacherID == 2
 

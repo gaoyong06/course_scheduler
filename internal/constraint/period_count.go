@@ -4,11 +4,10 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 )
 
-var PCRule1 = &constraint.Rule{
+var PCRule1 = &Rule{
 	Name:     "PCRule1",
 	Type:     "fixed",
 	Fn:       pcRule1Fn,
@@ -19,7 +18,7 @@ var PCRule1 = &constraint.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, e constraint.Element) (bool, bool, error) {
+func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, e Element) (bool, bool, error) {
 
 	periodCount := countPeriodClasses(classMatrix, e.ClassSN, e.TeacherID, e.VenueID)
 	period := e.TimeSlot % constants.NUM_CLASSES

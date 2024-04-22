@@ -5,11 +5,10 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 )
 
-var TTLRule1 = &constraint.Rule{
+var TTLRule1 = &Rule{
 
 	Name:     "TTLRule1",
 	Type:     "fixed",
@@ -20,7 +19,7 @@ var TTLRule1 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TTLRule2 = &constraint.Rule{
+var TTLRule2 = &Rule{
 
 	Name:     "TTLRule2",
 	Type:     "fixed",
@@ -31,7 +30,7 @@ var TTLRule2 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TTLRule3 = &constraint.Rule{
+var TTLRule3 = &Rule{
 
 	Name:     "TTLRule3",
 	Type:     "fixed",
@@ -43,7 +42,7 @@ var TTLRule3 = &constraint.Rule{
 }
 
 // 23. 王老师 上午 最多1节
-func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -55,7 +54,7 @@ func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 24. 王老师 下午 最多2节
-func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -67,7 +66,7 @@ func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 25. 王老师 全天(不含晚自习) 最多3节
-func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1

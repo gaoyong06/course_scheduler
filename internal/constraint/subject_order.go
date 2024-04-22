@@ -3,12 +3,11 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 	"sort"
 )
 
-var SORule1 = &constraint.Rule{
+var SORule1 = &Rule{
 	Name:     "SORule1",
 	Type:     "fixed",
 	Fn:       soRule1Fn,
@@ -19,7 +18,7 @@ var SORule1 = &constraint.Rule{
 }
 
 // 38. 体育 数学
-func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)

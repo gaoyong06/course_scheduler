@@ -3,11 +3,10 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 )
 
-var TCLRule1 = &constraint.Rule{
+var TCLRule1 = &Rule{
 	Name:     "TCLRule1",
 	Type:     "fixed",
 	Fn:       tclRule1Fn,
@@ -17,7 +16,7 @@ var TCLRule1 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TCLRule2 = &constraint.Rule{
+var TCLRule2 = &Rule{
 	Name:     "TCLRule2",
 	Type:     "fixed",
 	Fn:       tclRule2Fn,
@@ -27,7 +26,7 @@ var TCLRule2 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TCLRule3 = &constraint.Rule{
+var TCLRule3 = &Rule{
 	Name:     "TCLRule3",
 	Type:     "fixed",
 	Fn:       tclRule3Fn,
@@ -37,7 +36,7 @@ var TCLRule3 = &constraint.Rule{
 	Priority: 1,
 }
 
-var TCLRule4 = &constraint.Rule{
+var TCLRule4 = &Rule{
 	Name:     "TCLRule4",
 	Type:     "fixed",
 	Fn:       tclRule4Fn,
@@ -48,7 +47,7 @@ var TCLRule4 = &constraint.Rule{
 }
 
 // 27. 王老师 上午第4节 最多3次
-func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -64,7 +63,7 @@ func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 28. 李老师 上午第4节 最多3次
-func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -80,7 +79,7 @@ func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 29. 刘老师 上午第4节 最多3次
-func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1
@@ -96,7 +95,7 @@ func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 30. 张老师 上午第4节 最多3次
-func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	teacherID := element.TeacherID
 	period := element.TimeSlot%constants.NUM_CLASSES + 1

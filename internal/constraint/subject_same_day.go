@@ -6,12 +6,11 @@ package constraint
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 )
 
-var SSDRule1 = &constraint.Rule{
+var SSDRule1 = &Rule{
 	Name:     "SSDRule1",
 	Type:     "fixed",
 	Fn:       ssdRule1Fn,
@@ -22,7 +21,7 @@ var SSDRule1 = &constraint.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element constraint.Element) (bool, bool, error) {
+func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element Element) (bool, bool, error) {
 
 	classSN := element.ClassSN
 	SN, _ := types.ParseSN(classSN)
