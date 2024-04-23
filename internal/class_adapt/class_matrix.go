@@ -98,11 +98,11 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int) (int,
 				return numAssignedClasses, err
 			}
 
-			fmt.Printf("findBestTimeSlot teacherID: %d, venueID: %d, timeSlot: %d, maxScore: %d\n", teacherID, venueID, timeSlot, maxScore)
+			// fmt.Printf("findBestTimeSlot teacherID: %d, venueID: %d, timeSlot: %d, maxScore: %d\n", teacherID, venueID, timeSlot, maxScore)
 			// 打印失败的约束
 			if maxScore < 0 {
 				val := cm.Elements[sn][teacherID][venueID][timeSlot]
-				fmt.Printf("timeSlot: %d, sn: %s, failed rules: ", timeSlot, sn)
+				fmt.Printf("findBestTimeSlot timeSlot: %d, sn: %s, failed rules: ", timeSlot, sn)
 				for _, rule := range val.ScoreInfo.DynamicFailed {
 					fmt.Printf("%s, ", rule)
 				}
