@@ -13,20 +13,24 @@ func CalcFixed(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 	sortRulesByPriority(rules)
 	score := 0
 	penalty := 0
+
+	// 先清空
+	newVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
 	for _, rule := range rules {
 		if rule.Type == "fixed" {
 			if preCheckPassed, result, err := rule.Fn(classMatrix, element); preCheckPassed && err == nil {
 
-				tempVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
-
 				if result {
 					score += rule.Score * rule.Weight
-					tempVal.ScoreInfo.Passed = append(tempVal.ScoreInfo.Passed, rule)
+					// tempVal.ScoreInfo.Passed = append(tempVal.ScoreInfo.Passed, rule)
+					newVal.ScoreInfo.FixedPassed = append(newVal.ScoreInfo.FixedPassed, rule.Name)
 				} else {
 					penalty += rule.Penalty * rule.Weight
-					tempVal.ScoreInfo.Failed = append(tempVal.ScoreInfo.Failed, rule)
+					// tempVal.ScoreInfo.Failed = append(tempVal.ScoreInfo.Failed, rule)
+					newVal.ScoreInfo.FixedFailed = append(newVal.ScoreInfo.FixedFailed, rule.Name)
 				}
-				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
+
+				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = newVal
 			}
 		}
 	}
@@ -42,22 +46,26 @@ func CalcDynamic(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 	sortRulesByPriority(rules)
 	score := 0
 	penalty := 0
+
+	// 先清空
+	newVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
+
 	for _, rule := range rules {
 		if rule.Type == "dynamic" {
 			if preCheckPassed, result, err := rule.Fn(classMatrix, element); preCheckPassed && err == nil {
 
-				tempVal := classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
 				if result {
 					score += rule.Score * rule.Weight
-					tempVal.ScoreInfo.Passed = append(tempVal.ScoreInfo.Passed, rule)
+					newVal.ScoreInfo.DynamicPassed = append(newVal.ScoreInfo.DynamicPassed, rule.Name)
 				} else {
 					penalty += rule.Penalty * rule.Weight
-					tempVal.ScoreInfo.Failed = append(tempVal.ScoreInfo.Failed, rule)
+					newVal.ScoreInfo.DynamicFailed = append(newVal.ScoreInfo.DynamicFailed, rule.Name)
 				}
-				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
+				classMatrix[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = newVal
 			}
 		}
 	}
+
 	finalScore := score - penalty
 	return finalScore, nil
 }

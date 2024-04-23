@@ -34,7 +34,15 @@ func InitClassMatrix(classes []Class) map[string]map[int]map[int]map[int]types.V
 				classMatrix[sn][teacherID][venueID] = make(map[int]types.Val)
 				for l := 0; l < len(timeSlots); l++ {
 					timeSlot := timeSlots[l]
-					scoreInfo := &types.ScoreInfo{Score: 0}
+					scoreInfo := &types.ScoreInfo{
+						Score:         0,
+						FixedScore:    0,
+						DynamicScore:  0,
+						FixedPassed:   []string{},
+						FixedFailed:   []string{},
+						DynamicPassed: []string{},
+						DynamicFailed: []string{},
+					}
 					classMatrix[sn][teacherID][venueID][timeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 0}
 				}
 			}
@@ -82,11 +90,11 @@ func AllocateClassMatrix(classSNs []string, classHours map[int]int, classMatrix 
 
 				// 测试
 				if maxScore < 0 {
-
 					val := classMatrix[sn][teacherID][venueID][timeSlot]
 					fmt.Printf("timeSlot: %d, sn: %s, failed rules: ", timeSlot, sn)
-					for _, rule := range val.ScoreInfo.Failed {
-						fmt.Printf("%s, ", rule.Name)
+					for _, rule := range val.ScoreInfo.DynamicFailed {
+						// fmt.Printf("%s, ", rule.Name)
+						fmt.Printf("%s, ", rule)
 					}
 					fmt.Println()
 				}
@@ -132,7 +140,7 @@ func findBestTimeSlot(sn string, classMatrix map[string]map[int]map[int]map[int]
 }
 
 // CalcScores 计算固定得分和动态得分
-func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFunc func(map[string]map[int]map[int]map[int]types.Val, *types.Element) (int, error), isAddScore bool) error {
+func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFunc func(map[string]map[int]map[int]map[int]types.Val, *types.Element) (int, error), isDynamic bool) error {
 
 	for sn, teacherMap := range classMatrix {
 		SN, err := types.ParseSN(sn)
@@ -156,11 +164,15 @@ func calcScores(classMatrix map[string]map[int]map[int]map[int]types.Val, calcFu
 					if err != nil {
 						return err
 					}
-					if isAddScore {
-						val.ScoreInfo.Score = val.ScoreInfo.Score + score
+					if isDynamic {
+						val.ScoreInfo.DynamicScore = score
 					} else {
-						val.ScoreInfo.Score = score
+						val.ScoreInfo.FixedScore = score
 					}
+
+					// 更新最终分数
+					val.ScoreInfo.Score = val.ScoreInfo.DynamicScore + val.ScoreInfo.FixedScore
+
 					classMatrix[sn][teacherID][venueID][timeSlot] = val
 				}
 			}
