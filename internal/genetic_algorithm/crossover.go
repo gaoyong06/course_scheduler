@@ -2,7 +2,6 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 	"fmt"
 	"math/rand"
@@ -207,16 +206,19 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				TimeSlot:  gene.TimeSlot,
 			}
 			// score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-			score, err := constraint.CalcScore(classMatrix1, element)
+			// score, err := classMatrix1.CalcScore(element)
 
-			if err != nil {
-				return false, err
-			}
+			classMatrix1.CalcScore(element)
+			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
+
+			// if err != nil {
+			// 	return false, err
+			// }
 
 			// if score.FinalScore < 0 {
 			// 	return false, err
 			// }
-			if score < 0 {
+			if score1 < 0 {
 				return false, err
 			}
 		}
@@ -241,14 +243,15 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				TimeSlot:  gene.TimeSlot,
 			}
 
-			score, err := constraint.CalcScore(classMatrix2, element)
+			classMatrix2.CalcScore(element)
+			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
 
 			// score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-			if err != nil {
-				return false, err
-			}
+			// if err != nil {
+			// 	return false, err
+			// }
 
-			if score < 0 {
+			if score2 < 0 {
 				return false, err
 			}
 

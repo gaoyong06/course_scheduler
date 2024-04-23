@@ -3,7 +3,6 @@ package genetic_algorithm
 
 import (
 	"course_scheduler/internal/class_adapt"
-	"course_scheduler/internal/types"
 	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
@@ -30,7 +29,9 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 
 		var err error
 		var numAssignedClasses int
-		var classMatrix map[string]map[int]map[int]map[int]types.Val
+		classMatrix := class_adapt.NewClassMatrix()
+
+		// var classMatrix map[string]map[int]map[int]map[int]types.Val
 
 		// 设置最大重试次数
 		const maxRetries = 1000
@@ -50,20 +51,21 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			}
 
 			// 课班适应性矩阵
-			classMatrix = class_adapt.InitClassMatrix(classes)
+			// classMatrix = class_adapt.InitClassMatrix(classes)
+			classMatrix.Init(classes)
 			log.Println("Class matrix initialized")
 
 			// 计算课班适应性矩阵各个元素固定约束条件下的得分
-			err = class_adapt.CalcFixedScores(classMatrix)
+			err = classMatrix.CalcFixedScores()
 			if err != nil {
 				return nil, err
 			}
 			log.Println("Fixed scores calculated")
 
-			utils.PrintClassMatrix(classMatrix)
+			utils.PrintClassMatrix(classMatrix.Elements)
 
 			// 课班适应性矩阵分配
-			numAssignedClasses, err = class_adapt.AllocateClassMatrix(classeSNs, classHours, classMatrix)
+			numAssignedClasses, err = classMatrix.Allocate(classeSNs, classHours)
 			log.Printf("numAssignedClasses: %d\n", numAssignedClasses)
 
 			if err == nil {
@@ -81,7 +83,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		log.Println("Class matrix assigned")
 
 		// 生成个体
-		individual, err := newIndividual(classMatrix, classHours)
+		individual, err := newIndividual(classMatrix.Elements, classHours)
 		if err != nil {
 			return nil, err
 		}

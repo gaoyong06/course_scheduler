@@ -3,7 +3,6 @@ package genetic_algorithm
 
 import (
 	"course_scheduler/internal/class_adapt"
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"math/rand"
@@ -83,12 +82,15 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 		VenueID:   newGene.VenueID,
 		TimeSlot:  newGene.TimeSlot,
 	}
-	score, err := constraint.CalcScore(classMatrix, element)
+	// score, err := classMatrix.CalcScore(element)
+
+	classMatrix.CalcScore(element)
+	score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
 
 	// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-	if err != nil {
-		return false, err
-	}
+	// if err != nil {
+	// 	return false, err
+	// }
 
 	if score < 0 {
 		return false, err
