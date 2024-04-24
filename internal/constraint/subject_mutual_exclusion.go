@@ -5,6 +5,7 @@ package constraint
 import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/types"
+	"math"
 )
 
 var SMERule1 = &types.Rule{
@@ -12,7 +13,7 @@ var SMERule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       smeRule1Fn,
 	Score:    0,
-	Penalty:  1,
+	Penalty:  math.MaxInt32,
 	Weight:   1,
 	Priority: 1,
 }
@@ -28,7 +29,7 @@ func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 
 	shouldPenalize := false
 	if preCheckPassed {
-		ret, err := isSubjectsSameDay(14, 6, classMatrix)
+		ret, err := isSubjectsSameDay(14, 6, classMatrix, element)
 		if err != nil {
 			return false, false, err
 		}
@@ -39,7 +40,7 @@ func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 判断活动课和体育课是否在同一天
-func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, error) {
 
 	subjectADays := make(map[int]bool)
 	subjectBDays := make(map[int]bool)
@@ -65,10 +66,9 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[in
 		}
 	}
 
-	for day := 0; day < constants.NUM_DAYS; day++ {
-		if subjectADays[day] && subjectBDays[day] {
-			return true, nil
-		}
+	elementDay := element.TimeSlot / constants.NUM_CLASSES
+	if subjectADays[elementDay] && subjectBDays[elementDay] {
+		return true, nil
 	}
 	return false, nil
 }

@@ -88,12 +88,13 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val, cla
 		return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
 	}
 
-	// 设置适应度
-	fitness, err := individual.EvaluateFitness(classHours)
-	if err != nil {
-		return nil, err
-	}
-	individual.Fitness = fitness
+	// TODO: 这里需要重点关注
+	// // 设置适应度
+	// fitness, err := individual.EvaluateFitness(classHours)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	individual.Fitness = 1
 
 	return individual, nil
 }

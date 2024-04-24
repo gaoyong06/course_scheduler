@@ -7,6 +7,7 @@ import (
 	"course_scheduler/internal/types"
 	"fmt"
 	"math"
+	"strings"
 )
 
 // 课班适应性矩阵
@@ -93,20 +94,9 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int) (int,
 		numClassHours := classHours[subjectID]
 
 		for i := 0; i < numClassHours; i++ {
-			teacherID, venueID, timeSlot, maxScore, err := cm.findBestTimeSlot(sn, timeTable)
+			teacherID, venueID, timeSlot, _, err := cm.findBestTimeSlot(sn, timeTable)
 			if err != nil {
 				return numAssignedClasses, err
-			}
-
-			// fmt.Printf("findBestTimeSlot teacherID: %d, venueID: %d, timeSlot: %d, maxScore: %d\n", teacherID, venueID, timeSlot, maxScore)
-			// 打印失败的约束
-			if maxScore < 0 {
-				val := cm.Elements[sn][teacherID][venueID][timeSlot]
-				fmt.Printf("findBestTimeSlot timeSlot: %d, sn: %s, failed rules: ", timeSlot, sn)
-				for _, rule := range val.ScoreInfo.DynamicFailed {
-					fmt.Printf("%s, ", rule)
-				}
-				fmt.Println()
 			}
 
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
@@ -255,7 +245,37 @@ func (cm *ClassMatrix) calcDynamicScore(element *types.Element) {
 	}
 
 	// 动态约束条件得分
+	oldDynamicScore := newVal.ScoreInfo.DynamicScore
 	finalScore := score - penalty
-	newVal.ScoreInfo.DynamicScore = finalScore
+	if oldDynamicScore != finalScore {
+		newVal.ScoreInfo.DynamicScore = finalScore
+		// log.Printf("Updated dynamic score: sn=%s, teacherID=%d, venueID=%d, TimeSlot=%d, oldDynamicScore=%d, currentDynamicScore=%d", element.ClassSN, element.TeacherID, element.VenueID, element.TimeSlot, oldDynamicScore, finalScore)
+	}
+
 	cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = newVal
+}
+
+// 打印有冲突的元素
+// 分配课时Allocate结束后,再打印有冲突的元素查看当前矩阵匹配的冲突情况
+// [重要] 再分配前,和分配过程中打印都会与最终的结果不一致
+// 因为在分配课时Allocate过程中动态约束条件的计算一直在进行ScoreInfo内部数据在一直发生变化
+func (cm *ClassMatrix) PrintConstraintElement() {
+
+	for sn, teacherMap := range cm.Elements {
+
+		// if sn == "6_1_1" {
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				for timeSlot, val := range timeSlotMap {
+
+					if val.Used == 1 && (len(val.ScoreInfo.FixedFailed) > 0 || len(val.ScoreInfo.DynamicFailed) > 0) {
+						fixedStr := strings.Join(val.ScoreInfo.FixedFailed, ",")
+						dynamicStr := strings.Join(val.ScoreInfo.DynamicFailed, ",")
+						fmt.Printf("%p sn: %s, teacherID: %d, venueID: %d, timeSlot: %d failed rules: %s, %s, score: %d\n", cm, sn, teacherID, venueID, timeSlot, fixedStr, dynamicStr, val.ScoreInfo.Score)
+					}
+				}
+			}
+		}
+	}
+	// }
 }

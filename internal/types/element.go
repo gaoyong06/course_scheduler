@@ -10,3 +10,19 @@ type Element struct {
 	VenueID   int    // 教室
 	TimeSlot  int    // 时间段
 }
+
+func (e *Element) GetClassSN() string {
+	return e.ClassSN
+}
+
+func (e *Element) GetTeacherID() int {
+	return e.TeacherID
+}
+
+func (e *Element) GetVenueID() int {
+	return e.VenueID
+}
+
+func (e *Element) GetTimeSlot() int {
+	return e.TimeSlot
+}

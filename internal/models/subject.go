@@ -3,8 +3,6 @@ package models
 
 import "fmt"
 
-var ()
-
 type Subject struct {
 	SubjectID       int    // 科目id
 	Name            string // 名称

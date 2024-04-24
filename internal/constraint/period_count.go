@@ -32,7 +32,7 @@ func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 	if preCheckPassed {
 
 		// 检查相同节次的排课是否超过数量限制
-		shouldPenalize = count >= constants.PERIOD_THRESHOLD
+		shouldPenalize = count > constants.PERIOD_THRESHOLD
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }

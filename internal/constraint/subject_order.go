@@ -36,8 +36,9 @@ func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 }
 
 // 判断体育课后是否就是数学课
-// 判断课程A是在课程B之前
+// 判断课程A(体育)是在课程B(数学)之前
 func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
 	for sn, classMap := range classMatrix {
@@ -59,10 +60,12 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string
 			}
 		}
 	}
+
 	// 如果课程A或课程B没有上课时间段，则返回false
 	if len(timeSlotsA) == 0 || len(timeSlotsB) == 0 {
 		return false, nil
 	}
+
 	// 对上课时间段进行排序
 	sort.Ints(timeSlotsA)
 	sort.Ints(timeSlotsB)

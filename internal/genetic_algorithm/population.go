@@ -3,7 +3,6 @@ package genetic_algorithm
 
 import (
 	"course_scheduler/internal/class_adapt"
-	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
 	"math/rand"
@@ -45,10 +44,10 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			}
 			log.Println("Class order shuffled")
 
-			fmt.Println("=========== classes ===========")
-			for _, class := range classes {
-				fmt.Println(class.String())
-			}
+			// fmt.Println("=========== classes ===========")
+			// for _, class := range classes {
+			// 	fmt.Println(class.String())
+			// }
 
 			// 课班适应性矩阵
 			// classMatrix = class_adapt.InitClassMatrix(classes)
@@ -62,7 +61,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			}
 			log.Println("Fixed scores calculated")
 
-			utils.PrintClassMatrix(classMatrix.Elements)
+			// utils.PrintClassMatrix(classMatrix.Elements)
 
 			// 课班适应性矩阵分配
 			numAssignedClasses, err = classMatrix.Allocate(classeSNs, classHours)
@@ -87,6 +86,9 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 		if err != nil {
 			return nil, err
 		}
+
+		fmt.Println("打印矩阵中有冲突的元素")
+		classMatrix.PrintConstraintElement()
 
 		// fmt.Println("================================")
 		// individual.PrintSchedule()
