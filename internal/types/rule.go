@@ -13,7 +13,7 @@ package types
 //	error 错误信息
 //
 // type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]Val, classUnit ClassUnit) (bool, bool, error)
-type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]*Element, classUnit ClassUnit) (bool, bool, error)
+type ConstraintFn func(classMatrix *ClassMatrix, classUnit ClassUnit) (bool, bool, error)
 
 // Rule 表示评分规则
 type Rule struct {

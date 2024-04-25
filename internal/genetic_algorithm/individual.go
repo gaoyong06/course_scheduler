@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix map[string]map[int]map[int]map[int]*types.Element, classHours map[int]int) (*Individual, error) {
+func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -40,7 +40,7 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]*types.Element
 	}
 
 	totalGenes := 0
-	for sn, classMap := range classMatrix {
+	for sn, classMap := range classMatrix.Elements {
 
 		// 种群的个体中每个课班选择作为一个染色体
 		chromosome := Chromosome{

@@ -61,7 +61,7 @@ var TRule5 = &types.Rule{
 }
 
 // 9. 数学组 周一 第4节 禁排 教研会
-func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -79,7 +79,7 @@ func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 10. 刘老师 周一 第4节 禁排 教研会
-func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -97,7 +97,7 @@ func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 11. 行政领导 周二 第7节 禁排 例会
-func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -115,7 +115,7 @@ func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 12. 马老师 周二 第7节 禁排 例会
-func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -133,7 +133,7 @@ func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 13. 王老师 周二 第2节 固排
-func tRule5Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()

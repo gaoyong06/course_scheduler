@@ -86,7 +86,7 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 		log.Println("Class matrix assigned")
 
 		// 生成个体
-		individual, err := newIndividual(classMatrix.Elements, classHours)
+		individual, err := newIndividual(classMatrix, classHours)
 		if err != nil {
 			return nil, err
 		}

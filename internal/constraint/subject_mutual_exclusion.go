@@ -19,7 +19,7 @@ var SMERule1 = &types.Rule{
 }
 
 // 37. 活动 体育
-func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func smeRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	SN, _ := types.ParseSN(classSN)
@@ -40,12 +40,12 @@ func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 判断活动课和体育课是否在同一天
-func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, error) {
+func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, error) {
 
 	timeSlot := element.GetTimeSlot()
 	subjectADays := make(map[int]bool)
 	subjectBDays := make(map[int]bool)
-	for sn, classMap := range classMatrix {
+	for sn, classMap := range classMatrix.Elements {
 
 		SN, err := types.ParseSN(sn)
 		if err != nil {

@@ -27,7 +27,7 @@ var TNANRule2 = &types.Rule{
 }
 
 // 33. 王老师
-func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tnanRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 1
@@ -41,7 +41,7 @@ func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, 
 }
 
 // 34. 李老师
-func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tnanRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 2
 
@@ -54,8 +54,8 @@ func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, 
 }
 
 // 判断教师是否在两个节次都有课
-func isTeacherInBothPeriods(teacherID int, period1, period2 int, classMatrix map[string]map[int]map[int]map[int]*types.Element) bool {
-	for _, classMap := range classMatrix {
+func isTeacherInBothPeriods(teacherID int, period1, period2 int, classMatrix *types.ClassMatrix) bool {
+	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
 			if id == teacherID {
 				for _, periodMap := range teacherMap {

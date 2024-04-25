@@ -18,7 +18,7 @@ var PCRule1 = &types.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func pcRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
@@ -43,11 +43,11 @@ func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, el
 }
 
 // countPeriodClasses 计算每个时间段的科目数量
-func countPeriodClasses(classMatrix map[string]map[int]map[int]map[int]*types.Element, sn string, teacherID, venueID int) map[int]int {
+func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venueID int) map[int]int {
 
 	periodCount := make(map[int]int)
 
-	for timeSlot, element := range classMatrix[sn][teacherID][venueID] {
+	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {
 
 		if element.Val.Used == 1 {
 			period := timeSlot % constants.NUM_CLASSES

@@ -180,7 +180,7 @@ func (cm *ClassMatrix) calcFixedScore(element ClassUnit, rules []*Rule) {
 
 	for _, rule := range rules {
 		if rule.Type == "fixed" {
-			if preCheckPassed, result, err := rule.Fn(cm.Elements, element); preCheckPassed && err == nil {
+			if preCheckPassed, result, err := rule.Fn(cm, element); preCheckPassed && err == nil {
 
 				if result {
 					score += rule.Score * rule.Weight
@@ -218,7 +218,7 @@ func (cm *ClassMatrix) calcDynamicScore(element ClassUnit, rules []*Rule) {
 
 	for _, rule := range rules {
 		if rule.Type == "dynamic" {
-			if preCheckPassed, result, err := rule.Fn(cm.Elements, element); preCheckPassed && err == nil {
+			if preCheckPassed, result, err := rule.Fn(cm, element); preCheckPassed && err == nil {
 
 				if result {
 					score += rule.Score * rule.Weight

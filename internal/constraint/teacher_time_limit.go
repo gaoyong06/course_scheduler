@@ -42,7 +42,7 @@ var TTLRule3 = &types.Rule{
 }
 
 // 23. 王老师 上午 最多1节
-func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func ttlRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -55,7 +55,7 @@ func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 24. 王老师 下午 最多2节
-func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func ttlRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -68,7 +68,7 @@ func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 25. 王老师 全天(不含晚自习) 最多3节
-func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func ttlRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -82,10 +82,10 @@ func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 26. 王老师 晚自习 最多1节
-func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, classMatrix map[string]map[int]map[int]map[int]*types.Element) int {
+func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, classMatrix *types.ClassMatrix) int {
 
 	count := 0
-	for _, classMap := range classMatrix {
+	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
 			if teacherID == id {
 				for _, timeSlotMap := range teacherMap {

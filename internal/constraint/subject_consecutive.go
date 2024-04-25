@@ -22,7 +22,7 @@ var SCRule1 = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func scRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 
@@ -48,9 +48,9 @@ func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, el
 }
 
 // 检查科目是否连续排课
-func isSubjectConsecutive(subjectID int, classMatrix map[string]map[int]map[int]map[int]*types.Element) (bool, error) {
+func isSubjectConsecutive(subjectID int, classMatrix *types.ClassMatrix) (bool, error) {
 	subjectTimeSlots := make([]int, 0)
-	for sn, classMap := range classMatrix {
+	for sn, classMap := range classMatrix.Elements {
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return false, err

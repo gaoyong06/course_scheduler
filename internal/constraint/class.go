@@ -98,7 +98,7 @@ var CRule8 = &types.Rule{
 }
 
 // 1. 一年级(1)班 语文 王老师 第1节 固排
-func cRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
@@ -113,7 +113,7 @@ func cRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 2. 三年级(1)班 第7节 禁排 班会
-func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -127,7 +127,7 @@ func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 3. 三年级(2)班 第8节 禁排 班会
-func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -142,7 +142,7 @@ func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 4. 四年级 第8节 禁排 班会
-func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -157,7 +157,7 @@ func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 5. 四年级(1)班 语文 王老师 第1节 禁排
-func cRule5Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
@@ -173,7 +173,7 @@ func cRule5Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 6. 五年级 数学 李老师 第2节 固排
-func cRule6Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule6Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
@@ -188,7 +188,7 @@ func cRule6Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 7. 五年级 数学 李老师 第3节 尽量排
-func cRule7Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule7Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
@@ -203,7 +203,7 @@ func cRule7Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, ele
 }
 
 // 8. 五年级 数学 李老师 第5节 固排
-func cRule8Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func cRule8Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()

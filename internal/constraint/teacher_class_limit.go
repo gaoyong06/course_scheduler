@@ -47,7 +47,7 @@ var TCLRule4 = &types.Rule{
 }
 
 // 27. 王老师 上午第4节 最多3次
-func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tclRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -64,7 +64,7 @@ func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 28. 李老师 上午第4节 最多3次
-func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tclRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -81,7 +81,7 @@ func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 29. 刘老师 上午第4节 最多3次
-func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tclRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -98,7 +98,7 @@ func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 }
 
 // 30. 张老师 上午第4节 最多3次
-func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
+func tclRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -114,9 +114,9 @@ func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, e
 	return preCheckPassed, !shouldPenalize, nil
 }
 
-func countTeacherClassInPeriod(teacherID int, period int, classMatrix map[string]map[int]map[int]map[int]*types.Element) int {
+func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.ClassMatrix) int {
 	count := 0
-	for _, classMap := range classMatrix {
+	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
 			if teacherID == id {
 				for _, timeSlotMap := range teacherMap {
