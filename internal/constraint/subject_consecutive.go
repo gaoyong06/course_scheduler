@@ -22,9 +22,10 @@ var SCRule1 = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func scRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	classSN := element.ClassSN
+	classSN := element.GetClassSN()
+
 	SN, _ := types.ParseSN(classSN)
 	subjectID := SN.SubjectID
 

@@ -61,13 +61,17 @@ var TRule5 = &types.Rule{
 }
 
 // 9. 数学组 周一 第4节 禁排 教研会
-func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacher, err := models.FindTeacherByID(element.TeacherID)
+func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	teacher, err := models.FindTeacherByID(teacherID)
 	if err != nil {
 		return false, false, err
 	}
-	day := element.TimeSlot/constants.NUM_CLASSES + 1
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/constants.NUM_CLASSES + 1
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := day == 1 && period == 4
 	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 2
@@ -75,13 +79,17 @@ func tRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 10. 刘老师 周一 第4节 禁排 教研会
-func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacher, err := models.FindTeacherByID(element.TeacherID)
+func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	teacher, err := models.FindTeacherByID(teacherID)
 	if err != nil {
 		return false, false, err
 	}
-	day := element.TimeSlot/constants.NUM_CLASSES + 1
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/constants.NUM_CLASSES + 1
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := day == 1 && period == 4
 	shouldPenalize := preCheckPassed && teacher.TeacherID == 3
@@ -89,13 +97,17 @@ func tRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 11. 行政领导 周二 第7节 禁排 例会
-func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacher, err := models.FindTeacherByID(element.TeacherID)
+func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	teacher, err := models.FindTeacherByID(teacherID)
 	if err != nil {
 		return false, false, err
 	}
-	day := element.TimeSlot/constants.NUM_CLASSES + 1
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/constants.NUM_CLASSES + 1
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := day == 2 && period == 7
 	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 3
@@ -103,13 +115,17 @@ func tRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 12. 马老师 周二 第7节 禁排 例会
-func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacher, err := models.FindTeacherByID(element.TeacherID)
+func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	teacher, err := models.FindTeacherByID(teacherID)
 	if err != nil {
 		return false, false, err
 	}
-	day := element.TimeSlot/constants.NUM_CLASSES + 1
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/constants.NUM_CLASSES + 1
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := day == 2 && period == 7
 	shouldPenalize := preCheckPassed && teacher.TeacherID == 5
@@ -117,13 +133,17 @@ func tRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 13. 王老师 周二 第2节 固排
-func tRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacher, err := models.FindTeacherByID(element.TeacherID)
+func tRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	teacher, err := models.FindTeacherByID(teacherID)
 	if err != nil {
 		return false, false, err
 	}
-	day := element.TimeSlot/constants.NUM_CLASSES + 1
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/constants.NUM_CLASSES + 1
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := day == 2 && period == 2
 	isValid := preCheckPassed && teacher.TeacherID == 1

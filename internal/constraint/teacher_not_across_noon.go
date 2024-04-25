@@ -27,9 +27,9 @@ var TNANRule2 = &types.Rule{
 }
 
 // 33. 王老师
-func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
+	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 1
 
 	shouldPenalize := false
@@ -41,8 +41,8 @@ func tnanRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, eleme
 }
 
 // 34. 李老师
-func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacherID := element.TeacherID
+func tnanRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 2
 
 	shouldPenalize := false

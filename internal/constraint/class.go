@@ -98,21 +98,28 @@ var CRule8 = &types.Rule{
 }
 
 // 1. 一年级(1)班 语文 王老师 第1节 固排
-func cRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func cRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 1 && SN.ClassID == 1 && period == 1
-	isValid := preCheckPassed && SN.SubjectID == 1 && element.TeacherID == 1
+	isValid := preCheckPassed && SN.SubjectID == 1 && teacherID == 1
 
 	return preCheckPassed, isValid, nil
 }
 
 // 2. 三年级(1)班 第7节 禁排 班会
-func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	classSN := element.GetClassSN()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 1 && period == 7
 
 	isValid := !preCheckPassed
@@ -120,10 +127,13 @@ func cRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 3. 三年级(2)班 第8节 禁排 班会
-func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	classSN := element.GetClassSN()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 2 && period == 8
 
 	isValid := !preCheckPassed
@@ -132,10 +142,13 @@ func cRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 4. 四年级 第8节 禁排 班会
-func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	classSN := element.GetClassSN()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 4 && period == 8
 
 	isValid := !preCheckPassed
@@ -144,41 +157,61 @@ func cRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 5. 四年级(1)班 语文 王老师 第1节 禁排
-func cRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+func cRule5Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 
 	preCheckPassed := SN.GradeID == 4 && SN.SubjectID == 1 && period == 1
 
-	shouldPenalize := preCheckPassed && element.TeacherID == 1
+	shouldPenalize := preCheckPassed && teacherID == 1
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 6. 五年级 数学 李老师 第2节 固排
-func cRule6Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+func cRule6Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 2
-	isValid := preCheckPassed && SN.SubjectID == 2 && element.TeacherID == 1
+	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 1
 
 	return preCheckPassed, isValid, nil
 }
 
 // 7. 五年级 数学 李老师 第3节 尽量排
-func cRule7Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+func cRule7Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 3
-	isValid := preCheckPassed && SN.SubjectID == 2 && element.TeacherID == 2
+	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
 
 	return preCheckPassed, isValid, nil
 }
 
 // 8. 五年级 数学 李老师 第5节 固排
-func cRule8Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	SN, _ := types.ParseSN(element.ClassSN)
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+func cRule8Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+
+	SN, _ := types.ParseSN(classSN)
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := SN.GradeID == 5 && period == 5
-	isValid := preCheckPassed && SN.SubjectID == 2 && element.TeacherID == 2
+	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
 	return preCheckPassed, isValid, nil
 }

@@ -47,10 +47,11 @@ var TCLRule4 = &types.Rule{
 }
 
 // 27. 王老师 上午第4节 最多3次
-func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := teacherID == 1 && period == 4
 
 	shouldPenalize := false
@@ -63,10 +64,11 @@ func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 28. 李老师 上午第4节 最多3次
-func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := teacherID == 2 && period == 4
 
 	shouldPenalize := false
@@ -79,10 +81,11 @@ func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 29. 刘老师 上午第4节 最多3次
-func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := teacherID == 3 && period == 4
 
 	shouldPenalize := false
@@ -95,10 +98,11 @@ func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 30. 张老师 上午第4节 最多3次
-func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	preCheckPassed := teacherID == 4 && period == 4
 
 	shouldPenalize := false

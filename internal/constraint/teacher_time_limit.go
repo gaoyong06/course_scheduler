@@ -42,10 +42,11 @@ var TTLRule3 = &types.Rule{
 }
 
 // 23. 王老师 上午 最多1节
-func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	count := countTeacherClassesInRange(1, 1, 4, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 4
@@ -54,10 +55,11 @@ func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 24. 王老师 下午 最多2节
-func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	count := countTeacherClassesInRange(1, 5, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 5 && period <= 8
@@ -66,10 +68,11 @@ func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 25. 王老师 全天(不含晚自习) 最多3节
-func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
-	period := element.TimeSlot%constants.NUM_CLASSES + 1
+	teacherID := element.GetTeacherID()
+	timeSlot := element.GetTimeSlot()
+	period := timeSlot%constants.NUM_CLASSES + 1
 	count := countTeacherClassesInRange(1, 1, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 8

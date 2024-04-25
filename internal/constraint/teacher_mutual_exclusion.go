@@ -28,8 +28,8 @@ var TMERule2 = &types.Rule{
 }
 
 // 31. 王老师(语文) 马老师(美术)
-func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
-	teacherID := element.TeacherID
+func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 1 || teacherID == 5
 
 	shouldPenalize := false
@@ -41,9 +41,9 @@ func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 32. 李老师(数学) 黄老师(体育)
-func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	teacherID := element.TeacherID
+	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 2 || teacherID == 6
 
 	shouldPenalize := false
@@ -55,12 +55,13 @@ func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 判断教师A,教师B是否同一天都有课
-func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) bool {
+func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) bool {
 
 	teacher1Days := make(map[int]bool)
 	teacher2Days := make(map[int]bool)
+	timeSlot := element.GetTimeSlot()
 
-	elementDay := element.TimeSlot / constants.NUM_CLASSES
+	elementDay := timeSlot / constants.NUM_CLASSES
 
 	for _, classMap := range classMatrix {
 		for id, teacherMap := range classMap {

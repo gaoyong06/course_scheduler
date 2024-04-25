@@ -126,7 +126,7 @@ func (cm *ClassMatrix) reCalcDynamicScores() error {
 }
 
 // 计算课班适应性矩阵所有元素的得分
-func (cm *ClassMatrix) calcScores(calcFunc func(*types.Element)) error {
+func (cm *ClassMatrix) calcScores(calcFunc func(types.ClassUnit)) error {
 
 	for sn, teacherMap := range cm.Elements {
 		SN, err := types.ParseSN(sn)
@@ -182,14 +182,19 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 }
 
 // CalcFixed 计算固定约束条件得分
-func (cm *ClassMatrix) calcFixedScore(element *types.Element) {
+func (cm *ClassMatrix) calcFixedScore(element types.ClassUnit) {
 
 	rules := constraint.GetFixedRules()
 	score := 0
 	penalty := 0
 
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	venueID := element.GetVenueID()
+	timeSlot := element.GetTimeSlot()
+
 	// 先清空
-	newVal := cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
+	newVal := cm.Elements[classSN][teacherID][venueID][timeSlot]
 	newVal.ScoreInfo.FixedPassed = []string{}
 	newVal.ScoreInfo.FixedFailed = []string{}
 
@@ -214,18 +219,23 @@ func (cm *ClassMatrix) calcFixedScore(element *types.Element) {
 	// 固定约束条件得分
 	finalScore := score - penalty
 	newVal.ScoreInfo.FixedScore = finalScore
-	cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = newVal
+	cm.Elements[classSN][teacherID][venueID][timeSlot] = newVal
 }
 
 // CalcDynamic 计算动态约束条件得分
-func (cm *ClassMatrix) calcDynamicScore(element *types.Element) {
+func (cm *ClassMatrix) calcDynamicScore(element types.ClassUnit) {
 
 	rules := constraint.GetDynamicRules()
 	score := 0
 	penalty := 0
 
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	venueID := element.GetVenueID()
+	timeSlot := element.GetTimeSlot()
+
 	// 先清空
-	newVal := cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
+	newVal := cm.Elements[classSN][teacherID][venueID][timeSlot]
 	newVal.ScoreInfo.DynamicPassed = []string{}
 	newVal.ScoreInfo.DynamicFailed = []string{}
 
@@ -252,7 +262,7 @@ func (cm *ClassMatrix) calcDynamicScore(element *types.Element) {
 		// log.Printf("Updated dynamic score: sn=%s, teacherID=%d, venueID=%d, TimeSlot=%d, oldDynamicScore=%d, currentDynamicScore=%d", element.ClassSN, element.TeacherID, element.VenueID, element.TimeSlot, oldDynamicScore, finalScore)
 	}
 
-	cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = newVal
+	cm.Elements[classSN][teacherID][venueID][timeSlot] = newVal
 }
 
 // 打印有冲突的元素

@@ -18,10 +18,15 @@ var PCRule1 = &types.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func pcRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	periodCount := countPeriodClasses(classMatrix, element.ClassSN, element.TeacherID, element.VenueID)
-	period := element.TimeSlot % constants.NUM_CLASSES
+	classSN := element.GetClassSN()
+	teacherID := element.GetTeacherID()
+	venueID := element.GetVenueID()
+	timeSlot := element.GetTimeSlot()
+
+	periodCount := countPeriodClasses(classMatrix, classSN, teacherID, venueID)
+	period := timeSlot % constants.NUM_CLASSES
 
 	preCheckPassed := false
 	count := 0

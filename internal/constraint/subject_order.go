@@ -18,9 +18,9 @@ var SORule1 = &types.Rule{
 }
 
 // 38. 体育 数学
-func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element *types.Element) (bool, bool, error) {
+func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
 
-	classSN := element.ClassSN
+	classSN := element.GetClassSN()
 	SN, _ := types.ParseSN(classSN)
 	subjectID := SN.SubjectID
 	preCheckPassed := subjectID == 6 || subjectID == 2
