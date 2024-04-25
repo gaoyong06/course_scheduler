@@ -18,7 +18,7 @@ var SORule1 = &types.Rule{
 }
 
 // 38. 体育 数学
-func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	SN, _ := types.ParseSN(classSN)
@@ -37,7 +37,7 @@ func soRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element
 
 // 判断体育课后是否就是数学课
 // 判断课程A(体育)是在课程B(数学)之前
-func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]types.Val) (bool, error) {
+func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]*types.Element) (bool, error) {
 
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
@@ -48,8 +48,8 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix map[string
 		}
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
-					if val.Used == 1 {
+				for timeSlot, element := range venueMap {
+					if element.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
 							timeSlotsA = append(timeSlotsA, timeSlot)
 						} else if SN.SubjectID == subjectBID {

@@ -28,7 +28,7 @@ var TMERule2 = &types.Rule{
 }
 
 // 31. 王老师(语文) 马老师(美术)
-func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 1 || teacherID == 5
 
@@ -41,7 +41,7 @@ func tmeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 32. 李老师(数学) 黄老师(体育)
-func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	preCheckPassed := teacherID == 2 || teacherID == 6
@@ -55,7 +55,7 @@ func tmeRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 判断教师A,教师B是否同一天都有课
-func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) bool {
+func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) bool {
 
 	teacher1Days := make(map[int]bool)
 	teacher2Days := make(map[int]bool)
@@ -67,8 +67,8 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int
 		for id, teacherMap := range classMap {
 			if id == teacherAID {
 				for _, timeSlotMap := range teacherMap {
-					for timeSlot, val := range timeSlotMap {
-						if val.Used == 1 {
+					for timeSlot, element := range timeSlotMap {
+						if element.Val.Used == 1 {
 							day := timeSlot / constants.NUM_CLASSES
 							teacher1Days[day] = true // 将时间段转换为天数
 						}
@@ -76,8 +76,8 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix map[string]map[int
 				}
 			} else if id == teacherBID {
 				for _, timeSlotMap := range teacherMap {
-					for timeSlot, val := range timeSlotMap {
-						if val.Used == 1 {
+					for timeSlot, element := range timeSlotMap {
+						if element.Val.Used == 1 {
 							day := timeSlot / constants.NUM_CLASSES
 							teacher2Days[day] = true // 将时间段转换为天数
 						}

@@ -19,7 +19,7 @@ var SMERule1 = &types.Rule{
 }
 
 // 37. 活动 体育
-func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	SN, _ := types.ParseSN(classSN)
@@ -40,7 +40,7 @@ func smeRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 判断活动课和体育课是否在同一天
-func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, error) {
+func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, error) {
 
 	timeSlot := element.GetTimeSlot()
 	subjectADays := make(map[int]bool)
@@ -54,8 +54,8 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix map[string]map[in
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
-					if val.Used == 1 {
+				for timeSlot, element := range venueMap {
+					if element.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
 							subjectADays[timeSlot/constants.NUM_CLASSES] = true // 将时间段转换为天数
 						} else if SN.SubjectID == subjectBID {

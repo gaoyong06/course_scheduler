@@ -42,7 +42,7 @@ var TTLRule3 = &types.Rule{
 }
 
 // 23. 王老师 上午 最多1节
-func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -55,7 +55,7 @@ func ttlRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 24. 王老师 下午 最多2节
-func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -68,7 +68,7 @@ func ttlRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 25. 王老师 全天(不含晚自习) 最多3节
-func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -82,7 +82,7 @@ func ttlRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 26. 王老师 晚自习 最多1节
-func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, classMatrix map[string]map[int]map[int]map[int]types.Val) int {
+func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, classMatrix map[string]map[int]map[int]map[int]*types.Element) int {
 
 	count := 0
 	for _, classMap := range classMatrix {
@@ -92,8 +92,8 @@ func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, class
 					if timeSlotMap == nil {
 						continue
 					}
-					for timeSlot, val := range timeSlotMap {
-						if val.Used == 1 && timeSlot >= startPeriod && timeSlot <= endPeriod {
+					for timeSlot, element := range timeSlotMap {
+						if element.Val.Used == 1 && timeSlot >= startPeriod && timeSlot <= endPeriod {
 							count++
 						}
 					}

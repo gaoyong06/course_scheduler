@@ -47,7 +47,7 @@ var TCLRule4 = &types.Rule{
 }
 
 // 27. 王老师 上午第4节 最多3次
-func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -64,7 +64,7 @@ func tclRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 28. 李老师 上午第4节 最多3次
-func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -81,7 +81,7 @@ func tclRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 29. 刘老师 上午第4节 最多3次
-func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -98,7 +98,7 @@ func tclRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 30. 张老师 上午第4节 最多3次
-func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
@@ -114,7 +114,7 @@ func tclRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 	return preCheckPassed, !shouldPenalize, nil
 }
 
-func countTeacherClassInPeriod(teacherID int, period int, classMatrix map[string]map[int]map[int]map[int]types.Val) int {
+func countTeacherClassInPeriod(teacherID int, period int, classMatrix map[string]map[int]map[int]map[int]*types.Element) int {
 	count := 0
 	for _, classMap := range classMatrix {
 		for id, teacherMap := range classMap {
@@ -123,8 +123,8 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix map[string
 					if timeSlotMap == nil {
 						continue
 					}
-					for timeSlot, val := range timeSlotMap {
-						if val.Used == 1 && timeSlot%constants.NUM_CLASSES+1 == period {
+					for timeSlot, element := range timeSlotMap {
+						if element.Val.Used == 1 && timeSlot%constants.NUM_CLASSES+1 == period {
 							count++
 						}
 					}

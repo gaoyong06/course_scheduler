@@ -61,7 +61,7 @@ var SRule4 = &types.Rule{
 // 14. 语数英 周一~周五 第1节 优先排
 // 15. 语数英 周一~周五 第2节 优先排
 // 16. 语数英 周一~周五 第3节 优先排
-func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -81,7 +81,7 @@ func sRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 
 // 副课 安排在第1,2,3节 扣分
 // 满足该条件扣分, 不满足该该条件, 不增加分数, 也不扣分
-func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -100,7 +100,7 @@ func sRule2Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 17. 主课 周一~周五 第8节 禁排
-func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -118,7 +118,7 @@ func sRule3Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element 
 }
 
 // 18. 主课 周一~周五 第7节 尽量不排
-func sRule4Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func sRule4Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()

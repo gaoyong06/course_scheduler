@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val, classHours map[int]int) (*Individual, error) {
+func newIndividual(classMatrix map[string]map[int]map[int]map[int]*types.Element, classHours map[int]int) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -53,9 +53,9 @@ func newIndividual(classMatrix map[string]map[int]map[int]map[int]types.Val, cla
 
 		for teacherID, teacherMap := range classMap {
 			for venueID, venueMap := range teacherMap {
-				for timeSlot, val := range venueMap {
+				for timeSlot, element := range venueMap {
 
-					if val.Used == 1 {
+					if element.Val.Used == 1 {
 
 						// 将每个课班的时间、教室、老师作为染色体上的基因
 						gene := Gene{
@@ -162,28 +162,28 @@ func (i *Individual) toClassMatrix() *class_adapt.ClassMatrix {
 		for _, gene := range chromosome.Genes {
 			// 检查中间键是否存在，如果不存在，则创建它们
 			if _, ok := classMatrix.Elements[gene.ClassSN]; !ok {
-				classMatrix.Elements[gene.ClassSN] = make(map[int]map[int]map[int]types.Val)
+				classMatrix.Elements[gene.ClassSN] = make(map[int]map[int]map[int]*types.Element)
 			}
 			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID]; !ok {
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID] = make(map[int]map[int]types.Val)
+				classMatrix.Elements[gene.ClassSN][gene.TeacherID] = make(map[int]map[int]*types.Element)
 			}
 			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID]; !ok {
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID] = make(map[int]types.Val)
+				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID] = make(map[int]*types.Element)
 			}
 
 			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; !ok {
 
-				scoreInfo := &types.ScoreInfo{Score: 0}
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 0}
+				scoreInfo := types.ScoreInfo{Score: 0}
+				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val = types.Val{ScoreInfo: scoreInfo, Used: 0}
 			}
-			if val, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; ok {
+			if element, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; ok {
 				// 键存在，更新值
-				val.Used = 1
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = val
+				element.Val.Used = 1
+				// classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = element
 			} else {
 				// 键不存在，创建新的值并赋值为 1
-				scoreInfo := &types.ScoreInfo{Score: 0}
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 1}
+				scoreInfo := types.ScoreInfo{Score: 0}
+				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val = types.Val{ScoreInfo: scoreInfo, Used: 1}
 			}
 		}
 	}
@@ -239,7 +239,7 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 			// }
 
 			classMatrix.CalcScore(element)
-			score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
+			score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			// fitness += score.FinalScore
 			fitness += score

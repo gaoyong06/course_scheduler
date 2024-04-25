@@ -11,7 +11,9 @@ package types
 //	bool true: 满足前置条件, false: 不满足前置条件
 //	bool true: 满足约束,增加score, false: 不满足约束,增加penalty
 //	error 错误信息
-type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]Val, classUnit ClassUnit) (bool, bool, error)
+//
+// type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]Val, classUnit ClassUnit) (bool, bool, error)
+type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]*Element, classUnit ClassUnit) (bool, bool, error)
 
 // Rule 表示评分规则
 type Rule struct {

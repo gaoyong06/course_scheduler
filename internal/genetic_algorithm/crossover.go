@@ -209,7 +209,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 			// score, err := classMatrix1.CalcScore(element)
 
 			classMatrix1.CalcScore(element)
-			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
+			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			// if err != nil {
 			// 	return false, err
@@ -244,7 +244,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 			}
 
 			classMatrix2.CalcScore(element)
-			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
+			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			// score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 			// if err != nil {

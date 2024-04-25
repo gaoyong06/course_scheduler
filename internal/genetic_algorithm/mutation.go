@@ -85,7 +85,7 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 	// score, err := classMatrix.CalcScore(element)
 
 	classMatrix.CalcScore(element)
-	score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].ScoreInfo.Score
+	score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 	// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
 	// if err != nil {

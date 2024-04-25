@@ -21,7 +21,7 @@ var SSDRule1 = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, element types.ClassUnit) (bool, bool, error) {
+func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]*types.Element, element types.ClassUnit) (bool, bool, error) {
 
 	// fmt.Printf("---> ssdRule1Fn %d", element.TimeSlot)
 
@@ -52,16 +52,16 @@ func ssdRule1Fn(classMatrix map[string]map[int]map[int]map[int]types.Val, elemen
 }
 
 // 检查同一科目是否在同一天已经排课
-func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, timeSlot int) bool {
+func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]*types.Element, sn string, timeSlot int) bool {
 
 	count := 0
 	day := timeSlot / constants.NUM_CLASSES
 
 	for _, teacherMap := range classMatrix[sn] {
 		for _, venueMap := range teacherMap {
-			for timeSlot1, val := range venueMap {
+			for timeSlot1, element := range venueMap {
 
-				if val.Used == 1 {
+				if element.Val.Used == 1 {
 					day1 := timeSlot1 / constants.NUM_CLASSES
 					if day == day1 && timeSlot != timeSlot1 {
 						count++
