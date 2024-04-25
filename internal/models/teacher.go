@@ -1,7 +1,6 @@
 package models
 
 import (
-	"course_scheduler/internal/types"
 	"fmt"
 
 	"github.com/samber/lo"
@@ -50,9 +49,8 @@ func FindTeacherByID(teacherID int) (*Teacher, error) {
 
 // 老师集合
 // 根据课班选取老师
-func ClassTeacherIDs(SN *types.SN) []int {
+func ClassTeacherIDs(subjectID int) []int {
 
-	subjectID := SN.SubjectID
 	var teacherIDs []int
 	teachers := GetTeachers()
 

@@ -2,6 +2,7 @@
 package genetic_algorithm
 
 import (
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 	"fmt"
 	"math/rand"
@@ -205,19 +206,13 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				VenueID:   gene.VenueID,
 				TimeSlot:  gene.TimeSlot,
 			}
-			// score, err := evaluation.CalcScore(classMatrix1, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-			// score, err := classMatrix1.CalcScore(element)
 
-			classMatrix1.CalcScore(element)
+			fixedRules := constraint.GetFixedRules()
+			dynamicRules := constraint.GetDynamicRules()
+
+			classMatrix1.CalcScore(element, fixedRules, dynamicRules)
 			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
-			// if err != nil {
-			// 	return false, err
-			// }
-
-			// if score.FinalScore < 0 {
-			// 	return false, err
-			// }
 			if score1 < 0 {
 				return false, err
 			}
@@ -243,21 +238,15 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 				TimeSlot:  gene.TimeSlot,
 			}
 
-			classMatrix2.CalcScore(element)
-			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
+			fixedRules := constraint.GetFixedRules()
+			dynamicRules := constraint.GetDynamicRules()
 
-			// score, err := evaluation.CalcScore(classMatrix2, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-			// if err != nil {
-			// 	return false, err
-			// }
+			classMatrix2.CalcScore(element, fixedRules, dynamicRules)
+			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			if score2 < 0 {
 				return false, err
 			}
-
-			// if score.FinalScore < 0 {
-			// 	return false, err
-			// }
 		}
 	}
 	return true, nil

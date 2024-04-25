@@ -2,7 +2,8 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/class_adapt"
+	"course_scheduler/internal/constraint"
+	"course_scheduler/internal/types"
 	"fmt"
 	"log"
 	"math/rand"
@@ -11,7 +12,7 @@ import (
 )
 
 // 初始化种群
-func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populationSize int) ([]*Individual, error) {
+func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int) ([]*Individual, error) {
 
 	var classeSNs []string
 	for _, class := range classes {
@@ -28,7 +29,7 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 
 		var err error
 		var numAssignedClasses int
-		classMatrix := class_adapt.NewClassMatrix()
+		classMatrix := types.NewClassMatrix()
 
 		// var classMatrix map[string]map[int]map[int]map[int]types.Val
 
@@ -55,7 +56,9 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			log.Println("Class matrix initialized")
 
 			// 计算课班适应性矩阵各个元素固定约束条件下的得分
-			err = classMatrix.CalcFixedScores()
+
+			fixedRules := constraint.GetFixedRules()
+			err = classMatrix.CalcFixedScores(fixedRules)
 			if err != nil {
 				return nil, err
 			}
@@ -64,7 +67,8 @@ func InitPopulation(classes []class_adapt.Class, classHours map[int]int, populat
 			// utils.PrintClassMatrix(classMatrix.Elements)
 
 			// 课班适应性矩阵分配
-			numAssignedClasses, err = classMatrix.Allocate(classeSNs, classHours)
+			dynamicRules := constraint.GetDynamicRules()
+			numAssignedClasses, err = classMatrix.Allocate(classeSNs, classHours, dynamicRules)
 			log.Printf("numAssignedClasses: %d\n", numAssignedClasses)
 
 			if err == nil {

@@ -1,7 +1,5 @@
 package models
 
-import "course_scheduler/internal/types"
-
 func GetVenueIDs() []int {
 
 	// 教室id列表
@@ -11,10 +9,9 @@ func GetVenueIDs() []int {
 
 // 教室集合
 // 根据课班选取教室
-func ClassVenueIDs(SN *types.SN) []int {
+func ClassVenueIDs(classID int) []int {
 
 	venueIDs := GetVenueIDs()
-	classID := SN.ClassID
 	venueID := venueIDs[classID]
 
 	var ids []int

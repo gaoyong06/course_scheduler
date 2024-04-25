@@ -1,10 +1,8 @@
 // class_matrix.go
-package class_adapt
+package types
 
 import (
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
-	"course_scheduler/internal/types"
 	"fmt"
 	"math"
 	"strings"
@@ -13,13 +11,13 @@ import (
 // 课班适应性矩阵
 type ClassMatrix struct {
 	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
-	Elements map[string]map[int]map[int]map[int]*types.Element
+	Elements map[string]map[int]map[int]map[int]*Element
 }
 
 // 新建课班适应性矩阵
 func NewClassMatrix() *ClassMatrix {
 	return &ClassMatrix{
-		Elements: make(map[string]map[int]map[int]map[int]*types.Element),
+		Elements: make(map[string]map[int]map[int]map[int]*Element),
 	}
 }
 
@@ -33,21 +31,25 @@ func (cm *ClassMatrix) Init(classes []Class) {
 
 	for i := 0; i < len(classes); i++ {
 		class := classes[i]
-		teacherIDs := models.ClassTeacherIDs(class.SN)
-		venueIDs := models.ClassVenueIDs(class.SN)
+
+		subjectID := class.SN.SubjectID
+		classID := class.SN.ClassID
+
+		teacherIDs := models.ClassTeacherIDs(subjectID)
+		venueIDs := models.ClassVenueIDs(classID)
 		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
 		sn := class.SN.Generate()
 
-		cm.Elements[sn] = make(map[int]map[int]map[int]*types.Element)
+		cm.Elements[sn] = make(map[int]map[int]map[int]*Element)
 		for j := 0; j < len(teacherIDs); j++ {
 			teacherID := teacherIDs[j]
-			cm.Elements[sn][teacherID] = make(map[int]map[int]*types.Element)
+			cm.Elements[sn][teacherID] = make(map[int]map[int]*Element)
 			for k := 0; k < len(venueIDs); k++ {
 				venueID := venueIDs[k]
-				cm.Elements[sn][teacherID][venueID] = make(map[int]*types.Element)
+				cm.Elements[sn][teacherID][venueID] = make(map[int]*Element)
 				for l := 0; l < len(timeSlots); l++ {
 					timeSlot := timeSlots[l]
-					element := types.NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+					element := NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
 					cm.Elements[sn][teacherID][venueID][timeSlot] = element
 				}
 			}
@@ -55,90 +57,15 @@ func (cm *ClassMatrix) Init(classes []Class) {
 	}
 }
 
-// func (cm *ClassMatrix) Init(classes []Class) {
-
-// 	for i := 0; i < len(classes); i++ {
-// 		class := classes[i]
-// 		teacherIDs := models.ClassTeacherIDs(class.SN)
-// 		venueIDs := models.ClassVenueIDs(class.SN)
-// 		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
-// 		sn := class.SN.Generate()
-
-// 		cm.Elements[sn] = make(map[int]map[int]map[int]types.Val)
-// 		for j := 0; j < len(teacherIDs); j++ {
-// 			teacherID := teacherIDs[j]
-// 			cm.Elements[sn][teacherID] = make(map[int]map[int]types.Val)
-// 			for k := 0; k < len(venueIDs); k++ {
-// 				venueID := venueIDs[k]
-// 				cm.Elements[sn][teacherID][venueID] = make(map[int]types.Val)
-// 				for l := 0; l < len(timeSlots); l++ {
-// 					timeSlot := timeSlots[l]
-// 					scoreInfo := &types.ScoreInfo{
-// 						Score:         0,
-// 						FixedScore:    0,
-// 						DynamicScore:  0,
-// 						FixedPassed:   []string{},
-// 						FixedFailed:   []string{},
-// 						DynamicPassed: []string{},
-// 						DynamicFailed: []string{},
-// 					}
-// 					cm.Elements[sn][teacherID][venueID][timeSlot] = types.Val{ScoreInfo: scoreInfo, Used: 0}
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-// // GetElement 获取课班适应性矩阵中指定元素
-// func (cm *ClassMatrix) GetElement(classSN string, teacherID, venueID, timeSlot int) (*types.Element, bool) {
-
-// 	if val, ok := cm.Elements[classSN][teacherID][venueID][timeSlot]; ok {
-// 		SN, err := types.ParseSN(classSN)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			return nil, false
-// 		}
-
-// 		return &types.Element{
-// 			ClassSN:   classSN,
-// 			SubjectID: SN.SubjectID,
-// 			GradeID:   SN.GradeID,
-// 			ClassID:   SN.ClassID,
-// 			TeacherID: teacherID,
-// 			VenueID:   venueID,
-// 			TimeSlot:  timeSlot,
-// 			Val:       &val,
-// 		}, true
-// 	}
-// 	return nil, false
-// }
-
-// // SetElementVal 修改矩阵中某个元素的 Val 值
-// func (cm *ClassMatrix) SetElementVal(classSN string, teacherID, venueID, timeSlot int, val types.Val) {
-// 	cm.Elements[classSN][teacherID][venueID][timeSlot] = val
-// }
-
 // 计算课班适应性矩阵的所有元素, 固定约束条件下的得分
-func (cm *ClassMatrix) CalcFixedScores() error {
-	return cm.calcScores(cm.calcFixedScore)
+func (cm *ClassMatrix) CalcFixedScores(rules []*Rule) error {
+	return cm.calcScores(cm.calcFixedScore, rules)
 }
 
-// 计算元素element固定约束得分和动态约束得分
-// func (cm *ClassMatrix) CalcScore(element *types.Element) {
+func (cm *ClassMatrix) CalcScore(element *Element, fixedRules, dynamicRules []*Rule) {
 
-// 	cm.calcFixedScore(element)
-// 	cm.calcDynamicScore(element)
-
-// 	// 更新val.ScoreInfo.Score
-// 	tempVal := cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot]
-// 	tempVal.ScoreInfo.Score = tempVal.ScoreInfo.FixedScore + tempVal.ScoreInfo.DynamicScore
-// 	cm.Elements[element.ClassSN][element.TeacherID][element.VenueID][element.TimeSlot] = tempVal
-// }
-
-func (cm *ClassMatrix) CalcScore(element *types.Element) {
-
-	cm.calcFixedScore(element)
-	cm.calcDynamicScore(element)
+	cm.calcFixedScore(element, fixedRules)
+	cm.calcDynamicScore(element, dynamicRules)
 
 	// 更新 element.Val.Score
 	element.Val.ScoreInfo.Score = element.Val.ScoreInfo.FixedScore + element.Val.ScoreInfo.DynamicScore
@@ -146,14 +73,14 @@ func (cm *ClassMatrix) CalcScore(element *types.Element) {
 
 // 根据班级适应性矩阵分配课时
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
-func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int) (int, error) {
+func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules []*Rule) (int, error) {
 
 	var numAssignedClasses int
 
 	timeTable := initTimeTable()
 
 	for _, sn := range classSNs {
-		SN, err := types.ParseSN(sn)
+		SN, err := ParseSN(sn)
 		if err != nil {
 			return numAssignedClasses, err
 		}
@@ -175,7 +102,7 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int) (int,
 
 				timeTable.Used[timeSlot] = true
 
-				cm.reCalcDynamicScores()
+				cm.reCalcDynamicScores(rules)
 
 				// updateTimeTableAndClassMatrix(sn, teacherID, venueID, timeSlot, cm.data, timeTable)
 				numAssignedClasses++
@@ -189,18 +116,18 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int) (int,
 }
 
 // 计算课班适应性矩阵中,各个元素的动态约束条件下的得分
-func (cm *ClassMatrix) reCalcDynamicScores() error {
-	return cm.calcScores(cm.calcDynamicScore)
+func (cm *ClassMatrix) reCalcDynamicScores(rules []*Rule) error {
+	return cm.calcScores(cm.calcDynamicScore, rules)
 }
 
 // 计算课班适应性矩阵所有元素的得分
-func (cm *ClassMatrix) calcScores(calcFunc func(types.ClassUnit)) error {
+func (cm *ClassMatrix) calcScores(calcFunc func(ClassUnit, []*Rule), rules []*Rule) error {
 
 	for _, teacherMap := range cm.Elements {
 		for _, venueMap := range teacherMap {
 			for _, timeSlotMap := range venueMap {
 				for _, element := range timeSlotMap {
-					calcFunc(element)
+					calcFunc(element, rules)
 					element.Val.ScoreInfo.Score = element.Val.ScoreInfo.DynamicScore + element.Val.ScoreInfo.FixedScore
 				}
 			}
@@ -236,9 +163,8 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 }
 
 // CalcFixed 计算固定约束条件得分
-func (cm *ClassMatrix) calcFixedScore(element types.ClassUnit) {
+func (cm *ClassMatrix) calcFixedScore(element ClassUnit, rules []*Rule) {
 
-	rules := constraint.GetFixedRules()
 	score := 0
 	penalty := 0
 
@@ -275,9 +201,8 @@ func (cm *ClassMatrix) calcFixedScore(element types.ClassUnit) {
 }
 
 // CalcDynamic 计算动态约束条件得分
-func (cm *ClassMatrix) calcDynamicScore(element types.ClassUnit) {
+func (cm *ClassMatrix) calcDynamicScore(element ClassUnit, rules []*Rule) {
 
-	rules := constraint.GetDynamicRules()
 	score := 0
 	penalty := 0
 

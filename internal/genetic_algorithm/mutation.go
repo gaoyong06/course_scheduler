@@ -2,7 +2,7 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/class_adapt"
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"math/rand"
@@ -82,24 +82,16 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 		VenueID:   newGene.VenueID,
 		TimeSlot:  newGene.TimeSlot,
 	}
-	// score, err := classMatrix.CalcScore(element)
 
-	classMatrix.CalcScore(element)
+	fixedRules := constraint.GetFixedRules()
+	dynamicRules := constraint.GetDynamicRules()
+
+	classMatrix.CalcScore(element, fixedRules, dynamicRules)
 	score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-
-	// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-	// if err != nil {
-	// 	return false, err
-	// }
 
 	if score < 0 {
 		return false, err
 	}
-
-	// if score.FinalScore < 0 {
-	// 	return false, err
-	// }
-
 	return true, nil
 }
 
@@ -141,7 +133,7 @@ func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
 	}
 
 	// 时间集合
-	timeSlots := class_adapt.ClassTimeSlots(unusedTeacherIDs, unusedVenueIDs)
+	timeSlots := types.ClassTimeSlots(unusedTeacherIDs, unusedVenueIDs)
 	for _, timeSlot := range timeSlots {
 		timeSlotUsed := false
 		for _, gene := range chromosome.Genes {

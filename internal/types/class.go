@@ -1,20 +1,18 @@
-package class_adapt
+package types
 
 import (
 	"course_scheduler/internal/constants"
-	"course_scheduler/internal/models"
-	"course_scheduler/internal/types"
 	"fmt"
 )
 
 // 课班
 // 表示科目班级如:美术一班, 如果增加年级如: 美术三年级一班
 type Class struct {
-	SN        *types.SN // 序列号
-	SubjectID int       // 科目id
-	GradeID   int       // 年级id
-	ClassID   int       // 班级id
-	Name      string    // 名称
+	SN        SN     // 序列号
+	SubjectID int    // 科目id
+	GradeID   int    // 年级id
+	ClassID   int    // 班级id
+	Name      string // 名称
 }
 
 func (c *Class) String() string {
@@ -25,7 +23,7 @@ func (c *Class) String() string {
 func InitClasses() []Class {
 
 	var classes []Class
-	subjects := models.GetSubjects()
+	// subjects := models.GetSubjects()
 
 	// 这里根据年级,班级,科目生成课班
 	for i := 0; i < constants.NUM_GRADES; i++ {
@@ -40,8 +38,8 @@ func InitClasses() []Class {
 					SubjectID: subjectID,
 					GradeID:   gradeID,
 					ClassID:   classID,
-					SN:        &types.SN{SubjectID: subjectID, GradeID: gradeID, ClassID: classID},
-					Name:      fmt.Sprintf("%d年级(%d)班 %s", gradeID, classID, subjects[k].Name),
+					SN:        SN{SubjectID: subjectID, GradeID: gradeID, ClassID: classID},
+					// Name:      fmt.Sprintf("%d年级(%d)班 %s", gradeID, classID, subjects[k].Name),
 				}
 				classes = append(classes, class)
 			}
@@ -65,6 +63,3 @@ func ClassTimeSlots(teacherIDs []int, venueIDs []int) []int {
 	}
 	return timeSlots
 }
-
-
-

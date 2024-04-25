@@ -2,8 +2,8 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/class_adapt"
 	"course_scheduler/internal/constants"
+	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"crypto/sha256"
@@ -149,13 +149,12 @@ func (i *Individual) UniqueId() string {
 	return lastFour
 }
 
-func (i *Individual) toClassMatrix() *class_adapt.ClassMatrix {
+func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	// 汇总课班集合
-	classes1 := class_adapt.InitClasses()
+	classes1 := types.InitClasses()
 
 	// 初始化课班适应性矩阵
-	// classMatrix := class_adapt.InitClassMatrix(classes1)
-	classMatrix := class_adapt.NewClassMatrix()
+	classMatrix := types.NewClassMatrix()
 	classMatrix.Init(classes1)
 
 	for _, chromosome := range i.Chromosomes {
@@ -232,16 +231,11 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 				TimeSlot:  gene.TimeSlot,
 			}
 
-			// score, err := evaluation.CalcScore(classMatrix, classHours, gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot)
-			// score, err := classMatrix.CalcScore(element)
-			// if err != nil {
-			// 	return fitness, err
-			// }
+			fixedRules := constraint.GetFixedRules()
+			dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix.CalcScore(element)
+			classMatrix.CalcScore(element, fixedRules, dynamicRules)
 			score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-
-			// fitness += score.FinalScore
 			fitness += score
 		}
 	}

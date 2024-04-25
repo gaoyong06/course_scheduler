@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"course_scheduler/config"
-	"course_scheduler/internal/class_adapt"
 	"course_scheduler/internal/genetic_algorithm"
 	"course_scheduler/internal/models"
+	"course_scheduler/internal/types"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	// bestRatio := config.BestRatio
 
 	// 课班初始化
-	classes := class_adapt.InitClasses()
+	classes := types.InitClasses()
 
 	// 周课时初始化
 	classHours := models.GetClassHours()

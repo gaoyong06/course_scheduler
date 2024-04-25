@@ -1,4 +1,4 @@
-package class_adapt
+package types
 
 import (
 	"course_scheduler/internal/constants"
