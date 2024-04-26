@@ -158,8 +158,11 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	offspring2.SortChromosomes()
 
 	// 评估子代个体的适应度并赋值
-	fitness1, err1 := offspring1.EvaluateFitness(classHours)
-	fitness2, err2 := offspring2.EvaluateFitness(classHours)
+	offspringClassMatrix1 := offspring1.toClassMatrix()
+	offspringClassMatrix2 := offspring2.toClassMatrix()
+
+	fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
+	fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
 
 	if err1 != nil || err2 != nil {
 		return nil, nil, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())

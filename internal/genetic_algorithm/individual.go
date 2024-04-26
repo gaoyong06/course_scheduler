@@ -90,11 +90,11 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 
 	// TODO: 这里需要重点关注
 	// // 设置适应度
-	// fitness, err := individual.EvaluateFitness(classHours)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	individual.Fitness = 1
+	fitness, err := individual.EvaluateFitness(classMatrix, classHours)
+	if err != nil {
+		return nil, err
+	}
+	individual.Fitness = fitness
 
 	return individual, nil
 }
@@ -159,33 +159,16 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
-			// 检查中间键是否存在，如果不存在，则创建它们
-			if _, ok := classMatrix.Elements[gene.ClassSN]; !ok {
-				classMatrix.Elements[gene.ClassSN] = make(map[int]map[int]map[int]*types.Element)
-			}
-			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID]; !ok {
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID] = make(map[int]map[int]*types.Element)
-			}
-			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID]; !ok {
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID] = make(map[int]*types.Element)
-			}
 
-			if _, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; !ok {
-
-				scoreInfo := types.ScoreInfo{Score: 0}
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val = types.Val{ScoreInfo: scoreInfo, Used: 0}
-			}
-			if element, ok := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]; ok {
-				// 键存在，更新值
-				element.Val.Used = 1
-				// classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot] = element
-			} else {
-				// 键不存在，创建新的值并赋值为 1
-				scoreInfo := types.ScoreInfo{Score: 0}
-				classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val = types.Val{ScoreInfo: scoreInfo, Used: 1}
-			}
+			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
+			element.Val.Used = 1
+			fixedRules := constraint.GetFixedRules()
+			dynamicRules := constraint.GetDynamicRules()
+			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
 		}
 	}
+	classMatrix.SumUsedElementsScore()
+
 	return classMatrix
 }
 
@@ -197,52 +180,13 @@ func (i *Individual) SortChromosomes() {
 }
 
 // 评估适应度
-func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
+func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int) (int, error) {
 
 	// 初始化适应度值
 	fitness := 0
 
-	// 将Individual转换为ClassMatrix,并标识ClassMatrix的已占用
-	// 将计算ClassMatrix内部标识为已占用的各个Element元素的得分
-	// 将所有Element的得分相加返回
-
-	classMatrix := i.toClassMatrix()
-
-	// Check if the individual is not nil
-	if i == nil {
-		return fitness, nil
-	}
-
-	// 遍历个体的所有基因
-	// log.Printf("individual.Chromosomes: %d\n", len(i.Chromosomes))
-	for _, chromosome := range i.Chromosomes {
-		// 遍历每个基因的所有课程
-		for _, gene := range chromosome.Genes {
-			// 计算该基因对应的课程的适应度值
-
-			SN, err := types.ParseSN(gene.ClassSN)
-			if err != nil {
-				return 0, err
-			}
-
-			element := &types.Element{
-				ClassSN:   gene.ClassSN,
-				SubjectID: SN.SubjectID,
-				GradeID:   SN.GradeID,
-				ClassID:   SN.ClassID,
-				TeacherID: gene.TeacherID,
-				VenueID:   gene.VenueID,
-				TimeSlot:  gene.TimeSlot,
-			}
-
-			fixedRules := constraint.GetFixedRules()
-			dynamicRules := constraint.GetDynamicRules()
-
-			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
-			score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-			fitness += score
-		}
-	}
+	// 计算矩阵内已占用元素得分
+	fitness = classMatrix.Score
 
 	// 计算科目分散度得分
 	// TODO: 改config
@@ -262,11 +206,6 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 	fitness += teacherDispersionScoreInt
 
 	// log.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
-
-	// fitness是个非负数
-	if fitness < 0 {
-		fitness = 0
-	}
 
 	// 返回适应度值
 	return fitness, nil

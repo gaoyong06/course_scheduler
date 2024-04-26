@@ -4,6 +4,7 @@ package types
 import (
 	"course_scheduler/internal/models"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 )
@@ -126,7 +127,31 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 		}
 	}
 
+	// 对已占用的矩阵元素的求和
+	cm.Score = cm.SumUsedElementsScore()
 	return numAssignedClasses, nil
+}
+
+// 对已占用的矩阵元素的求和
+// 只对元素score分数大于0的元素score求和
+func (cm *ClassMatrix) SumUsedElementsScore() int {
+	score := 0
+	for sn, teacherMap := range cm.Elements {
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				for timeSlot, element := range timeSlotMap {
+					if element.Val.Used == 1 && element.Val.ScoreInfo.Score >= 0 {
+						elementScore := element.Val.ScoreInfo.Score
+						score += elementScore
+						log.Printf("Used element: SN=%s, TeacherID=%d, VenueID=%d, TimeSlot=%d, Score=%d\n",
+							sn, teacherID, venueID, timeSlot, elementScore)
+					}
+				}
+			}
+		}
+	}
+	log.Printf("ClassMatrix: %p, Sum of used elements score: %d\n", cm, score)
+	return score
 }
 
 // 打印有冲突的元素
