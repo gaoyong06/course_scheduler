@@ -2,8 +2,6 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/constraint"
-	"course_scheduler/internal/types"
 	"fmt"
 	"math/rand"
 )
@@ -62,7 +60,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 
 			// 交叉操作后,顺利修复时间段冲突
 			if err1 == nil && err2 == nil {
-				isValid, err := validateCrossover(offspring1, offspring2, classHours)
+				isValid, err := validateCrossover(offspring1, offspring2)
 				if err != nil {
 					return CrossoverResult{
 						Offspring: offspring,
@@ -176,13 +174,14 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件
-func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]int) (bool, error) {
+func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 
-	// Check consistency of gene.Class between offspring1 and offspring2
+	// 染色体数量是否相同
 	if len(offspring1.Chromosomes) != len(offspring2.Chromosomes) {
 		return false, nil
 	}
 
+	// 各个染色体中课班信息是否相同
 	for i, chromosome1 := range offspring1.Chromosomes {
 		chromosome2 := offspring2.Chromosomes[i]
 		if chromosome1.Genes[0].ClassSN != chromosome2.Genes[0].ClassSN {
@@ -191,66 +190,66 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 	}
 
 	// Check constraints for each gene in the offspring
-	classMatrix1 := offspring1.toClassMatrix()
-	for _, chromosome := range offspring1.Chromosomes {
-		for _, gene := range chromosome.Genes {
+	// classMatrix1 := offspring1.toClassMatrix()
+	// for _, chromosome := range offspring1.Chromosomes {
+	// 	for _, gene := range chromosome.Genes {
 
-			SN, err := types.ParseSN(gene.ClassSN)
-			if err != nil {
-				return false, err
-			}
+	// 		SN, err := types.ParseSN(gene.ClassSN)
+	// 		if err != nil {
+	// 			return false, err
+	// 		}
 
-			element := &types.Element{
-				ClassSN:   gene.ClassSN,
-				SubjectID: SN.SubjectID,
-				GradeID:   SN.GradeID,
-				ClassID:   SN.ClassID,
-				TeacherID: gene.TeacherID,
-				VenueID:   gene.VenueID,
-				TimeSlot:  gene.TimeSlot,
-			}
+	// 		element := &types.Element{
+	// 			ClassSN:   gene.ClassSN,
+	// 			SubjectID: SN.SubjectID,
+	// 			GradeID:   SN.GradeID,
+	// 			ClassID:   SN.ClassID,
+	// 			TeacherID: gene.TeacherID,
+	// 			VenueID:   gene.VenueID,
+	// 			TimeSlot:  gene.TimeSlot,
+	// 		}
 
-			fixedRules := constraint.GetFixedRules()
-			dynamicRules := constraint.GetDynamicRules()
+	// 		fixedRules := constraint.GetFixedRules()
+	// 		dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix1.UpdateElementScore(element, fixedRules, dynamicRules)
-			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
+	// 		classMatrix1.UpdateElementScore(element, fixedRules, dynamicRules)
+	// 		score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
-			if score1 < 0 {
-				return false, err
-			}
-		}
-	}
+	// 		if score1 < 0 {
+	// 			return false, err
+	// 		}
+	// 	}
+	// }
 
-	classMatrix2 := offspring1.toClassMatrix()
-	for _, chromosome := range offspring2.Chromosomes {
-		for _, gene := range chromosome.Genes {
+	// classMatrix2 := offspring1.toClassMatrix()
+	// for _, chromosome := range offspring2.Chromosomes {
+	// 	for _, gene := range chromosome.Genes {
 
-			SN, err := types.ParseSN(gene.ClassSN)
-			if err != nil {
-				return false, err
-			}
+	// 		SN, err := types.ParseSN(gene.ClassSN)
+	// 		if err != nil {
+	// 			return false, err
+	// 		}
 
-			element := &types.Element{
-				ClassSN:   gene.ClassSN,
-				SubjectID: SN.SubjectID,
-				GradeID:   SN.GradeID,
-				ClassID:   SN.ClassID,
-				TeacherID: gene.TeacherID,
-				VenueID:   gene.VenueID,
-				TimeSlot:  gene.TimeSlot,
-			}
+	// 		element := &types.Element{
+	// 			ClassSN:   gene.ClassSN,
+	// 			SubjectID: SN.SubjectID,
+	// 			GradeID:   SN.GradeID,
+	// 			ClassID:   SN.ClassID,
+	// 			TeacherID: gene.TeacherID,
+	// 			VenueID:   gene.VenueID,
+	// 			TimeSlot:  gene.TimeSlot,
+	// 		}
 
-			fixedRules := constraint.GetFixedRules()
-			dynamicRules := constraint.GetDynamicRules()
+	// 		fixedRules := constraint.GetFixedRules()
+	// 		dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix2.UpdateElementScore(element, fixedRules, dynamicRules)
-			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
+	// 		classMatrix2.UpdateElementScore(element, fixedRules, dynamicRules)
+	// 		score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
-			if score2 < 0 {
-				return false, err
-			}
-		}
-	}
+	// 		if score2 < 0 {
+	// 			return false, err
+	// 		}
+	// 	}
+	// }
 	return true, nil
 }

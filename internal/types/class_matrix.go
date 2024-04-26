@@ -4,7 +4,6 @@ package types
 import (
 	"course_scheduler/internal/models"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 )
@@ -136,21 +135,21 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 // 只对元素score分数大于0的元素score求和
 func (cm *ClassMatrix) SumUsedElementsScore() int {
 	score := 0
-	for sn, teacherMap := range cm.Elements {
-		for teacherID, venueMap := range teacherMap {
-			for venueID, timeSlotMap := range venueMap {
-				for timeSlot, element := range timeSlotMap {
+	for _, teacherMap := range cm.Elements {
+		for _, venueMap := range teacherMap {
+			for _, timeSlotMap := range venueMap {
+				for _, element := range timeSlotMap {
 					if element.Val.Used == 1 && element.Val.ScoreInfo.Score >= 0 {
 						elementScore := element.Val.ScoreInfo.Score
 						score += elementScore
-						log.Printf("Used element: SN=%s, TeacherID=%d, VenueID=%d, TimeSlot=%d, Score=%d\n",
-							sn, teacherID, venueID, timeSlot, elementScore)
+						// log.Printf("Used element: SN=%s, TeacherID=%d, VenueID=%d, TimeSlot=%d, Score=%d\n",
+						// 	sn, teacherID, venueID, timeSlot, elementScore)
 					}
 				}
 			}
 		}
 	}
-	log.Printf("ClassMatrix: %p, Sum of used elements score: %d\n", cm, score)
+	// log.Printf("ClassMatrix: %p, Sum of used elements score: %d\n", cm, score)
 	return score
 }
 

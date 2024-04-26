@@ -59,10 +59,12 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 
 						// 将每个课班的时间、教室、老师作为染色体上的基因
 						gene := Gene{
-							ClassSN:   sn,
-							TeacherID: teacherID,
-							VenueID:   venueID,
-							TimeSlot:  timeSlot,
+							ClassSN:           sn,
+							TeacherID:         teacherID,
+							VenueID:           venueID,
+							TimeSlot:          timeSlot,
+							PassedConstraints: element.GetPassedConstraints(),
+							FailedConstraints: element.GetFailedConstraints(),
 						}
 						chromosome.Genes = append(chromosome.Genes, gene)
 						numGenesInChromosome++
@@ -158,13 +160,17 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	classMatrix.Init(classes1)
 
 	for _, chromosome := range i.Chromosomes {
-		for _, gene := range chromosome.Genes {
+		for i, gene := range chromosome.Genes {
 
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			element.Val.Used = 1
 			fixedRules := constraint.GetFixedRules()
 			dynamicRules := constraint.GetDynamicRules()
 			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
+
+			// 修改基因内的约束状态信息
+			chromosome.Genes[i].PassedConstraints = element.GetPassedConstraints()
+			chromosome.Genes[i].FailedConstraints = element.GetFailedConstraints()
 		}
 	}
 	classMatrix.SumUsedElementsScore()
@@ -516,6 +522,35 @@ func (i *Individual) PrintSchedule() {
 		fmt.Println()
 		fmt.Println("---+-------------------------------------------")
 	}
+}
+
+// 打印约束状态信息
+func (i *Individual) PrintConstraints() {
+
+	var totalConstraints int
+	var totalFailedConstraints int
+	var totalPassedConstraints int
+
+	for _, chromosome := range i.Chromosomes {
+		for _, gene := range chromosome.Genes {
+
+			failedConstraints := gene.FailedConstraints
+			passedConstraints := gene.PassedConstraints
+
+			totalConstraints += len(failedConstraints) + len(passedConstraints)
+			totalFailedConstraints += len(failedConstraints)
+			totalPassedConstraints += len(passedConstraints)
+
+			failedStr := strings.Join(failedConstraints, ", ")
+			passedStr := strings.Join(passedConstraints, ", ")
+
+			fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
+				gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
+		}
+	}
+
+	fmt.Printf("\nTotal Constraints: %d, Failed Constraints: %d, Passed Constraints: %d\n",
+		totalConstraints, totalFailedConstraints, totalPassedConstraints)
 }
 
 // =================================

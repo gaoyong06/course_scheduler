@@ -52,3 +52,22 @@ func (e *Element) GetVenueID() int {
 func (e *Element) GetTimeSlot() int {
 	return e.TimeSlot
 }
+
+func (e *Element) GetPassedConstraints() []string {
+
+	fixedPassed := e.Val.ScoreInfo.FixedPassed
+	dynamicPassed := e.Val.ScoreInfo.DynamicPassed
+
+	passedConstraints := append(fixedPassed, dynamicPassed...)
+	return passedConstraints
+}
+
+func (e *Element) GetFailedConstraints() []string {
+
+	fixedFailed := e.Val.ScoreInfo.FixedFailed
+	dynamicFailed := e.Val.ScoreInfo.DynamicFailed
+
+	failedConstraints := append(fixedFailed, dynamicFailed...)
+	return failedConstraints
+
+}

@@ -11,7 +11,7 @@ func GetFixedRules() []*types.Rule {
 
 	// var rules []*Rule
 	rules := []*types.Rule{
-		CRule1,
+		// CRule1,
 		CRule2,
 		CRule3,
 		CRule4,

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -17,11 +18,11 @@ func main() {
 
 	// 参数定义
 	popSize := config.PopSize
-	// selectionSize := config.SelectionSize
+	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
 	// mutationRate := config.MutationRate
-	// crossoverRate := config.CrossoverRate
-	// bestRatio := config.BestRatio
+	crossoverRate := config.CrossoverRate
+	bestRatio := config.BestRatio
 
 	// 课班初始化
 	classes := types.InitClasses()
@@ -45,70 +46,70 @@ func main() {
 	bestGen := -1
 	replaced := false
 
-	// for gen := 0; gen < maxGen; gen++ {
+	for gen := 0; gen < maxGen; gen++ {
 
-	// 	log.Printf("Generation %d START", gen)
-	// 	// 获取当前最近个体标识符
-	// 	uniqueId = bestIndividual.UniqueId()
+		log.Printf("Generation %d START", gen)
+		// 获取当前最近个体标识符
+		uniqueId = bestIndividual.UniqueId()
 
-	// 	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-	// 	bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
-	// 	if err != nil {
-	// 		log.Panic(err)
-	// 	}
+		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
+		bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
+		if err != nil {
+			log.Panic(err)
+		}
 
-	// 	// 如果 bestIndividual 被替换，则记录当前 gen 值
-	// 	if replaced {
-	// 		bestGen = gen
-	// 	}
+		// 如果 bestIndividual 被替换，则记录当前 gen 值
+		if replaced {
+			bestGen = gen
+		}
 
-	// 	// 打印当前代中最好个体的适应度值
-	// 	// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
-	// 	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", gen, uniqueId, bestGen, bestIndividual.Fitness)
+		// 打印当前代中最好个体的适应度值
+		// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
+		log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", gen, uniqueId, bestGen, bestIndividual.Fitness)
 
-	// 	// 选择
-	// 	// 选择的个体是原个体数量的一半
-	// 	selectedPopulation, err := genetic_algorithm.Selection(currentPopulation, selectionSize, bestRatio)
-	// 	if err != nil {
-	// 		log.Panic(err)
-	// 	}
+		// 选择
+		// 选择的个体是原个体数量的一半
+		selectedPopulation, err := genetic_algorithm.Selection(currentPopulation, selectionSize, bestRatio)
+		if err != nil {
+			log.Panic(err)
+		}
 
-	// 	selectedCount := len(selectedPopulation)
+		selectedCount := len(selectedPopulation)
 
-	// 	log.Printf("Current population size: %d, duplicates count: %d, selected count: %d\n", popSize, dupCount, selectedCount)
+		log.Printf("Current population size: %d, duplicates count: %d, selected count: %d\n", popSize, dupCount, selectedCount)
 
-	// 	if selectedCount > 0 {
+		if selectedCount > 0 {
 
-	// 		// 交叉
-	// 		// 交叉前后的个体数量不变
-	// 		// offspring, err := genetic_algorithm.Crossover(selectedPopulation, crossoverRate)
-	// 		// if err != nil {
-	// 		// 	log.Panic(err)
-	// 		// }
+			// 交叉
+			// 交叉前后的个体数量不变
+			// offspring, err := genetic_algorithm.Crossover(selectedPopulation, crossoverRate)
+			// if err != nil {
+			// 	log.Panic(err)
+			// }
 
-	// 		crossoverRet := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
-	// 		if crossoverRet.Err != nil {
-	// 			log.Panic(crossoverRet.Err)
-	// 		}
-	// 		log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			crossoverRet := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
+			if crossoverRet.Err != nil {
+				log.Panic(crossoverRet.Err)
+			}
+			log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
-	// 		// 变异
-	// 		// offspring := crossoverRet.Offspring
-	// 		// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
-	// 		// if err != nil {
-	// 		// 	log.Panic(err)
-	// 		// }
+			// 变异
+			// offspring := crossoverRet.Offspring
+			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
+			// if err != nil {
+			// 	log.Panic(err)
+			// }
 
-	// 		// 更新种群
-	// 		// 更新前后的个体数量不变
-	// 		// TODO: 这里会引发currentPopulation内边个体有时间段冲突
-	// 		xy(currentPopulation, "#1")
-	// 		currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
-	// 		// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
-	// 	}
-	// 	log.Printf("Generation %d END", gen)
-	// 	fmt.Printf("\n\n")
-	// }
+			// 更新种群
+			// 更新前后的个体数量不变
+			// TODO: 这里会引发currentPopulation内边个体有时间段冲突
+			xy(currentPopulation, "#1")
+			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
+			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
+		}
+		log.Printf("Generation %d END", gen)
+		fmt.Printf("\n\n")
+	}
 
 	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
 	bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
@@ -127,6 +128,10 @@ func main() {
 	// 打印最好的个体
 	log.Printf("最佳个体适应度: %d, uniqueId: %s\n", bestIndividual.Fitness, uniqueId)
 	bestIndividual.PrintSchedule()
+
+	// 打印个体的约束状态信息
+	log.Println("打印个体的约束状态信息")
+	bestIndividual.PrintConstraints()
 
 	// 计算总运行时间
 	elapsedTime := time.Since(startTime)
