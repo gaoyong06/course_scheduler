@@ -213,7 +213,7 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 	fitness += subjectDispersionScoreInt
 	fitness += teacherDispersionScoreInt
 
-	// log.Printf("科目分散度: %.2f, 教师分散度: %.2f\n", subjectDispersionScore, teacherDispersionScore)
+	// log.Printf("矩阵得分: %d,  科目分散度: %.2f, 教师分散度: %.2f, 适应度: %d\n", classMatrix.Score, subjectDispersionScore, teacherDispersionScore, fitness)
 
 	// 返回适应度值
 	return fitness, nil

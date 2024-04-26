@@ -20,7 +20,7 @@ func main() {
 	popSize := config.PopSize
 	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
-	// mutationRate := config.MutationRate
+	mutationRate := config.MutationRate
 	crossoverRate := config.CrossoverRate
 	bestRatio := config.BestRatio
 
@@ -94,18 +94,18 @@ func main() {
 			log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// 变异
-			// offspring := crossoverRet.Offspring
-			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
+			offspring := crossoverRet.Offspring
+			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
+			if err != nil {
+				log.Panic(err)
+			}
 
 			// 更新种群
 			// 更新前后的个体数量不变
 			// TODO: 这里会引发currentPopulation内边个体有时间段冲突
 			xy(currentPopulation, "#1")
-			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
-			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
+			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
+			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
 		}
 		log.Printf("Generation %d END", gen)
 		fmt.Printf("\n\n")

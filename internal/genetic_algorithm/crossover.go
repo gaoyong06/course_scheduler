@@ -7,7 +7,6 @@ import (
 )
 
 // 交叉操作返回值
-// 交叉操作返回值
 type CrossoverResult struct {
 	Offspring []*Individual // 交叉操作后生成的新个体
 	Prepared  int           // 准备执行交叉操作的次数
