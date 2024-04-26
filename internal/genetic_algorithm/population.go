@@ -91,14 +91,15 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 			return nil, err
 		}
 
-		fmt.Println("打印矩阵中有冲突的元素")
-		classMatrix.PrintConstraintElement()
+		// fmt.Println("打印矩阵中有冲突的元素")
+		// classMatrix.PrintConstraintElement()
 
 		// fmt.Println("================================")
 		// individual.PrintSchedule()
 
 		population = append(population, individual)
 		log.Println("Individual initialized")
+		log.Println("")
 	}
 	log.Println("Population initialization completed")
 	return population, nil

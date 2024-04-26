@@ -90,8 +90,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 		return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
 	}
 
-	// TODO: 这里需要重点关注
-	// // 设置适应度
+	// 设置适应度
 	fitness, err := individual.EvaluateFitness(classMatrix, classHours)
 	if err != nil {
 		return nil, err
@@ -151,6 +150,8 @@ func (i *Individual) UniqueId() string {
 	return lastFour
 }
 
+// 将个体反向转换为科班适应性矩阵
+// 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
 func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	// 汇总课班集合
 	classes1 := types.InitClasses()
@@ -162,6 +163,7 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	for _, chromosome := range i.Chromosomes {
 		for i, gene := range chromosome.Genes {
 
+			// 根据基因信息更新矩阵内部元素约束,得分,占用状态
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			element.Val.Used = 1
 			fixedRules := constraint.GetFixedRules()
@@ -173,7 +175,8 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 			chromosome.Genes[i].FailedConstraints = element.GetFailedConstraints()
 		}
 	}
-	classMatrix.SumUsedElementsScore()
+	score := classMatrix.SumUsedElementsScore()
+	classMatrix.Score = score
 
 	return classMatrix
 }
@@ -195,8 +198,7 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 	fitness = classMatrix.Score
 
 	// 计算科目分散度得分
-	// TODO: 改config
-	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, 2)
+	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, constants.PERIOD_THRESHOLD)
 	if err != nil {
 		return fitness, nil
 	}
@@ -541,11 +543,11 @@ func (i *Individual) PrintConstraints() {
 			totalFailedConstraints += len(failedConstraints)
 			totalPassedConstraints += len(passedConstraints)
 
-			failedStr := strings.Join(failedConstraints, ", ")
-			passedStr := strings.Join(passedConstraints, ", ")
+			// failedStr := strings.Join(failedConstraints, ", ")
+			// passedStr := strings.Join(passedConstraints, ", ")
 
-			fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
-				gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
+			// fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
+			// 	gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
 		}
 	}
 

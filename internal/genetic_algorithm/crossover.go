@@ -169,6 +169,9 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	offspring1.Fitness = fitness1
 	offspring2.Fitness = fitness2
 
+	// 交叉后父代和子代的适应度
+	fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
+
 	// 返回两个子代个体和nil错误
 	return offspring1, offspring2, nil
 }
