@@ -4,15 +4,21 @@
 
 // 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
+// 课班适应性矩阵
 type ClassMatrix struct {
-	Elements map[string]map[int]map[int]map[int]types.Val
+	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
+	Elements map[string]map[int]map[int]map[int]*Element
 }
 
-// 新建课班适应性矩阵
-func NewClassMatrix() *ClassMatrix {
-	return &ClassMatrix{
-		Elements: make(map[string]map[int]map[int]map[int]types.Val),
-	}
+type Element struct {
+	ClassSN   string // 科目_年级_班级
+	SubjectID int    // 科目
+	GradeID   int    // 年级
+	ClassID   int    // 班级
+	TeacherID int    // 教师
+	VenueID   int    // 教室
+	TimeSlot  int    // 时间段
+	Val       Val    // 分数
 }
 
 // 课表适应性矩阵元素值
@@ -40,15 +46,15 @@ classID = 1 // 班级id
 teacherID = 3 // 王老师
 venueID = 4 // 教室1
 
-classMatrix["2_1_1"][3][4][0]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][2]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][3]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][4]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][5]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
+classMatrix["2_1_1"][3][4][0]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][2]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][3]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][4]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][5]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
 ....
-classMatrix["2_1_1"][3][4][37]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][38]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
-classMatrix["2_1_1"][3][4][39]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicScore: 0, FixedPassed: []string{}, FixedFailed: []string{}, DynamicPassed: []string{},DynamicFailed: []string{},}
+classMatrix["2_1_1"][3][4][37]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][38]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
+classMatrix["2_1_1"][3][4][39]= NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
 
 
 然后根据各种各样的约束条件,给classMatrix矩阵的每个元素计算分数score, 最满足要求的分数最高,最不满足要求的分数最低
@@ -73,4 +79,35 @@ classMatrix["2_1_1"][3][4][39]= types.ScoreInfo{Score: 0, FixedScore: 0,DynamicS
 是应该重新写一个计算个体适应度计算的逻辑代码，还是可以复用上面课班适应性矩阵计算矩阵的计算过程
 
 
-你有什么更好的建议？
+现在我的想法是：将通过科班适应性矩阵已标记占用情况而生成的个体，根据个体的染色体和基因信息，在反向生成个体对应的科班适应性矩阵并标记好已占用的元素，此时已占用的一个元素，对应的个体中染色体的一个基因
+在通过科班适应性矩阵计算分数的方法，计算出一个已占用元素的分数，然后将所有的分数相加得到一个总分数，将该总分数定义为该个体的适应度分数
+
+
+具体的步骤是：
+
+1. 将Individual转换为ClassMatrix,并标识ClassMatrix的已占用
+2. 将计算ClassMatrix内部标识为已占用的各个Element元素的得分
+3. 将所有Element的得分相加返回
+
+
+// Individual 个体结构体，代表一个完整的课表排课方案
+type Individual struct {
+	Chromosomes []*Chromosome // 染色体序列
+	Fitness     int           // 适应度
+}
+
+// Chromosome 染色体结构体，代表一个课班的排课信息
+type Chromosome struct {
+	ClassSN string // 课班 科目_年级_班级
+	Genes   []Gene // 基因序列
+}
+
+// 基因
+type Gene struct {
+	ClassSN   string // 课班信息，科目_年级_班级 如:美术_一年级_1班
+	TeacherID int    // 教师id
+	VenueID   int    // 教室id
+	TimeSlot  int    // 时间段 一周5天,每天8节课,TimeSlot值是{0,1,2,3...39}
+}
+
+请问你有什么更好的建议？

@@ -199,10 +199,14 @@ func (i *Individual) SortChromosomes() {
 // 评估适应度
 func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 
-	classMatrix := i.toClassMatrix()
-
 	// 初始化适应度值
 	fitness := 0
+
+	// 将Individual转换为ClassMatrix,并标识ClassMatrix的已占用
+	// 将计算ClassMatrix内部标识为已占用的各个Element元素的得分
+	// 将所有Element的得分相加返回
+
+	classMatrix := i.toClassMatrix()
 
 	// Check if the individual is not nil
 	if i == nil {
@@ -234,7 +238,7 @@ func (i *Individual) EvaluateFitness(classHours map[int]int) (int, error) {
 			fixedRules := constraint.GetFixedRules()
 			dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix.CalcScore(element, fixedRules, dynamicRules)
+			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
 			score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 			fitness += score
 		}

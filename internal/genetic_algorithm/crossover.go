@@ -210,7 +210,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 			fixedRules := constraint.GetFixedRules()
 			dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix1.CalcScore(element, fixedRules, dynamicRules)
+			classMatrix1.UpdateElementScore(element, fixedRules, dynamicRules)
 			score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			if score1 < 0 {
@@ -241,7 +241,7 @@ func validateCrossover(offspring1, offspring2 *Individual, classHours map[int]in
 			fixedRules := constraint.GetFixedRules()
 			dynamicRules := constraint.GetDynamicRules()
 
-			classMatrix2.CalcScore(element, fixedRules, dynamicRules)
+			classMatrix2.UpdateElementScore(element, fixedRules, dynamicRules)
 			score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 			if score2 < 0 {

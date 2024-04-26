@@ -12,6 +12,9 @@ import (
 type ClassMatrix struct {
 	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 	Elements map[string]map[int]map[int]map[int]*Element
+
+	// 已占用元素总分数
+	Score int
 }
 
 // 新建课班适应性矩阵
@@ -58,14 +61,25 @@ func (cm *ClassMatrix) Init(classes []Class) {
 }
 
 // 计算课班适应性矩阵的所有元素, 固定约束条件下的得分
-func (cm *ClassMatrix) CalcFixedScores(rules []*Rule) error {
-	return cm.calcScores(cm.calcFixedScore, rules)
+func (cm *ClassMatrix) CalcElementFixedScores(rules []*Rule) error {
+	return cm.updateElementScores(cm.calcElementFixedScore, rules)
 }
 
-func (cm *ClassMatrix) CalcScore(element *Element, fixedRules, dynamicRules []*Rule) {
+// 计算一个元素的得分(含固定约束和动态约束)
+func (cm *ClassMatrix) UpdateElementScore(element *Element, fixedRules, dynamicRules []*Rule) {
 
-	cm.calcFixedScore(element, fixedRules)
-	cm.calcDynamicScore(element, dynamicRules)
+	fixedVal := cm.calcElementFixedScore(element, fixedRules)
+	dynamicVal := cm.calcElementDynamicScore(element, dynamicRules)
+
+	// 更新固定约束得分
+	element.Val.ScoreInfo.FixedFailed = fixedVal.ScoreInfo.FixedFailed
+	element.Val.ScoreInfo.FixedPassed = fixedVal.ScoreInfo.FixedPassed
+	element.Val.ScoreInfo.FixedScore = fixedVal.ScoreInfo.FixedScore
+
+	// 更新动态约束得分
+	element.Val.ScoreInfo.DynamicFailed = dynamicVal.ScoreInfo.DynamicFailed
+	element.Val.ScoreInfo.DynamicPassed = dynamicVal.ScoreInfo.DynamicPassed
+	element.Val.ScoreInfo.DynamicScore = dynamicVal.ScoreInfo.DynamicScore
 
 	// 更新 element.Val.Score
 	element.Val.ScoreInfo.Score = element.Val.ScoreInfo.FixedScore + element.Val.ScoreInfo.DynamicScore
@@ -102,7 +116,7 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 
 				timeTable.Used[timeSlot] = true
 
-				cm.reCalcDynamicScores(rules)
+				cm.updateElementDynamicScores(rules)
 
 				// updateTimeTableAndClassMatrix(sn, teacherID, venueID, timeSlot, cm.data, timeTable)
 				numAssignedClasses++
@@ -115,25 +129,29 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 	return numAssignedClasses, nil
 }
 
-// 计算课班适应性矩阵中,各个元素的动态约束条件下的得分
-func (cm *ClassMatrix) reCalcDynamicScores(rules []*Rule) error {
-	return cm.calcScores(cm.calcDynamicScore, rules)
-}
+// 打印有冲突的元素
+// 分配课时Allocate结束后,再打印有冲突的元素查看当前矩阵匹配的冲突情况
+// [重要] 再分配前,和分配过程中打印都会与最终的结果不一致
+// 因为在分配课时Allocate过程中动态约束条件的计算一直在进行ScoreInfo内部数据在一直发生变化
+func (cm *ClassMatrix) PrintConstraintElement() {
 
-// 计算课班适应性矩阵所有元素的得分
-func (cm *ClassMatrix) calcScores(calcFunc func(ClassUnit, []*Rule), rules []*Rule) error {
+	for sn, teacherMap := range cm.Elements {
 
-	for _, teacherMap := range cm.Elements {
-		for _, venueMap := range teacherMap {
-			for _, timeSlotMap := range venueMap {
-				for _, element := range timeSlotMap {
-					calcFunc(element, rules)
-					element.Val.ScoreInfo.Score = element.Val.ScoreInfo.DynamicScore + element.Val.ScoreInfo.FixedScore
+		// if sn == "6_1_1" {
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				for timeSlot, element := range timeSlotMap {
+
+					if element.Val.Used == 1 && (len(element.Val.ScoreInfo.FixedFailed) > 0 || len(element.Val.ScoreInfo.DynamicFailed) > 0) {
+						fixedStr := strings.Join(element.Val.ScoreInfo.FixedFailed, ",")
+						dynamicStr := strings.Join(element.Val.ScoreInfo.DynamicFailed, ",")
+						fmt.Printf("%p sn: %s, teacherID: %d, venueID: %d, timeSlot: %d failed rules: %s, %s, score: %d\n", cm, sn, teacherID, venueID, timeSlot, fixedStr, dynamicStr, element.Val.ScoreInfo.Score)
+					}
 				}
 			}
 		}
 	}
-	return nil
+	// }
 }
 
 // 查找当前课程的最佳可用时间段
@@ -162,9 +180,18 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 	return teacherID, venueID, timeSlot, maxScore, nil
 }
 
-// CalcFixed 计算固定约束条件得分
-func (cm *ClassMatrix) calcFixedScore(element ClassUnit, rules []*Rule) {
+// 计算固定约束条件得分
+func (cm *ClassMatrix) calcElementFixedScore(element ClassUnit, rules []*Rule) Val {
+	return cm.calcElementScore(element, rules, "fixed")
+}
 
+// 计算动态约束条件得分
+func (cm *ClassMatrix) calcElementDynamicScore(element ClassUnit, rules []*Rule) Val {
+	return cm.calcElementScore(element, rules, "dynamic")
+}
+
+// 计算元素的约束条件得分
+func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreType string) Val {
 	score := 0
 	penalty := 0
 
@@ -175,94 +202,65 @@ func (cm *ClassMatrix) calcFixedScore(element ClassUnit, rules []*Rule) {
 
 	// 先清空
 	elementVal := cm.Elements[classSN][teacherID][venueID][timeSlot].Val
-	elementVal.ScoreInfo.FixedPassed = []string{}
-	elementVal.ScoreInfo.FixedFailed = []string{}
+	if scoreType == "fixed" {
+		elementVal.ScoreInfo.FixedPassed = []string{}
+		elementVal.ScoreInfo.FixedFailed = []string{}
+	} else {
+		elementVal.ScoreInfo.DynamicPassed = []string{}
+		elementVal.ScoreInfo.DynamicFailed = []string{}
+	}
 
 	for _, rule := range rules {
-		if rule.Type == "fixed" {
+		if rule.Type == scoreType {
 			if preCheckPassed, result, err := rule.Fn(cm, element); preCheckPassed && err == nil {
-
 				if result {
 					score += rule.Score * rule.Weight
-					elementVal.ScoreInfo.FixedPassed = append(elementVal.ScoreInfo.FixedPassed, rule.Name)
+					if scoreType == "fixed" {
+						elementVal.ScoreInfo.FixedPassed = append(elementVal.ScoreInfo.FixedPassed, rule.Name)
+					} else {
+						elementVal.ScoreInfo.DynamicPassed = append(elementVal.ScoreInfo.DynamicPassed, rule.Name)
+					}
 				} else {
 					penalty += rule.Penalty * rule.Weight
-					elementVal.ScoreInfo.FixedFailed = append(elementVal.ScoreInfo.FixedFailed, rule.Name)
-				}
-
-			}
-		}
-	}
-
-	// 固定约束条件得分
-	finalScore := score - penalty
-	elementVal.ScoreInfo.FixedScore = finalScore
-	cm.Elements[classSN][teacherID][venueID][timeSlot].Val = elementVal
-}
-
-// CalcDynamic 计算动态约束条件得分
-func (cm *ClassMatrix) calcDynamicScore(element ClassUnit, rules []*Rule) {
-
-	score := 0
-	penalty := 0
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	venueID := element.GetVenueID()
-	timeSlot := element.GetTimeSlot()
-
-	// 先清空
-	elementVal := cm.Elements[classSN][teacherID][venueID][timeSlot].Val
-	elementVal.ScoreInfo.DynamicPassed = []string{}
-	elementVal.ScoreInfo.DynamicFailed = []string{}
-
-	for _, rule := range rules {
-		if rule.Type == "dynamic" {
-			if preCheckPassed, result, err := rule.Fn(cm, element); preCheckPassed && err == nil {
-
-				if result {
-					score += rule.Score * rule.Weight
-					elementVal.ScoreInfo.DynamicPassed = append(elementVal.ScoreInfo.DynamicPassed, rule.Name)
-				} else {
-					penalty += rule.Penalty * rule.Weight
-					elementVal.ScoreInfo.DynamicFailed = append(elementVal.ScoreInfo.DynamicFailed, rule.Name)
-				}
-			}
-		}
-	}
-
-	// 动态约束条件得分
-	oldDynamicScore := elementVal.ScoreInfo.DynamicScore
-	finalScore := score - penalty
-	if oldDynamicScore != finalScore {
-		elementVal.ScoreInfo.DynamicScore = finalScore
-		// log.Printf("Updated dynamic score: sn=%s, teacherID=%d, venueID=%d, TimeSlot=%d, oldDynamicScore=%d, currentDynamicScore=%d", element.ClassSN, element.TeacherID, element.VenueID, element.TimeSlot, oldDynamicScore, finalScore)
-	}
-
-	cm.Elements[classSN][teacherID][venueID][timeSlot].Val = elementVal
-}
-
-// 打印有冲突的元素
-// 分配课时Allocate结束后,再打印有冲突的元素查看当前矩阵匹配的冲突情况
-// [重要] 再分配前,和分配过程中打印都会与最终的结果不一致
-// 因为在分配课时Allocate过程中动态约束条件的计算一直在进行ScoreInfo内部数据在一直发生变化
-func (cm *ClassMatrix) PrintConstraintElement() {
-
-	for sn, teacherMap := range cm.Elements {
-
-		// if sn == "6_1_1" {
-		for teacherID, venueMap := range teacherMap {
-			for venueID, timeSlotMap := range venueMap {
-				for timeSlot, element := range timeSlotMap {
-
-					if element.Val.Used == 1 && (len(element.Val.ScoreInfo.FixedFailed) > 0 || len(element.Val.ScoreInfo.DynamicFailed) > 0) {
-						fixedStr := strings.Join(element.Val.ScoreInfo.FixedFailed, ",")
-						dynamicStr := strings.Join(element.Val.ScoreInfo.DynamicFailed, ",")
-						fmt.Printf("%p sn: %s, teacherID: %d, venueID: %d, timeSlot: %d failed rules: %s, %s, score: %d\n", cm, sn, teacherID, venueID, timeSlot, fixedStr, dynamicStr, element.Val.ScoreInfo.Score)
+					if scoreType == "fixed" {
+						elementVal.ScoreInfo.FixedFailed = append(elementVal.ScoreInfo.FixedFailed, rule.Name)
+					} else {
+						elementVal.ScoreInfo.DynamicFailed = append(elementVal.ScoreInfo.DynamicFailed, rule.Name)
 					}
 				}
 			}
 		}
 	}
-	// }
+
+	// 计算得分
+	finalScore := score - penalty
+	if scoreType == "fixed" {
+		elementVal.ScoreInfo.FixedScore = finalScore
+	} else {
+		elementVal.ScoreInfo.DynamicScore = finalScore
+	}
+
+	return elementVal
+}
+
+// 更新课班适应性矩阵中,各个元素的动态约束条件下的得分
+func (cm *ClassMatrix) updateElementDynamicScores(rules []*Rule) error {
+	return cm.updateElementScores(cm.calcElementDynamicScore, rules)
+}
+
+// 更新课班适应性矩阵所有元素的得分
+func (cm *ClassMatrix) updateElementScores(calcFunc func(element ClassUnit, rules []*Rule) Val, rules []*Rule) error {
+
+	for sn, teacherMap := range cm.Elements {
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				for timeSlot, element := range timeSlotMap {
+					elementVal := calcFunc(element, rules)
+					cm.Elements[sn][teacherID][venueID][timeSlot].Val = elementVal
+					element.Val.ScoreInfo.Score = element.Val.ScoreInfo.DynamicScore + element.Val.ScoreInfo.FixedScore
+				}
+			}
+		}
+	}
+	return nil
 }

@@ -58,7 +58,7 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 			// 计算课班适应性矩阵各个元素固定约束条件下的得分
 
 			fixedRules := constraint.GetFixedRules()
-			err = classMatrix.CalcFixedScores(fixedRules)
+			err = classMatrix.CalcElementFixedScores(fixedRules)
 			if err != nil {
 				return nil, err
 			}

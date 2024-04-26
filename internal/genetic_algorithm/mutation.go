@@ -86,7 +86,7 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 	fixedRules := constraint.GetFixedRules()
 	dynamicRules := constraint.GetDynamicRules()
 
-	classMatrix.CalcScore(element, fixedRules, dynamicRules)
+	classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
 	score := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
 	if score < 0 {

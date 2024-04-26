@@ -1,6 +1,7 @@
 // gene.go
 package genetic_algorithm
 
+// 基因
 type Gene struct {
 	ClassSN   string // 课班信息，科目_年级_班级 如:美术_一年级_1班
 	TeacherID int    // 教师id
