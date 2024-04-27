@@ -189,13 +189,14 @@ func (i *Individual) SortChromosomes() {
 }
 
 // 评估适应度
+// 适应度 = 课班适应性矩阵的总分数 * 5 + 教师分散度*10 + 科目分散度 * 10
 func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int) (int, error) {
 
 	// 初始化适应度值
 	fitness := 0
 
 	// 计算矩阵内已占用元素得分
-	fitness = classMatrix.Score
+	fitness = classMatrix.Score * 5
 
 	// 计算科目分散度得分
 	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, constants.PERIOD_THRESHOLD)

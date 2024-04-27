@@ -24,3 +24,8 @@ func venueUnavailableSlots(venue int) []int {
 	var timeSlots []int
 	return timeSlots
 }
+
+// 判断venueID是否合法
+func IsVenueIDValid(venueID int) bool {
+	return venueID > 0
+}

@@ -66,6 +66,11 @@ func ClassTeacherIDs(subjectID int) []int {
 	return teacherIDs
 }
 
+// 判断teacherID是否合法
+func IsTeacherIDValid(teacherID int) bool {
+	return teacherID > 0
+}
+
 // 老师不可排课的时间范围
 func teacherUnavailableSlots() []int {
 	var timeSlots []int

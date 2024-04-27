@@ -5,7 +5,6 @@ import (
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"fmt"
 	"log"
 	"math/rand"
 )
@@ -33,6 +32,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 
 			// Find available options for the given class
 			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome)
+			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, err
 			}
@@ -67,23 +67,21 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
 	// Check if the mutation will result in a valid gene
 	newGene := gene
-	if unusedTeacherID != 0 {
+
+	if models.IsTeacherIDValid(unusedTeacherID) {
 		newGene.TeacherID = unusedTeacherID
 	}
-	if unusedVenueID != 0 {
+
+	if models.IsVenueIDValid(unusedVenueID) {
 		newGene.VenueID = unusedVenueID
 	}
-	if unusedTimeSlot != 0 {
+
+	if unusedTimeSlot >= 0 {
 		newGene.TimeSlot = unusedTimeSlot
 	}
 
 	// Calculate the score for the new gene
 	classMatrix := individual.toClassMatrix()
-
-	// SN, err := types.ParseSN(gene.ClassSN)
-	// if err != nil {
-	// 	return false, err
-	// }
 
 	oldElement := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 	oldElement.Val.Used = 0
@@ -91,41 +89,34 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 	newElement := classMatrix.Elements[gene.ClassSN][newGene.TeacherID][newGene.VenueID][newGene.TimeSlot]
 	newElement.Val.Used = 1
 
-	// &types.Element{
-	// 	ClassSN:   gene.ClassSN,
-	// 	SubjectID: SN.SubjectID,
-	// 	GradeID:   SN.GradeID,
-	// 	ClassID:   SN.ClassID,
-	// 	TeacherID: newGene.TeacherID,
-	// 	VenueID:   newGene.VenueID,
-	// 	TimeSlot:  newGene.TimeSlot,
-	// }
-
 	// 更新元素的得分和矩阵的总分数
 	fixedRules := constraint.GetFixedRules()
 	dynamicRules := constraint.GetDynamicRules()
 
-	oldScore := classMatrix.Score
+	// oldScore := classMatrix.Score
 	classMatrix.UpdateElementScore(newElement, fixedRules, dynamicRules)
 	newScore := classMatrix.SumUsedElementsScore()
 	classMatrix.Score = newScore
 
 	// elementScore := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
 
-	oldElementScore := oldElement.Val.ScoreInfo.Score
+	// oldElementScore := oldElement.Val.ScoreInfo.Score
 	newElementScore := newElement.Val.ScoreInfo.Score
 
 	if newElementScore <= 0 {
 		return false, nil
 	}
 
-	fitness1 := individual.Fitness
-	individual.EvaluateFitness(classMatrix, classHours)
-	fitness2 := individual.Fitness
+	// 更新个体适应度
+	newFitness, err := individual.EvaluateFitness(classMatrix, classHours)
 
-	fmt.Println("FFFFFFFFFFFFUCK")
+	if err != nil {
+		return false, err
+	}
+	individual.Fitness = newFitness
 
-	log.Printf("Mutations fitness1:  %d, fitness2: %d, oldScore: %d, newScore: %d, oldElementScore: %d, newElementScore: %d\n", fitness1, fitness2, oldScore, newScore, oldElementScore, newElementScore)
+	// log.Printf("oldElement.ClassSN: %s, oldElement.TeacherID: %d, oldElement.VenueID: %d, oldElement.TimeSlot: %d\n", oldElement.ClassSN, oldElement.TeacherID, oldElement.VenueID, oldElement.TimeSlot)
+	// log.Printf("newElement.ClassSN: %s, newElement.TeacherID: %d, newElement.VenueID: %d, newElement.TimeSlot: %d\n", newElement.ClassSN, newElement.TeacherID, newElement.VenueID, newElement.TimeSlot)
 
 	return true, nil
 }
