@@ -59,12 +59,13 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 
 						// 将每个课班的时间、教室、老师作为染色体上的基因
 						gene := Gene{
-							ClassSN:           sn,
-							TeacherID:         teacherID,
-							VenueID:           venueID,
-							TimeSlot:          timeSlot,
-							PassedConstraints: element.GetPassedConstraints(),
-							FailedConstraints: element.GetFailedConstraints(),
+							ClassSN:            sn,
+							TeacherID:          teacherID,
+							VenueID:            venueID,
+							TimeSlot:           timeSlot,
+							PassedConstraints:  element.GetPassedConstraints(),
+							FailedConstraints:  element.GetFailedConstraints(),
+							SkippedConstraints: element.GetSkippedConstraints(),
 						}
 						chromosome.Genes = append(chromosome.Genes, gene)
 						numGenesInChromosome++
@@ -533,27 +534,34 @@ func (i *Individual) PrintConstraints() {
 	var totalConstraints int
 	var totalFailedConstraints int
 	var totalPassedConstraints int
+	var totalSkippedConstraints int
 
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
 
 			failedConstraints := gene.FailedConstraints
 			passedConstraints := gene.PassedConstraints
+			skippedConstraints := gene.SkippedConstraints
 
-			totalConstraints += len(failedConstraints) + len(passedConstraints)
+			totalConstraints += len(failedConstraints) + len(passedConstraints) + len(skippedConstraints)
 			totalFailedConstraints += len(failedConstraints)
 			totalPassedConstraints += len(passedConstraints)
+			totalSkippedConstraints += len(skippedConstraints)
 
 			failedStr := strings.Join(failedConstraints, ", ")
 			passedStr := strings.Join(passedConstraints, ", ")
+			// skippedStr := strings.Join(skippedConstraints, ", ")
+
+			// fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s, Skipped Constraints: %s\n",
+			// 	gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr, skippedStr)
 
 			fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
 				gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
 		}
 	}
 
-	fmt.Printf("\nTotal Constraints: %d, Failed Constraints: %d, Passed Constraints: %d\n",
-		totalConstraints, totalFailedConstraints, totalPassedConstraints)
+	fmt.Printf("\nTotal Constraints: %d, Failed Constraints: %d, Passed Constraints: %d, Skipped Constraints: %d\n",
+		totalConstraints, totalFailedConstraints, totalPassedConstraints, totalSkippedConstraints)
 }
 
 // =================================

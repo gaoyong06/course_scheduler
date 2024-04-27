@@ -24,13 +24,15 @@ func NewElement(classSN string, subjectID, gradeID, classID, teacherID, venueID,
 		TimeSlot:  timeSlot,
 		Val: Val{
 			ScoreInfo: ScoreInfo{
-				Score:         0,
-				FixedScore:    0,
-				DynamicScore:  0,
-				FixedPassed:   []string{},
-				FixedFailed:   []string{},
-				DynamicPassed: []string{},
-				DynamicFailed: []string{},
+				Score:          0,
+				FixedScore:     0,
+				DynamicScore:   0,
+				FixedPassed:    []string{},
+				FixedFailed:    []string{},
+				FixedSkipped:   []string{},
+				DynamicPassed:  []string{},
+				DynamicFailed:  []string{},
+				DynamicSkipped: []string{},
 			},
 			Used: 0,
 		},
@@ -70,4 +72,13 @@ func (e *Element) GetFailedConstraints() []string {
 	failedConstraints := append(fixedFailed, dynamicFailed...)
 	return failedConstraints
 
+}
+
+func (e *Element) GetSkippedConstraints() []string {
+
+	fixedSkipped := e.Val.ScoreInfo.FixedSkipped
+	dynamicSkipped := e.Val.ScoreInfo.DynamicSkipped
+
+	skippedConstraints := append(fixedSkipped, dynamicSkipped...)
+	return skippedConstraints
 }

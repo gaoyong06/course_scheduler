@@ -216,6 +216,7 @@ func (cm *ClassMatrix) calcElementDynamicScore(element ClassUnit, rules []*Rule)
 
 // 计算元素的约束条件得分
 func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreType string) Val {
+
 	score := 0
 	penalty := 0
 
@@ -229,27 +230,39 @@ func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreT
 	if scoreType == "fixed" {
 		elementVal.ScoreInfo.FixedPassed = []string{}
 		elementVal.ScoreInfo.FixedFailed = []string{}
+		elementVal.ScoreInfo.FixedSkipped = []string{}
 	} else {
 		elementVal.ScoreInfo.DynamicPassed = []string{}
 		elementVal.ScoreInfo.DynamicFailed = []string{}
+		elementVal.ScoreInfo.DynamicSkipped = []string{}
 	}
 
 	for _, rule := range rules {
 		if rule.Type == scoreType {
-			if preCheckPassed, result, err := rule.Fn(cm, element); preCheckPassed && err == nil {
-				if result {
-					score += rule.Score * rule.Weight
-					if scoreType == "fixed" {
-						elementVal.ScoreInfo.FixedPassed = append(elementVal.ScoreInfo.FixedPassed, rule.Name)
+			if preCheckPassed, result, err := rule.Fn(cm, element); err == nil {
+				if preCheckPassed {
+					if result {
+						score += rule.Score * rule.Weight
+						if scoreType == "fixed" {
+							elementVal.ScoreInfo.FixedPassed = append(elementVal.ScoreInfo.FixedPassed, rule.Name)
+						} else {
+							elementVal.ScoreInfo.DynamicPassed = append(elementVal.ScoreInfo.DynamicPassed, rule.Name)
+						}
 					} else {
-						elementVal.ScoreInfo.DynamicPassed = append(elementVal.ScoreInfo.DynamicPassed, rule.Name)
+						penalty += rule.Penalty * rule.Weight
+						if scoreType == "fixed" {
+							elementVal.ScoreInfo.FixedFailed = append(elementVal.ScoreInfo.FixedFailed, rule.Name)
+						} else {
+							elementVal.ScoreInfo.DynamicFailed = append(elementVal.ScoreInfo.DynamicFailed, rule.Name)
+						}
 					}
 				} else {
-					penalty += rule.Penalty * rule.Weight
+
+					// Append the skipped rule to the Skipped field
 					if scoreType == "fixed" {
-						elementVal.ScoreInfo.FixedFailed = append(elementVal.ScoreInfo.FixedFailed, rule.Name)
+						elementVal.ScoreInfo.FixedSkipped = append(elementVal.ScoreInfo.FixedSkipped, rule.Name)
 					} else {
-						elementVal.ScoreInfo.DynamicFailed = append(elementVal.ScoreInfo.DynamicFailed, rule.Name)
+						elementVal.ScoreInfo.DynamicSkipped = append(elementVal.ScoreInfo.DynamicSkipped, rule.Name)
 					}
 				}
 			}
@@ -269,6 +282,7 @@ func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreT
 
 // 更新课班适应性矩阵中,各个元素的动态约束条件下的得分
 func (cm *ClassMatrix) updateElementDynamicScores(rules []*Rule) error {
+
 	return cm.updateElementScores(cm.calcElementDynamicScore, rules)
 }
 
