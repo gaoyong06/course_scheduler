@@ -196,7 +196,7 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 	fitness := 0
 
 	// 计算矩阵内已占用元素得分
-	fitness = classMatrix.Score * 5
+	fitness = classMatrix.Score * 10
 
 	// 计算科目分散度得分
 	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, constants.PERIOD_THRESHOLD)
@@ -544,11 +544,11 @@ func (i *Individual) PrintConstraints() {
 			totalFailedConstraints += len(failedConstraints)
 			totalPassedConstraints += len(passedConstraints)
 
-			// failedStr := strings.Join(failedConstraints, ", ")
-			// passedStr := strings.Join(passedConstraints, ", ")
+			failedStr := strings.Join(failedConstraints, ", ")
+			passedStr := strings.Join(passedConstraints, ", ")
 
-			// fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
-			// 	gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
+			fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
+				gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
 		}
 	}
 

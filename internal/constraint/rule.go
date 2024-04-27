@@ -58,8 +58,8 @@ func GetDynamicRules() []*types.Rule {
 		TCLRule3,
 		TCLRule4,
 
-		TMERule1,
-		TMERule2,
+		// TMERule1,
+		// TMERule2,
 
 		TNANRule1,
 		TNANRule2,

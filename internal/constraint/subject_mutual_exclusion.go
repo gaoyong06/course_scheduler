@@ -14,7 +14,7 @@ var SMERule1 = &types.Rule{
 	Fn:       smeRule1Fn,
 	Score:    0,
 	Penalty:  math.MaxInt32,
-	Weight:   1,
+	Weight:   2,
 	Priority: 1,
 }
 
@@ -54,12 +54,12 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlot, element := range venueMap {
+				for ts, element := range venueMap {
 					if element.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
-							subjectADays[timeSlot/constants.NUM_CLASSES] = true // 将时间段转换为天数
+							subjectADays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
 						} else if SN.SubjectID == subjectBID {
-							subjectBDays[timeSlot/constants.NUM_CLASSES] = true // 将时间段转换为天数
+							subjectBDays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
 						}
 					}
 				}

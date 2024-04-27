@@ -8,6 +8,7 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"math"
 )
 
 var SSDRule1 = &types.Rule{
@@ -15,8 +16,8 @@ var SSDRule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       ssdRule1Fn,
 	Score:    0,
-	Penalty:  1,
-	Weight:   1,
+	Penalty:  math.MaxInt32,
+	Weight:   2,
 	Priority: 1,
 }
 
@@ -61,9 +62,9 @@ func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int) b
 		for _, venueMap := range teacherMap {
 			for timeSlot1, element := range venueMap {
 
-				if element.Val.Used == 1 {
+				if element.Val.Used == 1 && timeSlot != timeSlot1 {
 					day1 := timeSlot1 / constants.NUM_CLASSES
-					if day == day1 && timeSlot != timeSlot1 {
+					if day == day1 {
 						count++
 					}
 				}
