@@ -30,7 +30,7 @@ func GetSubjects() []Subject {
 		{SubjectID: 12, Name: "地理", SubjectGroupIDs: []int{3}},
 		{SubjectID: 13, Name: "劳技", SubjectGroupIDs: []int{3}},
 		{SubjectID: 14, Name: "活动", SubjectGroupIDs: []int{3}},
-		{SubjectID: 15, Name: "班会", SubjectGroupIDs: []int{}},
+		{SubjectID: 15, Name: "班会", SubjectGroupIDs: []int{3}},
 	}
 
 	return subjects

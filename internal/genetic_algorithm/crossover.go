@@ -38,12 +38,6 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 
 			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
-			// 修复时间段冲突
-			// _, _, err1 := offspring1.RepairTimeSlotConflicts()
-			// _, _, err2 := offspring2.RepairTimeSlotConflicts()
-
-			// 交叉操作后,顺利修复时间段冲突
-			// if err1 == nil && err2 == nil {
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
 				return offspring, err

@@ -78,7 +78,7 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 
 	if subjectADays[elementDay] && subjectBDays[elementDay] {
 
-		fmt.Printf("subjectAID: %d, subjectADays: %v, subjectBID: %d, subjectBDays: %v\n", subjectAID, subjectADays, subjectBID, subjectBDays)
+		// fmt.Printf("subjectAID: %d, subjectADays: %v, subjectBID: %d, subjectBDays: %v\n", subjectAID, subjectADays, subjectBID, subjectBDays)
 
 		// Print time slots of both subjects on the same day (elementDay) in a single line
 		var subjectATimeSlotsStr, subjectBTimeSlotsStr string
@@ -93,7 +93,7 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 			}
 		}
 
-		fmt.Printf("Subject A Time Slots on elementDay: %s, Subject B Time Slots on elementDay: %s\n", subjectATimeSlotsStr, subjectBTimeSlotsStr)
+		// fmt.Printf("Current timeSlot: %d Subject A Time Slots on elementDay: %s, Subject B Time Slots on elementDay: %s\n", timeSlot, subjectATimeSlotsStr, subjectBTimeSlotsStr)
 
 		return true, nil
 	}

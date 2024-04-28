@@ -168,18 +168,27 @@ func (i *Individual) UniqueId() string {
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
 func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	// 汇总课班集合
-	classes1 := types.InitClasses()
+	classes := types.InitClasses()
 
 	// 初始化课班适应性矩阵
 	classMatrix := types.NewClassMatrix()
-	classMatrix.Init(classes1)
+	classMatrix.Init(classes)
 
+	// 先标记占用情况
 	for _, chromosome := range i.Chromosomes {
-		for i, gene := range chromosome.Genes {
+		for _, gene := range chromosome.Genes {
 
 			// 根据基因信息更新矩阵内部元素约束,得分,占用状态
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			element.Val.Used = 1
+		}
+	}
+
+	// 在计算冲突情况,因为冲突是根据现有标记的已占用情况来计算的, 不然这里会出现计算错误
+	for _, chromosome := range i.Chromosomes {
+		for i, gene := range chromosome.Genes {
+
+			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			fixedRules := constraint.GetFixedRules()
 			dynamicRules := constraint.GetDynamicRules()
 			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
