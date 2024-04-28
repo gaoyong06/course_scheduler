@@ -3,6 +3,7 @@
 package constraint
 
 import (
+	"course_scheduler/internal/constants"
 	"course_scheduler/internal/types"
 	"sort"
 )
@@ -26,7 +27,7 @@ func soRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 	preCheckPassed := subjectID == 6 || subjectID == 2
 	shouldPenalize := false
 	if preCheckPassed {
-		ret, err := isSubjectABeforeSubjectB(6, 2, classMatrix)
+		ret, err := isSubjectABeforeSubjectB(6, 2, classMatrix, element)
 		if err != nil {
 			return false, false, err
 		}
@@ -37,10 +38,11 @@ func soRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 
 // 判断体育课后是否就是数学课
 // 判断课程A(体育)是在课程B(数学)之前
-func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix) (bool, error) {
+func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, error) {
 
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
+	timeSlot := element.GetTimeSlot()
 	for sn, classMap := range classMatrix.Elements {
 		SN, err := types.ParseSN(sn)
 		if err != nil {
@@ -48,8 +50,8 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 		}
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlot, element := range venueMap {
-					if element.Val.Used == 1 {
+				for timeSlot, e := range venueMap {
+					if e.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
 							timeSlotsA = append(timeSlotsA, timeSlot)
 						} else if SN.SubjectID == subjectBID {
@@ -72,8 +74,15 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 	// 检查课程B是否在课程A之后
 	for _, timeSlotA := range timeSlotsA {
 		for _, timeSlotB := range timeSlotsB {
-			if timeSlotB == timeSlotA+1 {
-				return true, nil
+
+			if timeSlotA == timeSlot || timeSlotB == timeSlot {
+
+				dayA := timeSlotA / constants.NUM_CLASSES
+				dayB := timeSlotB / constants.NUM_CLASSES
+
+				if dayA == dayB && timeSlotB == timeSlotA+1 {
+					return true, nil
+				}
 			}
 		}
 	}

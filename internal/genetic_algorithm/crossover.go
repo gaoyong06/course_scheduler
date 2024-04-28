@@ -39,51 +39,51 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 			// 修复时间段冲突
-			_, _, err1 := offspring1.RepairTimeSlotConflicts()
-			_, _, err2 := offspring2.RepairTimeSlotConflicts()
+			// _, _, err1 := offspring1.RepairTimeSlotConflicts()
+			// _, _, err2 := offspring2.RepairTimeSlotConflicts()
 
 			// 交叉操作后,顺利修复时间段冲突
-			if err1 == nil && err2 == nil {
-				isValid, err := validateCrossover(offspring1, offspring2)
-				if err != nil {
-					return offspring, err
-				}
-				if isValid {
+			// if err1 == nil && err2 == nil {
+			isValid, err := validateCrossover(offspring1, offspring2)
+			if err != nil {
+				return offspring, err
+			}
+			if isValid {
 
-					// 评估子代个体的适应度并赋值
-					offspringClassMatrix1 := offspring1.toClassMatrix()
-					offspringClassMatrix2 := offspring2.toClassMatrix()
+				// 评估子代个体的适应度并赋值
+				offspringClassMatrix1 := offspring1.toClassMatrix()
+				offspringClassMatrix2 := offspring2.toClassMatrix()
 
-					fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
-					fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
+				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
+				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
 
-					if err1 != nil || err2 != nil {
-						return offspring, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
-					}
-
-					offspring1.Fitness = fitness1
-					offspring2.Fitness = fitness2
-
-					// 交叉后父代和子代的适应度
-					// fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
-
-					offspring = append(offspring, offspring1, offspring2)
-					executed++
-
-					// 打印交叉明细
-					// log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
-
-				} else {
-
-					offspring = append(offspring, selected[i], selected[i+1])
+				if err1 != nil || err2 != nil {
+					return offspring, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
 				}
 
+				offspring1.Fitness = fitness1
+				offspring2.Fitness = fitness2
+
+				// 交叉后父代和子代的适应度
+				// fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
+
+				offspring = append(offspring, offspring1, offspring2)
+				executed++
+
+				// 打印交叉明细
+				// log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+
+			} else {
+
+				offspring = append(offspring, selected[i], selected[i+1])
 			}
 
-		} else {
-			// 复制一份新的个体
-			offspring = append(offspring, selected[i].Copy(), selected[i+1].Copy())
 		}
+
+		// } else {
+		// 	// 复制一份新的个体
+		// 	offspring = append(offspring, selected[i].Copy(), selected[i+1].Copy())
+		// }
 	}
 
 	return offspring, nil
@@ -143,12 +143,23 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		offspring2.Chromosomes[i] = target
 	}
 
-	// 个体内基因排序
-	offspring1.SortChromosomes()
-	offspring2.SortChromosomes()
+	// 修复时间段冲突
+	_, _, err1 := offspring1.RepairTimeSlotConflicts()
+	_, _, err2 := offspring2.RepairTimeSlotConflicts()
 
-	// 返回两个子代个体和nil错误
-	return offspring1, offspring2, nil
+	if err1 == nil && err2 == nil {
+
+		// 个体内基因排序
+		offspring1.SortChromosomes()
+		offspring2.SortChromosomes()
+
+		// 返回两个子代个体和nil错误
+		return offspring1, offspring2, nil
+	}
+
+	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+
+	// return nil, nil, fmt.Errorf("invalid crossPoint %d", crossPoint)
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件
