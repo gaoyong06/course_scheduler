@@ -7,7 +7,7 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"math"
+		"math"
 
 	"github.com/samber/lo"
 )
@@ -63,6 +63,7 @@ var SRule4 = &types.Rule{
 // 16. 语数英 周一~周五 第3节 优先排
 func sRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
 
+	subjectGroupID := 1
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
 
@@ -73,12 +74,19 @@ func sRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	}
 	day := timeSlot/constants.NUM_CLASSES + 1
 	period := timeSlot%constants.NUM_CLASSES + 1
+
+	// 判断subjectGroupID是否已经排课完成
+	isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, subjectGroupID)
+	if err != nil {
+		return false, false, err
+	}
 	preCheckPassed := (period == 1 || period == 2 || period == 3) && (day >= 1 && day <= 5)
-	isValid := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 1)
+
+	// FindAvailableSubjectsByGroupID
+	shouldPenalize := preCheckPassed && !lo.Contains(subject.SubjectGroupIDs, subjectGroupID) && !isSubjectGroupScheduled
 
 	// fmt.Printf("sRule1Fn sn: %s, timeSlot: %d, subjectGroupIDs: %d\n", classSN, timeSlot, subject.SubjectGroupIDs)
-
-	return preCheckPassed, isValid, nil
+	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 副课 安排在第1,2,3节 扣分
@@ -136,4 +144,51 @@ func sRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 
 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
 	return preCheckPassed, !shouldPenalize, nil
+}
+
+// 判断subjectGroupID的课程是否已经排完
+// Check if all courses in the subject group are scheduled
+func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, subjectGroupID int) (bool, error) {
+
+	// 根据科目分组得到所有的科目
+	subjects, err := models.FindSubjectsByGroupID(subjectGroupID)
+	if err != nil {
+		return false, err
+	}
+
+	// 根据科目得到该科目的一周课时
+	classHours := models.GetClassHours()
+
+	for _, subject := range subjects {
+		subjectID := subject.SubjectID
+		subjectClassHours := classHours[subjectID]
+		totalScheduledHours := 0
+
+		for sn, classMap := range classMatrix.Elements {
+			SN, err := types.ParseSN(sn)
+			if err != nil {
+				return false, err
+			}
+
+			if SN.SubjectID == subjectID {
+				for _, teacherMap := range classMap {
+					for _, venueMap := range teacherMap {
+						for _, element := range venueMap {
+							if element.Val.Used == 1 {
+								totalScheduledHours++
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if subjectClassHours != totalScheduledHours {
+
+			// fmt.Printf("subjectID: %d, subjectClassHours: %d, totalScheduledHours: %d\n", subjectID, subjectClassHours, totalScheduledHours)
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

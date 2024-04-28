@@ -1,7 +1,11 @@
 // subject.go
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/samber/lo"
+)
 
 type Subject struct {
 	SubjectID       int    // 科目id
@@ -70,4 +74,22 @@ func FindSubjectByID(subjectID int) (*Subject, error) {
 		}
 	}
 	return nil, fmt.Errorf("subject not found")
+}
+
+// 根据科目组id查找科目
+func FindSubjectsByGroupID(groupID int) ([]*Subject, error) {
+
+	var subjectsByGroupID []*Subject
+
+	subjects := GetSubjects()
+	for _, subject := range subjects {
+		if lo.Contains(subject.SubjectGroupIDs, groupID) {
+			subjectsByGroupID = append(subjectsByGroupID, &subject)
+		}
+	}
+
+	if len(subjectsByGroupID) > 0 {
+		return subjectsByGroupID, nil
+	}
+	return nil, fmt.Errorf("no subjects found for group ID %d", groupID)
 }

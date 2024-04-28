@@ -46,7 +46,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 		chromosome := Chromosome{
 			ClassSN: sn,
 			// 将每个课班的时间、教室、老师作为染色体上的基因
-			Genes: []Gene{},
+			Genes: []*Gene{},
 		}
 
 		numGenesInChromosome := 0
@@ -58,7 +58,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 					if element.Val.Used == 1 {
 
 						// 将每个课班的时间、教室、老师作为染色体上的基因
-						gene := Gene{
+						gene := &Gene{
 							ClassSN:            sn,
 							TeacherID:          teacherID,
 							VenueID:            venueID,
@@ -103,11 +103,24 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 
 // Copy 复制一个 Individual 实例
 func (i *Individual) Copy() *Individual {
-
 	copiedChromosomes := make([]*Chromosome, len(i.Chromosomes))
 	for j, chromosome := range i.Chromosomes {
-		copiedGenes := make([]Gene, len(chromosome.Genes))
-		copy(copiedGenes, chromosome.Genes)
+		copiedGenes := make([]*Gene, len(chromosome.Genes))
+		for k, gene := range chromosome.Genes {
+			copiedGene := &Gene{
+				ClassSN:            gene.ClassSN,
+				TeacherID:          gene.TeacherID,
+				VenueID:            gene.VenueID,
+				TimeSlot:           gene.TimeSlot,
+				FailedConstraints:  make([]string, len(gene.FailedConstraints)),
+				PassedConstraints:  make([]string, len(gene.PassedConstraints)),
+				SkippedConstraints: make([]string, len(gene.SkippedConstraints)),
+			}
+			copy(copiedGene.FailedConstraints, gene.FailedConstraints)
+			copy(copiedGene.PassedConstraints, gene.PassedConstraints)
+			copy(copiedGene.SkippedConstraints, gene.SkippedConstraints)
+			copiedGenes[k] = copiedGene
+		}
 		copiedChromosomes[j] = &Chromosome{
 			ClassSN: chromosome.ClassSN,
 			Genes:   copiedGenes,
@@ -537,7 +550,7 @@ func (i *Individual) PrintConstraints() {
 	var totalSkippedConstraints int
 
 	// Merge genes from all chromosomes into a single slice
-	genes := make([]Gene, 0)
+	genes := make([]*Gene, 0)
 	for _, chromosome := range i.Chromosomes {
 		genes = append(genes, chromosome.Genes...)
 	}
