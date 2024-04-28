@@ -151,7 +151,7 @@ func (i *Individual) UniqueId() string {
 	return lastFour
 }
 
-// 将个体反向转换为科班适应性矩阵
+// 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
 func (i *Individual) toClassMatrix() *types.ClassMatrix {
 	// 汇总课班集合
@@ -174,6 +174,7 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 			// 修改基因内的约束状态信息
 			chromosome.Genes[i].PassedConstraints = element.GetPassedConstraints()
 			chromosome.Genes[i].FailedConstraints = element.GetFailedConstraints()
+			chromosome.Genes[i].SkippedConstraints = element.GetSkippedConstraints()
 		}
 	}
 	score := classMatrix.SumUsedElementsScore()
@@ -530,34 +531,37 @@ func (i *Individual) PrintSchedule() {
 
 // 打印约束状态信息
 func (i *Individual) PrintConstraints() {
-
 	var totalConstraints int
 	var totalFailedConstraints int
 	var totalPassedConstraints int
 	var totalSkippedConstraints int
 
+	// Merge genes from all chromosomes into a single slice
+	genes := make([]Gene, 0)
 	for _, chromosome := range i.Chromosomes {
-		for _, gene := range chromosome.Genes {
+		genes = append(genes, chromosome.Genes...)
+	}
 
-			failedConstraints := gene.FailedConstraints
-			passedConstraints := gene.PassedConstraints
-			skippedConstraints := gene.SkippedConstraints
+	// Sort genes by TimeSlot in ascending order
+	sort.Slice(genes, func(i, j int) bool {
+		return genes[i].TimeSlot < genes[j].TimeSlot
+	})
 
-			totalConstraints += len(failedConstraints) + len(passedConstraints) + len(skippedConstraints)
-			totalFailedConstraints += len(failedConstraints)
-			totalPassedConstraints += len(passedConstraints)
-			totalSkippedConstraints += len(skippedConstraints)
+	for _, gene := range genes {
+		failedConstraints := gene.FailedConstraints
+		passedConstraints := gene.PassedConstraints
+		skippedConstraints := gene.SkippedConstraints
 
-			failedStr := strings.Join(failedConstraints, ", ")
-			passedStr := strings.Join(passedConstraints, ", ")
-			// skippedStr := strings.Join(skippedConstraints, ", ")
+		totalConstraints += len(failedConstraints) + len(passedConstraints) + len(skippedConstraints)
+		totalFailedConstraints += len(failedConstraints)
+		totalPassedConstraints += len(passedConstraints)
+		totalSkippedConstraints += len(skippedConstraints)
 
-			// fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s, Skipped Constraints: %s\n",
-			// 	gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr, skippedStr)
+		failedStr := strings.Join(failedConstraints, ", ")
+		passedStr := strings.Join(passedConstraints, ", ")
 
-			fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: %s, Passed Constraints: %s\n",
-				gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
-		}
+		fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: [%s], Passed Constraints: [%s]\n",
+			gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
 	}
 
 	fmt.Printf("\nTotal Constraints: %d, Failed Constraints: %d, Passed Constraints: %d, Skipped Constraints: %d\n",

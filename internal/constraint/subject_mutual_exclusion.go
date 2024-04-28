@@ -1,10 +1,10 @@
 // 科目互斥限制(科目A与科目B不排在同一天)
-
 package constraint
 
 import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/types"
+	"fmt"
 	"math"
 )
 
@@ -39,12 +39,19 @@ func smeRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 	return preCheckPassed, !shouldPenalize, nil
 }
 
-// 判断活动课和体育课是否在同一天
 func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, error) {
 
 	timeSlot := element.GetTimeSlot()
+	elementDay := timeSlot / constants.NUM_CLASSES
+
+	// key: day, val:bool
 	subjectADays := make(map[int]bool)
 	subjectBDays := make(map[int]bool)
+
+	// key: timeSlot val: day
+	subjectATimeSlots := make(map[int]int)
+	subjectBTimeSlots := make(map[int]int)
+
 	for sn, classMap := range classMatrix.Elements {
 
 		SN, err := types.ParseSN(sn)
@@ -54,12 +61,14 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for ts, element := range venueMap {
-					if element.Val.Used == 1 {
+				for ts, e := range venueMap {
+					if e.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
 							subjectADays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
+							subjectATimeSlots[ts] = ts / constants.NUM_CLASSES
 						} else if SN.SubjectID == subjectBID {
 							subjectBDays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
+							subjectBTimeSlots[ts] = ts / constants.NUM_CLASSES
 						}
 					}
 				}
@@ -67,8 +76,25 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 		}
 	}
 
-	elementDay := timeSlot / constants.NUM_CLASSES
 	if subjectADays[elementDay] && subjectBDays[elementDay] {
+
+		fmt.Printf("subjectAID: %d, subjectADays: %v, subjectBID: %d, subjectBDays: %v\n", subjectAID, subjectADays, subjectBID, subjectBDays)
+
+		// Print time slots of both subjects on the same day (elementDay) in a single line
+		var subjectATimeSlotsStr, subjectBTimeSlotsStr string
+		for ts, day := range subjectATimeSlots {
+			if day == elementDay {
+				subjectATimeSlotsStr += fmt.Sprintf(" %d", ts)
+			}
+		}
+		for ts, day := range subjectBTimeSlots {
+			if day == elementDay {
+				subjectBTimeSlotsStr += fmt.Sprintf(" %d", ts)
+			}
+		}
+
+		fmt.Printf("Subject A Time Slots on elementDay: %s, Subject B Time Slots on elementDay: %s\n", subjectATimeSlotsStr, subjectBTimeSlotsStr)
+
 		return true, nil
 	}
 	return false, nil

@@ -33,7 +33,7 @@ var SRule2 = &types.Rule{
 	Score:    0,
 	Penalty:  1,
 	Weight:   1,
-	Priority: 1,
+	Priority: 2,
 }
 
 // 17. 主课 周一~周五 第8节 禁排
@@ -76,6 +76,8 @@ func sRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	preCheckPassed := (period == 1 || period == 2 || period == 3) && (day >= 1 && day <= 5)
 	isValid := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 1)
 
+	// fmt.Printf("sRule1Fn sn: %s, timeSlot: %d, subjectGroupIDs: %d\n", classSN, timeSlot, subject.SubjectGroupIDs)
+
 	return preCheckPassed, isValid, nil
 }
 
@@ -114,6 +116,7 @@ func sRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	preCheckPassed := period == 8
 
 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
+	// fmt.Printf("sRule3Fn sn: %s, timeSlot: %d, shouldPenalize: %v\n", classSN, timeSlot, shouldPenalize)
 	return preCheckPassed, !shouldPenalize, nil
 }
 

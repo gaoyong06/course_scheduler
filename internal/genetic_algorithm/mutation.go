@@ -2,7 +2,6 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"log"
@@ -38,7 +37,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 			}
 
 			// Validate the mutation
-			isValid, err := validateMutation(selected[i], gene, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
+			isValid, err := validateMutation(selected[i], chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
 			if err != nil {
 				return nil, err
 			}
@@ -55,6 +54,16 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 				if unusedTimeSlot > 0 {
 					gene.TimeSlot = unusedTimeSlot
 				}
+				chromosome.Genes[geneIndex] = gene
+
+				// 更新个体适应度
+				classMatrix := selected[i].toClassMatrix()
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours)
+
+				if err != nil {
+					return nil, err
+				}
+				selected[i].Fitness = newFitness
 			}
 		}
 	}
@@ -64,9 +73,10 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 }
 
 // validateMutation 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件
-func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
+func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
+
 	// Check if the mutation will result in a valid gene
-	newGene := gene
+	newGene := individual.Chromosomes[chromosomeIndex].Genes[geneIndex]
 
 	if models.IsTeacherIDValid(unusedTeacherID) {
 		newGene.TeacherID = unusedTeacherID
@@ -80,43 +90,18 @@ func validateMutation(individual *Individual, gene Gene, unusedTeacherID, unused
 		newGene.TimeSlot = unusedTimeSlot
 	}
 
+	newIndividual := individual.Copy()
+	newIndividual.Chromosomes[chromosomeIndex].Genes[geneIndex] = newGene
+
 	// Calculate the score for the new gene
-	classMatrix := individual.toClassMatrix()
+	newClassMatrix := newIndividual.toClassMatrix()
 
-	oldElement := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
-	oldElement.Val.Used = 0
-
-	newElement := classMatrix.Elements[gene.ClassSN][newGene.TeacherID][newGene.VenueID][newGene.TimeSlot]
-	newElement.Val.Used = 1
-
-	// 更新元素的得分和矩阵的总分数
-	fixedRules := constraint.GetFixedRules()
-	dynamicRules := constraint.GetDynamicRules()
-
-	// oldScore := classMatrix.Score
-	classMatrix.UpdateElementScore(newElement, fixedRules, dynamicRules)
-	newScore := classMatrix.SumUsedElementsScore()
-	classMatrix.Score = newScore
-
-	// elementScore := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-
-	// oldElementScore := oldElement.Val.ScoreInfo.Score
+	newElement := newClassMatrix.Elements[newGene.ClassSN][newGene.TeacherID][newGene.VenueID][newGene.TimeSlot]
 	newElementScore := newElement.Val.ScoreInfo.Score
 
 	if newElementScore <= 0 {
 		return false, nil
 	}
-
-	// 更新个体适应度
-	newFitness, err := individual.EvaluateFitness(classMatrix, classHours)
-
-	if err != nil {
-		return false, err
-	}
-	individual.Fitness = newFitness
-
-	// log.Printf("oldElement.ClassSN: %s, oldElement.TeacherID: %d, oldElement.VenueID: %d, oldElement.TimeSlot: %d\n", oldElement.ClassSN, oldElement.TeacherID, oldElement.VenueID, oldElement.TimeSlot)
-	// log.Printf("newElement.ClassSN: %s, newElement.TeacherID: %d, newElement.VenueID: %d, newElement.TimeSlot: %d\n", newElement.ClassSN, newElement.TeacherID, newElement.VenueID, newElement.TimeSlot)
 
 	return true, nil
 }

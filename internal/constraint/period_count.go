@@ -45,6 +45,7 @@ func pcRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 // countPeriodClasses 计算每个时间段的科目数量
 func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venueID int) map[int]int {
 
+	// key: 节次, val: 数量
 	periodCount := make(map[int]int)
 
 	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {

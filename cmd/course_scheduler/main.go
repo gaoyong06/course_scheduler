@@ -82,19 +82,13 @@ func main() {
 
 			// 交叉
 			// 交叉前后的个体数量不变
-			// offspring, err := genetic_algorithm.Crossover(selectedPopulation, crossoverRate)
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
-
-			crossoverRet := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
-			if crossoverRet.Err != nil {
-				log.Panic(crossoverRet.Err)
+			offspring, err := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
+			if err != nil {
+				log.Panic(err)
 			}
-			log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
+			// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// 变异
-			offspring := crossoverRet.Offspring
 			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
 			if err != nil {
 				log.Panic(err)

@@ -7,18 +7,12 @@ import (
 )
 
 // 交叉操作返回值
-type CrossoverResult struct {
-	Offspring []*Individual // 交叉操作后生成的新个体
-	Prepared  int           // 准备执行交叉操作的次数
-	Executed  int           // 实际执行交叉操作的次数
-	Err       error         // 错误信息
-}
 
 // 交叉
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int) CrossoverResult {
+func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int) ([]*Individual, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -39,17 +33,8 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			// 交叉操作
 			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, classHours)
 			if err != nil {
-				return CrossoverResult{
-					Offspring: offspring,
-					Prepared:  prepared,
-					Executed:  executed,
-					Err:       err,
-				}
+				return offspring, err
 			}
-
-			// for k := 0; k < len(selected); k++ {
-			// 	log.Printf("=== Crossover selected[%d], %s\n", k, selected[k].UniqueId())
-			// }
 
 			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
@@ -61,14 +46,27 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			if err1 == nil && err2 == nil {
 				isValid, err := validateCrossover(offspring1, offspring2)
 				if err != nil {
-					return CrossoverResult{
-						Offspring: offspring,
-						Prepared:  prepared,
-						Executed:  executed,
-						Err:       err,
-					}
+					return offspring, err
 				}
 				if isValid {
+
+					// 评估子代个体的适应度并赋值
+					offspringClassMatrix1 := offspring1.toClassMatrix()
+					offspringClassMatrix2 := offspring2.toClassMatrix()
+
+					fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
+					fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
+
+					if err1 != nil || err2 != nil {
+						return offspring, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+					}
+
+					offspring1.Fitness = fitness1
+					offspring2.Fitness = fitness2
+
+					// 交叉后父代和子代的适应度
+					// fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
+
 					offspring = append(offspring, offspring1, offspring2)
 					executed++
 
@@ -88,12 +86,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 		}
 	}
 
-	return CrossoverResult{
-		Offspring: offspring,
-		Prepared:  prepared,
-		Executed:  executed,
-		Err:       nil,
-	}
+	return offspring, nil
 
 }
 
@@ -154,23 +147,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	offspring1.SortChromosomes()
 	offspring2.SortChromosomes()
 
-	// 评估子代个体的适应度并赋值
-	offspringClassMatrix1 := offspring1.toClassMatrix()
-	offspringClassMatrix2 := offspring2.toClassMatrix()
-
-	fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
-	fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
-
-	if err1 != nil || err2 != nil {
-		return nil, nil, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
-	}
-
-	offspring1.Fitness = fitness1
-	offspring2.Fitness = fitness2
-
-	// 交叉后父代和子代的适应度
-	// fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
-
 	// 返回两个子代个体和nil错误
 	return offspring1, offspring2, nil
 }
@@ -190,68 +166,5 @@ func validateCrossover(offspring1, offspring2 *Individual) (bool, error) {
 			return false, nil
 		}
 	}
-
-	// Check constraints for each gene in the offspring
-	// classMatrix1 := offspring1.toClassMatrix()
-	// for _, chromosome := range offspring1.Chromosomes {
-	// 	for _, gene := range chromosome.Genes {
-
-	// 		SN, err := types.ParseSN(gene.ClassSN)
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-
-	// 		element := &types.Element{
-	// 			ClassSN:   gene.ClassSN,
-	// 			SubjectID: SN.SubjectID,
-	// 			GradeID:   SN.GradeID,
-	// 			ClassID:   SN.ClassID,
-	// 			TeacherID: gene.TeacherID,
-	// 			VenueID:   gene.VenueID,
-	// 			TimeSlot:  gene.TimeSlot,
-	// 		}
-
-	// 		fixedRules := constraint.GetFixedRules()
-	// 		dynamicRules := constraint.GetDynamicRules()
-
-	// 		classMatrix1.UpdateElementScore(element, fixedRules, dynamicRules)
-	// 		score1 := classMatrix1.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-
-	// 		if score1 < 0 {
-	// 			return false, err
-	// 		}
-	// 	}
-	// }
-
-	// classMatrix2 := offspring1.toClassMatrix()
-	// for _, chromosome := range offspring2.Chromosomes {
-	// 	for _, gene := range chromosome.Genes {
-
-	// 		SN, err := types.ParseSN(gene.ClassSN)
-	// 		if err != nil {
-	// 			return false, err
-	// 		}
-
-	// 		element := &types.Element{
-	// 			ClassSN:   gene.ClassSN,
-	// 			SubjectID: SN.SubjectID,
-	// 			GradeID:   SN.GradeID,
-	// 			ClassID:   SN.ClassID,
-	// 			TeacherID: gene.TeacherID,
-	// 			VenueID:   gene.VenueID,
-	// 			TimeSlot:  gene.TimeSlot,
-	// 		}
-
-	// 		fixedRules := constraint.GetFixedRules()
-	// 		dynamicRules := constraint.GetDynamicRules()
-
-	// 		classMatrix2.UpdateElementScore(element, fixedRules, dynamicRules)
-	// 		score2 := classMatrix2.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot].Val.ScoreInfo.Score
-
-	// 		if score2 < 0 {
-	// 			return false, err
-	// 		}
-	// 	}
-	// }
 	return true, nil
 }
