@@ -105,26 +105,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 func (i *Individual) Copy() *Individual {
 	copiedChromosomes := make([]*Chromosome, len(i.Chromosomes))
 	for j, chromosome := range i.Chromosomes {
-		copiedGenes := make([]*Gene, len(chromosome.Genes))
-		for k, gene := range chromosome.Genes {
-			copiedGene := &Gene{
-				ClassSN:            gene.ClassSN,
-				TeacherID:          gene.TeacherID,
-				VenueID:            gene.VenueID,
-				TimeSlot:           gene.TimeSlot,
-				FailedConstraints:  make([]string, len(gene.FailedConstraints)),
-				PassedConstraints:  make([]string, len(gene.PassedConstraints)),
-				SkippedConstraints: make([]string, len(gene.SkippedConstraints)),
-			}
-			copy(copiedGene.FailedConstraints, gene.FailedConstraints)
-			copy(copiedGene.PassedConstraints, gene.PassedConstraints)
-			copy(copiedGene.SkippedConstraints, gene.SkippedConstraints)
-			copiedGenes[k] = copiedGene
-		}
-		copiedChromosomes[j] = &Chromosome{
-			ClassSN: chromosome.ClassSN,
-			Genes:   copiedGenes,
-		}
+		copiedChromosomes[j] = chromosome.Copy()
 	}
 	return &Individual{
 		Chromosomes: copiedChromosomes,
