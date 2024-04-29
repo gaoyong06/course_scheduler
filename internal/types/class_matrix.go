@@ -91,7 +91,6 @@ func (cm *ClassMatrix) UpdateElementScore(element *Element, fixedRules, dynamicR
 func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules []*Rule) (int, error) {
 
 	var numAssignedClasses int
-
 	timeTable := initTimeTable()
 
 	for _, sn := range classSNs {
@@ -104,11 +103,8 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 		numClassHours := classHours[subjectID]
 
 		for i := 0; i < numClassHours; i++ {
-			teacherID, venueID, timeSlot, _, err := cm.findBestTimeSlot(sn, timeTable)
-			if err != nil {
-				return numAssignedClasses, err
-			}
 
+			teacherID, venueID, timeSlot, _ := cm.findBestTimeSlot(sn, timeTable)
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
 
 				temp := cm.Elements[sn][teacherID][venueID][timeSlot].Val
@@ -116,7 +112,6 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 				cm.Elements[sn][teacherID][venueID][timeSlot].Val = temp
 
 				timeTable.Used[timeSlot] = true
-
 				cm.updateElementDynamicScores(rules)
 
 				// updateTimeTableAndClassMatrix(sn, teacherID, venueID, timeSlot, cm.data, timeTable)
@@ -180,7 +175,8 @@ func (cm *ClassMatrix) PrintConstraintElement() {
 }
 
 // 查找当前课程的最佳可用时间段
-func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, int, int, int, error) {
+// 返回值: teacherID, venueID, timeSlot, score
+func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, int, int, int) {
 
 	maxScore := math.MinInt32
 	teacherID, venueID, timeSlot := -1, -1, -1
@@ -202,7 +198,7 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 		}
 	}
 
-	return teacherID, venueID, timeSlot, maxScore, nil
+	return teacherID, venueID, timeSlot, maxScore
 }
 
 // 计算固定约束条件得分

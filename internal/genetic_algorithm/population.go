@@ -4,7 +4,6 @@ package genetic_algorithm
 import (
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
-	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -27,75 +26,10 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 	for i := 0; i < populationSize; i++ {
 		log.Printf("Initializing individual %d\n", i+1)
 
-		var err error
-		var numAssignedClasses int
-		classMatrix := types.NewClassMatrix()
-
-		// var classMatrix map[string]map[int]map[int]map[int]types.Val
-
-		// 设置最大重试次数
-		const maxRetries = 1000
-
-		// 如果 assignClassMatrix 返回了错误，就会重新执行打乱课程顺序、初始化课程矩阵、计算匹配结果值和分配课程矩阵这些步骤，直到没有返回错误为止
-		for retryCount := 0; ; retryCount++ {
-			// 打乱课班排课顺序
-			for i := len(classes) - 1; i > 0; i-- {
-				j := rand.Intn(i + 1)
-				classes[i], classes[j] = classes[j], classes[i]
-			}
-			log.Println("Class order shuffled")
-
-			// fmt.Println("=========== classes ===========")
-			// for _, class := range classes {
-			// 	fmt.Println(class.String())
-			// }
-
-			// 课班适应性矩阵
-			// classMatrix = class_adapt.InitClassMatrix(classes)
-			classMatrix.Init(classes)
-			log.Println("Class matrix initialized")
-
-			// 计算课班适应性矩阵各个元素固定约束条件下的得分
-
-			fixedRules := constraint.GetFixedRules()
-			err = classMatrix.CalcElementFixedScores(fixedRules)
-			if err != nil {
-				return nil, err
-			}
-			log.Println("Fixed scores calculated")
-
-			// utils.PrintClassMatrix(classMatrix.Elements)
-
-			// 课班适应性矩阵分配
-			dynamicRules := constraint.GetDynamicRules()
-			numAssignedClasses, err = classMatrix.Allocate(classeSNs, classHours, dynamicRules)
-			log.Printf("numAssignedClasses: %d\n", numAssignedClasses)
-
-			if err == nil {
-				break
-			}
-
-			log.Printf("assignClassMatrix err: %s, retrying...\n", err.Error())
-
-			// 检查重试次数是否达到最大值
-			if retryCount >= maxRetries {
-				return nil, fmt.Errorf("max retries (%d) reached while trying to allocate class matrix", maxRetries)
-			}
-		}
-
-		log.Println("Class matrix assigned")
-
-		// 生成个体
-		individual, err := newIndividual(classMatrix, classHours)
+		individual, err := createIndividual(classes, classeSNs, classHours)
 		if err != nil {
 			return nil, err
 		}
-
-		// fmt.Println("打印矩阵中有冲突的元素")
-		// classMatrix.PrintConstraintElement()
-
-		// fmt.Println("================================")
-		// individual.PrintSchedule()
 
 		population = append(population, individual)
 		log.Println("Individual initialized")
@@ -168,6 +102,67 @@ func HasDuplicates(population []*Individual) bool {
 	return len(duplicates) > 0
 }
 
+// 检查种群中是否存在时间段冲突的个体
+func CheckConflicts(population []*Individual) bool {
+
+	for i, item := range population {
+		hasTimeSlotConflicts, conflicts := item.HasTimeSlotConflicts()
+		if hasTimeSlotConflicts {
+			log.Printf("The %dth individual has time conflicts, conflict info: %v\n", i, conflicts)
+			return true
+		}
+	}
+	return false
+}
+
+// ============================================
+
+// 创建个体
+func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int) (*Individual, error) {
+
+	classMatrix := types.NewClassMatrix()
+	shuffleClassOrder(classes)
+	initClassMatrix(classMatrix, classes)
+	calculateFixedScores(classMatrix)
+	_, err := allocateClassMatrix(classMatrix, classeSNs, classHours)
+
+	if err != nil {
+		return nil, err
+	}
+	return newIndividual(classMatrix, classHours)
+}
+
+// 打乱课程顺序
+func shuffleClassOrder(classes []types.Class) {
+	for i := len(classes) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		classes[i], classes[j] = classes[j], classes[i]
+	}
+	log.Println("Class order shuffled")
+}
+
+// 初始化课程矩阵
+func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) {
+	classMatrix.Init(classes)
+	log.Println("Class matrix initialized")
+}
+
+// 计算固定得分
+func calculateFixedScores(classMatrix *types.ClassMatrix) {
+	fixedRules := constraint.GetFixedRules()
+	err := classMatrix.CalcElementFixedScores(fixedRules)
+	if err != nil {
+		log.Fatalf("Failed to calculate fixed scores: %v", err)
+	}
+	log.Println("Fixed scores calculated")
+}
+
+// 分配课程矩阵
+func allocateClassMatrix(classMatrix *types.ClassMatrix, classeSNs []string, classHours map[int]int) (int, error) {
+	dynamicRules := constraint.GetDynamicRules()
+	return classMatrix.Allocate(classeSNs, classHours, dynamicRules)
+}
+
 // checkDuplicates 种群中重复个体的映射，以其唯一ID为键
 func checkDuplicates(population []*Individual) map[string][]*Individual {
 	duplicates := make(map[string][]*Individual)
@@ -183,17 +178,4 @@ func checkDuplicates(population []*Individual) map[string][]*Individual {
 	}
 
 	return duplicates
-}
-
-// 检查种群中是否存在时间段冲突的个体
-func CheckConflicts(population []*Individual) bool {
-
-	for i, item := range population {
-		hasTimeSlotConflicts, conflicts := item.HasTimeSlotConflicts()
-		if hasTimeSlotConflicts {
-			log.Printf("The %dth individual has time conflicts, conflict info: %v\n", i, conflicts)
-			return true
-		}
-	}
-	return false
 }
