@@ -37,6 +37,30 @@ func GetFixedRules() []*types.Rule {
 	return rules
 }
 
+// 获取元素最大得分
+func GetMaxElementScore() int {
+
+	rules := append(GetFixedRules(), GetDynamicRules()...)
+	maxScore := 0
+	for _, rule := range rules {
+		maxScore += rule.Score * rule.Weight
+	}
+	return maxScore
+}
+
+// 获取元素最小得分
+func GetMinElementScore() int {
+
+	rules := append(GetFixedRules(), GetDynamicRules()...)
+	minScore := 0
+
+	for _, rule := range rules {
+		minScore -= rule.Penalty * rule.Weight
+	}
+
+	return minScore
+}
+
 // 所有动态约束条件
 func GetDynamicRules() []*types.Rule {
 

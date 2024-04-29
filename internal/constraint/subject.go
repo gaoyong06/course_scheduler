@@ -7,7 +7,6 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-		"math"
 
 	"github.com/samber/lo"
 )
@@ -19,7 +18,7 @@ var SRule1 = &types.Rule{
 	Name:     "SRule1",
 	Type:     "fixed",
 	Fn:       sRule1Fn,
-	Score:    1,
+	Score:    2,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,
@@ -31,7 +30,7 @@ var SRule2 = &types.Rule{
 	Type:     "fixed",
 	Fn:       sRule2Fn,
 	Score:    0,
-	Penalty:  1,
+	Penalty:  2,
 	Weight:   1,
 	Priority: 2,
 }
@@ -42,7 +41,7 @@ var SRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       sRule3Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }

@@ -6,7 +6,6 @@ package constraint
 import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/types"
-	"math"
 )
 
 // 1. 一年级(1)班 语文 王老师 第1节 固排
@@ -14,7 +13,7 @@ var CRule1 = &types.Rule{
 	Name:     "CRule1",
 	Type:     "fixed",
 	Fn:       cRule1Fn,
-	Score:    2,
+	Score:    3,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,
@@ -26,7 +25,7 @@ var CRule2 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule2Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -37,7 +36,7 @@ var CRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule3Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -48,7 +47,7 @@ var CRule4 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule4Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -59,7 +58,7 @@ var CRule5 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule5Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -69,7 +68,7 @@ var CRule6 = &types.Rule{
 	Name:     "CRule6",
 	Type:     "fixed",
 	Fn:       cRule6Fn,
-	Score:    2,
+	Score:    3,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,
@@ -80,7 +79,7 @@ var CRule7 = &types.Rule{
 	Name:     "CRule7",
 	Type:     "fixed",
 	Fn:       cRule7Fn,
-	Score:    1,
+	Score:    2,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,
@@ -91,7 +90,7 @@ var CRule8 = &types.Rule{
 	Name:     "CRule8",
 	Type:     "fixed",
 	Fn:       cRule8Fn,
-	Score:    2,
+	Score:    3,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,

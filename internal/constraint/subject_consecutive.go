@@ -16,7 +16,7 @@ var SCRule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       scRule1Fn,
 	Score:    0,
-	Penalty:  1,
+	Penalty:  3,
 	Weight:   1,
 	Priority: 1,
 }

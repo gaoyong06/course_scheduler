@@ -194,34 +194,50 @@ func (i *Individual) SortChromosomes() {
 }
 
 // 评估适应度
-// 适应度 = 课班适应性矩阵的总分数 * 5 + 教师分散度*10 + 科目分散度 * 10
+// 适应度评估使用三个参数, 课班适应度矩阵的分数(归一化后),教师分散度,科目分散度
+// 适应度 = 课班适应性矩阵的总分数 * 100 + 教师分散度*10 + 科目分散度 * 10
+// 其中影响比较大的几个参数是:
+// 1. 矩阵元素的最大惩罚得分
+// 2. 矩阵元素的最大奖励得分
+// 3. 上面1,2的分值范围, 不能太大, 例如惩罚得分是math.MinInt32,奖励得分是30, 这会导致归一化的值是1.0, 就让这个课班适应度矩阵的分数在计算个体适应度值时失去了意义
+// 4. 现在计算的值是：
+// Total score: 33
+// Min score: -50, Max score: 13
+// Normalized score: 1.317460
+// Subject dispersion score: 4.939426
+// eacher dispersion score: 1.707025
+// Fitness: 198
+// 给normalizedScore乘以100,目的是为了提升normalizedScore的重要性
+// 给subjectDispersionScore, teacherDispersionScore 乘以10, 目的是把数据归到同一个数量级和提升两者的重要度
 func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int) (int, error) {
+	// Calculate the total score of the class matrix
+	totalScore := classMatrix.Score
+	// log.Printf("Total score: %d\n", totalScore)
 
-	// 初始化适应度值
-	fitness := 0
+	minScore := constraint.GetMinElementScore()
+	maxScore := constraint.GetMaxElementScore()
 
-	// 计算矩阵内已占用元素得分
-	fitness = classMatrix.Score * 10
+	// log.Printf("Min score: %d, Max score: %d\n", minScore, maxScore)
 
-	// 计算科目分散度得分
+	// Normalize the total score
+	normalizedScore := (float64(totalScore) - float64(minScore)) / (float64(maxScore) - float64(minScore))
+	// log.Printf("Normalized score: %f\n", normalizedScore)
+
+	// Calculate the subject dispersion score
 	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, constants.PERIOD_THRESHOLD)
 	if err != nil {
-		return fitness, nil
+		return 0, err
 	}
+	// log.Printf("Subject dispersion score: %f\n", subjectDispersionScore)
 
-	// 计算教师分散度得分
+	// Calculate the teacher dispersion score
 	teacherDispersionScore := i.calcTeacherDispersionScore()
+	// log.Printf("Teacher dispersion score: %f\n", teacherDispersionScore)
 
-	// 乘以系数并转为整数,
-	subjectDispersionScoreInt := int(math.Round(subjectDispersionScore * 10))
-	teacherDispersionScoreInt := int(math.Round(teacherDispersionScore * 10))
+	// Calculate the fitness by multiplying the normalized score by a weight and adding the dispersion scores
+	fitness := int(normalizedScore*100 + float64(subjectDispersionScore)*10 + float64(teacherDispersionScore)*10)
+	// log.Printf("Fitness: %d\n", fitness)
 
-	fitness += subjectDispersionScoreInt
-	fitness += teacherDispersionScoreInt
-
-	// log.Printf("矩阵得分: %d,  科目分散度: %.2f, 教师分散度: %.2f, 适应度: %d\n", classMatrix.Score, subjectDispersionScore, teacherDispersionScore, fitness)
-
-	// 返回适应度值
 	return fitness, nil
 }
 

@@ -132,14 +132,14 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 }
 
 // 对已占用的矩阵元素的求和
-// 只对元素score分数大于0的元素score求和
+// 只对元素score分数大于math.MinInt32 的元素score求和
 func (cm *ClassMatrix) SumUsedElementsScore() int {
 	score := 0
 	for _, teacherMap := range cm.Elements {
 		for _, venueMap := range teacherMap {
 			for _, timeSlotMap := range venueMap {
 				for _, element := range timeSlotMap {
-					if element.Val.Used == 1 && element.Val.ScoreInfo.Score >= 0 {
+					if element.Val.Used == 1 {
 						elementScore := element.Val.ScoreInfo.Score
 						score += elementScore
 						// log.Printf("Used element: SN=%s, TeacherID=%d, VenueID=%d, TimeSlot=%d, Score=%d\n",

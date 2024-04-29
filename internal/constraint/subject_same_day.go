@@ -8,7 +8,6 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"math"
 )
 
 var SSDRule1 = &types.Rule{
@@ -16,8 +15,8 @@ var SSDRule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       ssdRule1Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
-	Weight:   2,
+	Penalty:  constants.MAX_PENALTY_SCORE,
+	Weight:   1,
 	Priority: 1,
 }
 

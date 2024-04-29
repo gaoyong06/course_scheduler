@@ -12,3 +12,7 @@ const (
 const (
 	PERIOD_THRESHOLD = 2 // 相同节次排课数量限制
 )
+
+const (
+	MAX_PENALTY_SCORE = 3 // 表示ClassMatrix中的元素可以具有的最大可能得分, 这个得分很重要,会直接影响适应度计算的结果, 一般和最高的奖励分是相同的
+)

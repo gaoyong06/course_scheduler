@@ -5,7 +5,6 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/types"
 	"fmt"
-	"math"
 )
 
 var SMERule1 = &types.Rule{
@@ -13,8 +12,8 @@ var SMERule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       smeRule1Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
-	Weight:   2,
+	Penalty:  constants.MAX_PENALTY_SCORE,
+	Weight:   1,
 	Priority: 1,
 }
 

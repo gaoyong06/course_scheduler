@@ -7,7 +7,6 @@ import (
 	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"math"
 )
 
 var TRule1 = &types.Rule{
@@ -15,7 +14,7 @@ var TRule1 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule1Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -25,7 +24,7 @@ var TRule2 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule2Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -35,7 +34,7 @@ var TRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule3Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -45,7 +44,7 @@ var TRule4 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule4Fn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  constants.MAX_PENALTY_SCORE,
 	Weight:   1,
 	Priority: 1,
 }
@@ -54,7 +53,7 @@ var TRule5 = &types.Rule{
 	Name:     "TRule5",
 	Type:     "fixed",
 	Fn:       tRule5Fn,
-	Score:    2,
+	Score:    3,
 	Penalty:  0,
 	Weight:   1,
 	Priority: 1,
