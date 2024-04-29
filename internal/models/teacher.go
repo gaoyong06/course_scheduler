@@ -49,7 +49,7 @@ func FindTeacherByID(teacherID int) (*Teacher, error) {
 
 // 老师集合
 // 根据课班选取老师
-func ClassTeacherIDs(subjectID int) []int {
+func ClassTeacherIDs(gradeID, classID, subjectID int) []int {
 
 	var teacherIDs []int
 	teachers := GetTeachers()

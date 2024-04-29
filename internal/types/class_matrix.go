@@ -36,10 +36,11 @@ func (cm *ClassMatrix) Init(classes []Class) {
 		class := classes[i]
 
 		subjectID := class.SN.SubjectID
+		gradeID := class.SN.GradeID
 		classID := class.SN.ClassID
 
-		teacherIDs := models.ClassTeacherIDs(subjectID)
-		venueIDs := models.ClassVenueIDs(classID)
+		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID)
+		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID)
 		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
 		sn := class.SN.Generate()
 

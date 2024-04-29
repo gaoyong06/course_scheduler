@@ -9,8 +9,8 @@ import (
 )
 
 // 变异
+// 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
-// 替换时间
 // Mutation performs mutation on the selected individuals with a given mutation rate
 func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int) ([]*Individual, error) {
 
@@ -21,30 +21,36 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 		if rand.Float64() < mutationRate {
 			prepared++
 
-			// Randomly select a chromosome and gene index for mutation
+			// 变异的个体
+			// individual := selected[i]
+
+			// 随机选择染色体和基因索引进行突变
 			chromosomeIndex := rand.Intn(len(selected[i].Chromosomes))
 			geneIndex := rand.Intn(len(selected[i].Chromosomes[chromosomeIndex].Genes))
 
-			// Get the chromosome and gene to be mutated
+			// 获取要突变的染色体和基因
 			chromosome := selected[i].Chromosomes[chromosomeIndex]
 			gene := chromosome.Genes[geneIndex]
 
-			// Find available options for the given class
+			// 找到给定课班的可用参数信息
 			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome)
 			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, err
 			}
 
-			// Validate the mutation
+			// 变异校验
 			isValid, err := validateMutation(selected[i], chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
 			if err != nil {
 				return nil, err
 			}
 
+			// 校验通过
 			if isValid {
+
 				executed++
-				// Mutate the gene with the unused values (if available)
+
+				// 用未使用的值(如果有的话)改变基因
 				if unusedTeacherID > 0 {
 					gene.TeacherID = unusedTeacherID
 				}
@@ -55,6 +61,17 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 					gene.TimeSlot = unusedTimeSlot
 				}
 				chromosome.Genes[geneIndex] = gene
+
+				selected[i].Chromosomes[chromosomeIndex] = chromosome
+
+				// 修复时间段冲突
+				_, _, err := selected[i].RepairTimeSlotConflicts()
+				if err != nil {
+					return nil, err
+				}
+
+				// 个体内基因排序
+				selected[i].SortChromosomes()
 
 				// 更新个体适应度
 				classMatrix := selected[i].toClassMatrix()
@@ -75,7 +92,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 // validateMutation 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件
 func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
 
-	// Check if the mutation will result in a valid gene
+	// 检查突变是否会产生有效的基因，找到未使用的教师、教室和时间段
 	newGene := individual.Chromosomes[chromosomeIndex].Genes[geneIndex]
 
 	if models.IsTeacherIDValid(unusedTeacherID) {
@@ -90,27 +107,11 @@ func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unused
 		newGene.TimeSlot = unusedTimeSlot
 	}
 
-	newIndividual := individual.Copy()
-	newIndividual.Chromosomes[chromosomeIndex].Genes[geneIndex] = newGene
-
-	// Calculate the score for the new gene
-	newClassMatrix := newIndividual.toClassMatrix()
-
-	newElement := newClassMatrix.Elements[newGene.ClassSN][newGene.TeacherID][newGene.VenueID][newGene.TimeSlot]
-	newElementScore := newElement.Val.ScoreInfo.Score
-
-	if newElementScore <= 0 {
-		return false, nil
-	}
-
 	return true, nil
 }
 
 // findUnusedTCt 查找基因中未使用的教师,教室,时间段
 func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
-
-	// teachers := models.GetTeachers()
-	// venueIDs := models.GetVenueIDs()
 
 	SN, err := types.ParseSN(chromosome.ClassSN)
 	if err != nil {
@@ -118,17 +119,18 @@ func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
 	}
 
 	subjectID := SN.SubjectID
+	gradeID := SN.GradeID
 	classID := SN.ClassID
 
-	teacherIDs := models.ClassTeacherIDs(subjectID)
-	venueIDs := models.ClassVenueIDs(classID)
+	teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID)
+	venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID)
 	// timeSlots := types.ClassTimeSlots(teacherIDs, venueIDs)
 
 	unusedTeacherIDs := make([]int, 0)
 	unusedVenueIDs := make([]int, 0)
 	unusedTimeSlots := make([]int, 0)
 
-	// Find unused teachers, classrooms, and time slots
+	// 找到闲置的老师、教室和时间段
 	for _, teacherID := range teacherIDs {
 		teacherUsed := false
 		for _, gene := range chromosome.Genes {
@@ -172,7 +174,7 @@ func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
 
 	// fmt.Printf("unusedTeacherIDs: %#v, unusedVenueIDs: %#v, unusedTimeSlots: %#v\n", unusedTeacherIDs, unusedVenueIDs, unusedTimeSlots)
 
-	// Return a random unused teacher, classroom, and time slot (if available)
+	// 返回一个随机的未使用的老师、教室和时间段(如果有的话)
 	return getRandomUnused(unusedTeacherIDs), getRandomUnused(unusedVenueIDs), getRandomUnused(unusedTimeSlots), nil
 }
 

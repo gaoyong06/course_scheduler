@@ -9,7 +9,7 @@ func GetVenueIDs() []int {
 
 // 教室集合
 // 根据课班选取教室
-func ClassVenueIDs(classID int) []int {
+func ClassVenueIDs(gradeID, classID, subjectID int) []int {
 
 	venueIDs := GetVenueIDs()
 	venueID := venueIDs[classID]
