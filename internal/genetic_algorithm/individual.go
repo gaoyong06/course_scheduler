@@ -242,12 +242,14 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 }
 
 // 检查是否有时间段冲突
+// 时间段冲突是指,同一个时间段有多个排课信息
 func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 
 	// 记录冲突的时间段
 	var conflicts []int
 
 	// 创建一个用于记录已使用时间段的 map
+	// key: timeSlot, val: bool
 	usedTimeSlots := make(map[int]bool)
 
 	// 检查每个基因的时间段是否有冲突

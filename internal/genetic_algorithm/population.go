@@ -184,3 +184,16 @@ func checkDuplicates(population []*Individual) map[string][]*Individual {
 
 	return duplicates
 }
+
+// 检查种群中是否存在时间段冲突的个体
+func CheckConflicts(population []*Individual) bool {
+
+	for i, item := range population {
+		hasTimeSlotConflicts, conflicts := item.HasTimeSlotConflicts()
+		if hasTimeSlotConflicts {
+			log.Printf("The %dth individual has time conflicts, conflict info: %v\n", i, conflicts)
+			return true
+		}
+	}
+	return false
+}

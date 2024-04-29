@@ -20,7 +20,7 @@ func main() {
 	popSize := config.PopSize
 	selectionSize := config.SelectionSize
 	maxGen := config.MaxGen
-	// mutationRate := config.MutationRate
+	mutationRate := config.MutationRate
 	crossoverRate := config.CrossoverRate
 	bestRatio := config.BestRatio
 
@@ -89,15 +89,17 @@ func main() {
 			// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 			// 变异
-			// offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
-			// if err != nil {
-			// 	log.Panic(err)
-			// }
+			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
+			if err != nil {
+				log.Panic(err)
+			}
 
 			// 更新种群
 			// 更新前后的个体数量不变
-			// TODO: 这里会引发currentPopulation内边个体有时间段冲突
-			xy(currentPopulation, "#1")
+			hasConflicts := genetic_algorithm.CheckConflicts(currentPopulation)
+			if hasConflicts {
+				log.Panic("Population time slot conflicts")
+			}
 			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
 			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
 		}
@@ -130,14 +132,4 @@ func main() {
 	// 计算总运行时间
 	elapsedTime := time.Since(startTime)
 	log.Printf("Total runtime: %v\n", elapsedTime)
-}
-
-func xy(population []*genetic_algorithm.Individual, key string) {
-
-	for _, item := range population {
-		a, b := item.HasTimeSlotConflicts()
-		if a {
-			log.Printf("【xy】!!!!!!! %s population中有冲突 ,%v\n", key, b)
-		}
-	}
 }
