@@ -2,39 +2,51 @@
 package genetic_algorithm
 
 import (
+	"course_scheduler/internal/constants"
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
+	"fmt"
 	"log"
 	"math/rand"
 	"sort"
-	"time"
 )
 
 // 初始化种群
 func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int) ([]*Individual, error) {
 
-	var classeSNs []string
-	for _, class := range classes {
-		sn := class.SN.Generate()
-		classeSNs = append(classeSNs, sn)
+	population := make([]*Individual, populationSize)
+	errChan := make(chan error, populationSize)
+
+	classSNs := make([]string, len(classes))
+	for i, class := range classes {
+		classSNs[i] = class.SN.Generate()
 	}
 
-	// 初始化随机数种子
-	rand.Seed(time.Now().UnixNano())
-
-	population := make([]*Individual, 0)
 	for i := 0; i < populationSize; i++ {
-		log.Printf("Initializing individual %d\n", i+1)
+		go func(i int) {
+			log.Printf("Initializing individual %d\n", i+1)
 
-		individual, err := createIndividual(classes, classeSNs, classHours)
-		if err != nil {
+			individual, err := createIndividual(classes, classSNs, classHours)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			population[i] = individual
+			log.Printf("Individual %d initialized\n", i)
+
+			// 向 errChan 发送 nil 值，表示该 goroutine 执行成功
+			errChan <- nil
+		}(i)
+	}
+
+	// 检查错误
+	for i := 0; i < populationSize; i++ {
+		if err := <-errChan; err != nil {
 			return nil, err
 		}
-
-		population = append(population, individual)
-		log.Println("Individual initialized")
-		log.Println("")
 	}
+
 	log.Println("Population initialization completed")
 	return population, nil
 }
@@ -121,10 +133,19 @@ func CheckConflicts(population []*Individual) bool {
 func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int) (*Individual, error) {
 
 	classMatrix := types.NewClassMatrix()
-	shuffleClassOrder(classes)
-	initClassMatrix(classMatrix, classes)
+
+	// 避免所有的 goroutine 对同一个 classes slice 进行操作，导致数据竞争 (data race) 的问题
+	classesCopy := make([]types.Class, len(classes))
+	copy(classesCopy, classes)
+	shuffleClassOrder(classesCopy)
+
+	err := initClassMatrix(classMatrix, classesCopy)
+	if err != nil {
+		return nil, err
+	}
+
 	calculateFixedScores(classMatrix)
-	_, err := allocateClassMatrix(classMatrix, classeSNs, classHours)
+	_, err = allocateClassMatrix(classMatrix, classeSNs, classHours)
 
 	if err != nil {
 		return nil, err
@@ -142,9 +163,15 @@ func shuffleClassOrder(classes []types.Class) {
 }
 
 // 初始化课程矩阵
-func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) {
+func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) error {
+
+	count := constants.NUM_GRADES * constants.NUM_CLASSES_PER_GRADE * constants.NUM_SUBJECTS
+	if len(classes) != count {
+		return fmt.Errorf("failed to initialize class matrix: expected %d classes, got %d", count, len(classes))
+	}
 	classMatrix.Init(classes)
-	log.Println("Class matrix initialized")
+	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
+	return nil
 }
 
 // 计算固定得分

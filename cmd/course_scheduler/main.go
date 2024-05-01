@@ -35,6 +35,8 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	initPopulationTime := time.Since(startTime)
+	log.Printf("Init population runtime: %v\n", initPopulationTime)
 
 	// 当前种群内容重复的数量
 	dupCount := genetic_algorithm.CountDuplicates(currentPopulation)

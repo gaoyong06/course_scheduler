@@ -2,6 +2,7 @@
 package types
 
 import (
+	"course_scheduler/internal/constants"
 	"course_scheduler/internal/models"
 	"fmt"
 	"math"
@@ -104,7 +105,7 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 
 		for i := 0; i < numClassHours; i++ {
 
-			teacherID, venueID, timeSlot, _ := cm.findBestTimeSlot(sn, timeTable)
+			teacherID, venueID, timeSlot, score := cm.findBestTimeSlot(sn, timeTable)
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
 
 				temp := cm.Elements[sn][teacherID][venueID][timeSlot].Val
@@ -114,10 +115,9 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 				timeTable.Used[timeSlot] = true
 				cm.updateElementDynamicScores(rules)
 
-				// updateTimeTableAndClassMatrix(sn, teacherID, venueID, timeSlot, cm.data, timeTable)
 				numAssignedClasses++
 			} else {
-				return numAssignedClasses, fmt.Errorf("failed sn: %s, classHour: %d,  numClassHours: %d", sn, i+1, numClassHours)
+				return numAssignedClasses, fmt.Errorf("failed, sn: %s, current class hour: %d, subject num class hours: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassHours, teacherID, venueID, timeSlot, score)
 			}
 		}
 	}
@@ -173,6 +173,21 @@ func (cm *ClassMatrix) PrintConstraintElement() {
 	}
 	// }
 }
+
+// 打印cm的所以key，和val的长度
+func (cm *ClassMatrix) PrintKeysAndLength() {
+
+	for sn, teacherMap := range cm.Elements {
+		fmt.Printf("Key: %s, Length: %d ", sn, len(teacherMap))
+		for teacherID, venueMap := range teacherMap {
+			for venueID, timeSlotMap := range venueMap {
+				fmt.Printf("teacherID: %d, %d: venueID: %d\n", teacherID, venueID, len(timeSlotMap))
+			}
+		}
+	}
+}
+
+// ==================
 
 // 查找当前课程的最佳可用时间段
 // 返回值: teacherID, venueID, timeSlot, score
@@ -297,5 +312,23 @@ func (cm *ClassMatrix) updateElementScores(calcFunc func(element ClassUnit, rule
 			}
 		}
 	}
+	return nil
+}
+
+// 检查 cm.Elements[sn] 是否为空的方法
+func (cm *ClassMatrix) checkClassMatrix(classes []Class) error {
+
+	count := constants.NUM_GRADES * constants.NUM_CLASSES_PER_GRADE * constants.NUM_SUBJECTS
+	if len(classes) != count {
+		return fmt.Errorf("failed to initialize class matrix: expected %d classes based on constants (NUM_GRADES: %d, NUM_CLASSES_PER_GRADE: %d, NUM_SUBJECTS: %d), but got %d classes", count, constants.NUM_GRADES, constants.NUM_CLASSES_PER_GRADE, constants.NUM_SUBJECTS, len(classes))
+	}
+
+	for _, class := range classes {
+		sn := class.SN.Generate()
+		if _, ok := cm.Elements[sn]; !ok {
+			return fmt.Errorf("cm.Elements[%s] is nil", sn)
+		}
+	}
+
 	return nil
 }

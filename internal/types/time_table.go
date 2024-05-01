@@ -1,3 +1,4 @@
+// time_table.go
 package types
 
 import (
