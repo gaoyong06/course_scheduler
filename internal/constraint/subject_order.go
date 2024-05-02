@@ -3,7 +3,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 	"sort"
 )
@@ -77,8 +77,8 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 
 			if timeSlotA == timeSlot || timeSlotB == timeSlot {
 
-				dayA := timeSlotA / constants.NUM_CLASSES
-				dayB := timeSlotB / constants.NUM_CLASSES
+				dayA := timeSlotA / config.NumClasses
+				dayB := timeSlotB / config.NumClasses
 
 				if dayA == dayB && timeSlotB == timeSlotA+1 {
 					return true, nil

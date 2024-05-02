@@ -3,7 +3,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 )
 
@@ -61,7 +61,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 	teacher2Days := make(map[int]bool)
 	timeSlot := element.GetTimeSlot()
 
-	elementDay := timeSlot / constants.NUM_CLASSES
+	elementDay := timeSlot / config.NumClasses
 
 	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
@@ -69,7 +69,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 				for _, timeSlotMap := range teacherMap {
 					for timeSlot, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / constants.NUM_CLASSES
+							day := timeSlot / config.NumClasses
 							teacher1Days[day] = true // 将时间段转换为天数
 						}
 					}
@@ -78,7 +78,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 				for _, timeSlotMap := range teacherMap {
 					for timeSlot, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / constants.NUM_CLASSES
+							day := timeSlot / config.NumClasses
 							teacher2Days[day] = true // 将时间段转换为天数
 						}
 					}

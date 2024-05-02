@@ -2,7 +2,7 @@
 package types
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"fmt"
 	"math"
@@ -318,9 +318,9 @@ func (cm *ClassMatrix) updateElementScores(calcFunc func(element ClassUnit, rule
 // 检查 cm.Elements[sn] 是否为空的方法
 func (cm *ClassMatrix) checkClassMatrix(classes []Class) error {
 
-	count := constants.NUM_GRADES * constants.NUM_CLASSES_PER_GRADE * constants.NUM_SUBJECTS
+	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
 	if len(classes) != count {
-		return fmt.Errorf("failed to initialize class matrix: expected %d classes based on constants (NUM_GRADES: %d, NUM_CLASSES_PER_GRADE: %d, NUM_SUBJECTS: %d), but got %d classes", count, constants.NUM_GRADES, constants.NUM_CLASSES_PER_GRADE, constants.NUM_SUBJECTS, len(classes))
+		return fmt.Errorf("failed to initialize class matrix: expected %d classes based on constants (NUM_GRADES: %d, NUM_CLASSES_PER_GRADE: %d, NUM_SUBJECTS: %d), but got %d classes", count, config.NumGrades, config.NumClassesPreGrade, config.NumSubjects, len(classes))
 	}
 
 	for _, class := range classes {

@@ -4,7 +4,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 )
 
@@ -46,7 +46,7 @@ func ttlRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	count := countTeacherClassesInRange(1, 1, 4, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 4
@@ -59,7 +59,7 @@ func ttlRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	count := countTeacherClassesInRange(1, 5, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 5 && period <= 8
@@ -72,7 +72,7 @@ func ttlRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	count := countTeacherClassesInRange(1, 1, 8, classMatrix)
 
 	preCheckPassed := teacherID == 1 && period >= 1 && period <= 8

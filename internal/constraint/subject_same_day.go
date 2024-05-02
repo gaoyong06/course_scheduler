@@ -5,7 +5,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 )
@@ -15,7 +15,7 @@ var SSDRule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       ssdRule1Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -34,7 +34,7 @@ func ssdRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 	// 周课时初始化
 	classHours := models.GetClassHours()
 
-	preCheckPassed := classHours[subjectID] <= constants.NUM_DAYS
+	preCheckPassed := classHours[subjectID] <= config.NumDays
 
 	shouldPenalize := false
 	if preCheckPassed {
@@ -55,14 +55,14 @@ func ssdRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int) bool {
 
 	count := 0
-	day := timeSlot / constants.NUM_CLASSES
+	day := timeSlot / config.NumClasses
 
 	for _, teacherMap := range classMatrix.Elements[sn] {
 		for _, venueMap := range teacherMap {
 			for timeSlot1, element := range venueMap {
 
 				if element.Val.Used == 1 && timeSlot != timeSlot1 {
-					day1 := timeSlot1 / constants.NUM_CLASSES
+					day1 := timeSlot1 / config.NumClasses
 					if day == day1 {
 						count++
 					}

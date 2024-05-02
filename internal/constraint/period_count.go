@@ -3,7 +3,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 )
 
@@ -26,7 +26,7 @@ func pcRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 	timeSlot := element.GetTimeSlot()
 
 	periodCount := countPeriodClasses(classMatrix, classSN, teacherID, venueID)
-	period := timeSlot % constants.NUM_CLASSES
+	period := timeSlot % config.NumClasses
 
 	preCheckPassed := false
 	count := 0
@@ -37,7 +37,7 @@ func pcRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 	if preCheckPassed {
 
 		// 检查相同节次的排课是否超过数量限制
-		shouldPenalize = count > constants.PERIOD_THRESHOLD
+		shouldPenalize = count > config.PeriodThreshold
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }
@@ -51,7 +51,7 @@ func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, ve
 	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {
 
 		if element.Val.Used == 1 {
-			period := timeSlot % constants.NUM_CLASSES
+			period := timeSlot % config.NumClasses
 			periodCount[period]++
 		}
 	}

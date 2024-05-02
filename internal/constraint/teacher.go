@@ -4,7 +4,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 )
@@ -14,7 +14,7 @@ var TRule1 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule1Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -24,7 +24,7 @@ var TRule2 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule2Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -34,7 +34,7 @@ var TRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule3Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -44,7 +44,7 @@ var TRule4 = &types.Rule{
 	Type:     "fixed",
 	Fn:       tRule4Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -69,8 +69,8 @@ func tRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := day == 1 && period == 4
 	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 2
@@ -87,8 +87,8 @@ func tRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := day == 1 && period == 4
 	shouldPenalize := preCheckPassed && teacher.TeacherID == 3
@@ -105,8 +105,8 @@ func tRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := day == 2 && period == 7
 	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 3
@@ -123,8 +123,8 @@ func tRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := day == 2 && period == 7
 	shouldPenalize := preCheckPassed && teacher.TeacherID == 5
@@ -141,8 +141,8 @@ func tRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := day == 2 && period == 2
 	isValid := preCheckPassed && teacher.TeacherID == 1

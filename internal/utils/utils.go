@@ -1,42 +1,11 @@
 package utils
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 	"fmt"
 	"sort"
 )
-
-// // PrintClassMatrix 以Markdown格式打印classMatrix
-// func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) {
-
-// 	// fmt.Println("| Class SN | Teacher ID | Venue ID | Time Slot | Day | Period | Score | Used |")
-// 	// fmt.Println("| --- | --- | --- | --- | --- | --- | --- |")
-
-// 	fmt.Println("| Day | Period | Score |")
-// 	fmt.Println("| --- | --- | --- |")
-
-// 	for classSN, teacherMap := range classMatrix {
-// 		if classSN == "6_1_1" {
-// 			// for teacherID, venueMap := range teacherMap {
-// 			for _, venueMap := range teacherMap {
-// 				// for venueID, timeSlotMap := range venueMap {
-// 				for _, timeSlotMap := range venueMap {
-// 					for timeSlot, val := range timeSlotMap {
-// 						day := timeSlot / constants.NUM_CLASSES
-// 						period := timeSlot % constants.NUM_CLASSES
-// 						// usedStr := "true"
-// 						// if val.Used == 0 {
-// 						// 	usedStr = "false"
-// 						// }
-// 						// fmt.Printf("| %s | %d | %d | %d | %d | %d | %d | %s |\n", classSN, teacherID, venueID, timeSlot, day, period, val.Score, usedStr)
-// 						fmt.Printf("| %d | %d | %d |\n", day, period, val.Score)
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// }
 
 type ClassMatrixItem struct {
 	ClassSN  string
@@ -46,6 +15,7 @@ type ClassMatrixItem struct {
 	Score    int
 }
 
+// PrintClassMatrix 以Markdown格式打印classMatrix
 func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) {
 
 	fmt.Println("| Time Slot| Day | Period | Score |")
@@ -57,8 +27,8 @@ func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) 
 			for _, venueMap := range teacherMap {
 				for _, timeSlotMap := range venueMap {
 					for timeSlot, val := range timeSlotMap {
-						day := timeSlot / constants.NUM_CLASSES
-						period := timeSlot % constants.NUM_CLASSES
+						day := timeSlot / config.NumClasses
+						period := timeSlot % config.NumClasses
 						item := ClassMatrixItem{
 							ClassSN:  classSN,
 							TimeSlot: timeSlot,

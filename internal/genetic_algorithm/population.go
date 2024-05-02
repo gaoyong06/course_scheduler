@@ -2,7 +2,7 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/types"
 	"fmt"
@@ -165,7 +165,7 @@ func shuffleClassOrder(classes []types.Class) {
 // 初始化课程矩阵
 func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) error {
 
-	count := constants.NUM_GRADES * constants.NUM_CLASSES_PER_GRADE * constants.NUM_SUBJECTS
+	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
 	if len(classes) != count {
 		return fmt.Errorf("failed to initialize class matrix: expected %d classes, got %d", count, len(classes))
 	}

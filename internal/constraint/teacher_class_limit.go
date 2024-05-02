@@ -2,7 +2,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 )
 
@@ -51,7 +51,7 @@ func tclRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := teacherID == 1 && period == 4
 
 	shouldPenalize := false
@@ -68,7 +68,7 @@ func tclRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := teacherID == 2 && period == 4
 
 	shouldPenalize := false
@@ -85,7 +85,7 @@ func tclRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := teacherID == 3 && period == 4
 
 	shouldPenalize := false
@@ -102,7 +102,7 @@ func tclRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 	teacherID := element.GetTeacherID()
 	timeSlot := element.GetTimeSlot()
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := teacherID == 4 && period == 4
 
 	shouldPenalize := false
@@ -124,7 +124,7 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 						continue
 					}
 					for timeSlot, element := range timeSlotMap {
-						if element.Val.Used == 1 && timeSlot%constants.NUM_CLASSES+1 == period {
+						if element.Val.Used == 1 && timeSlot%config.NumClasses+1 == period {
 							count++
 						}
 					}

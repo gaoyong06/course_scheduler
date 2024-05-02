@@ -2,7 +2,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 	"fmt"
 )
@@ -12,7 +12,7 @@ var SMERule1 = &types.Rule{
 	Type:     "dynamic",
 	Fn:       smeRule1Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -41,7 +41,7 @@ func smeRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, error) {
 
 	timeSlot := element.GetTimeSlot()
-	elementDay := timeSlot / constants.NUM_CLASSES
+	elementDay := timeSlot / config.NumClasses
 
 	// key: day, val:bool
 	subjectADays := make(map[int]bool)
@@ -63,11 +63,11 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 				for ts, e := range venueMap {
 					if e.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
-							subjectADays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
-							subjectATimeSlots[ts] = ts / constants.NUM_CLASSES
+							subjectADays[ts/config.NumClasses] = true // 将时间段转换为天数
+							subjectATimeSlots[ts] = ts / config.NumClasses
 						} else if SN.SubjectID == subjectBID {
-							subjectBDays[ts/constants.NUM_CLASSES] = true // 将时间段转换为天数
-							subjectBTimeSlots[ts] = ts / constants.NUM_CLASSES
+							subjectBDays[ts/config.NumClasses] = true // 将时间段转换为天数
+							subjectBTimeSlots[ts] = ts / config.NumClasses
 						}
 					}
 				}

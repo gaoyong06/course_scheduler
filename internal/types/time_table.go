@@ -2,7 +2,7 @@
 package types
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 )
 
 // 时间表
@@ -16,9 +16,9 @@ func initTimeTable() *TimeTable {
 
 	var timeSlots []int
 	used := make(map[int]bool)
-	for i := 0; i < constants.NUM_DAYS; i++ {
-		for j := 0; j < constants.NUM_CLASSES; j++ {
-			timeSlot := i*constants.NUM_CLASSES + j
+	for i := 0; i < config.NumDays; i++ {
+		for j := 0; j < config.NumClasses; j++ {
+			timeSlot := i*config.NumClasses + j
 			used[timeSlot] = false
 			timeSlots = append(timeSlots, timeSlot)
 		}

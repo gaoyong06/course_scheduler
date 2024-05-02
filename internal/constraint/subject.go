@@ -4,7 +4,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 
@@ -41,7 +41,7 @@ var SRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       sRule3Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -71,8 +71,8 @@ func sRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	day := timeSlot/constants.NUM_CLASSES + 1
-	period := timeSlot%constants.NUM_CLASSES + 1
+	day := timeSlot/config.NumClasses + 1
+	period := timeSlot%config.NumClasses + 1
 
 	// 判断subjectGroupID是否已经排课完成
 	isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, subjectGroupID)
@@ -100,7 +100,7 @@ func sRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := period == 1 || period == 2 || period == 3
 
@@ -119,7 +119,7 @@ func sRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := period == 8
 
 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
@@ -138,7 +138,7 @@ func sRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	if err != nil {
 		return false, false, err
 	}
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := period == 7
 
 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)

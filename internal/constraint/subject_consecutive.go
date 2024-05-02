@@ -5,7 +5,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"sort"
@@ -32,7 +32,7 @@ func scRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, b
 	// 周课时初始化
 	classHours := models.GetClassHours()
 
-	preCheckPassed := classHours[subjectID] > constants.NUM_DAYS
+	preCheckPassed := classHours[subjectID] > config.NumDays
 
 	shouldPenalize := false
 	if preCheckPassed {

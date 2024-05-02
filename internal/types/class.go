@@ -1,7 +1,7 @@
 package types
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"fmt"
 )
 
@@ -26,9 +26,9 @@ func InitClasses() []Class {
 	// subjects := models.GetSubjects()
 
 	// 这里根据年级,班级,科目生成课班
-	for i := 0; i < constants.NUM_GRADES; i++ {
-		for j := 0; j < constants.NUM_CLASSES_PER_GRADE; j++ {
-			for k := 0; k < constants.NUM_SUBJECTS; k++ {
+	for i := 0; i < config.NumGrades; i++ {
+		for j := 0; j < config.NumClassesPreGrade; j++ {
+			for k := 0; k < config.NumSubjects; k++ {
 
 				subjectID := k + 1
 				gradeID := i + 1
@@ -59,9 +59,9 @@ func InitClasses() []Class {
 func ClassTimeSlots(teacherIDs []int, venueIDs []int) []int {
 
 	var timeSlots []int
-	for i := 0; i < constants.NUM_DAYS; i++ {
-		for j := 0; j < constants.NUM_CLASSES; j++ {
-			timeSlot := i*constants.NUM_CLASSES + j
+	for i := 0; i < config.NumDays; i++ {
+		for j := 0; j < config.NumClasses; j++ {
+			timeSlot := i*config.NumClasses + j
 			timeSlots = append(timeSlots, timeSlot)
 		}
 	}

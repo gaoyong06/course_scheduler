@@ -4,7 +4,7 @@
 package constraint
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/types"
 )
 
@@ -25,7 +25,7 @@ var CRule2 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule2Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -36,7 +36,7 @@ var CRule3 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule3Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -47,7 +47,7 @@ var CRule4 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule4Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -58,7 +58,7 @@ var CRule5 = &types.Rule{
 	Type:     "fixed",
 	Fn:       cRule5Fn,
 	Score:    0,
-	Penalty:  constants.MAX_PENALTY_SCORE,
+	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
 	Priority: 1,
 }
@@ -104,7 +104,7 @@ func cRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 1 && SN.ClassID == 1 && period == 1
 	isValid := preCheckPassed && SN.SubjectID == 1 && teacherID == 1
 
@@ -118,7 +118,7 @@ func cRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 1 && period == 7
 
 	isValid := !preCheckPassed
@@ -132,7 +132,7 @@ func cRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 2 && period == 8
 
 	isValid := !preCheckPassed
@@ -147,7 +147,7 @@ func cRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 4 && period == 8
 
 	isValid := !preCheckPassed
@@ -163,7 +163,7 @@ func cRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 
 	preCheckPassed := SN.GradeID == 4 && SN.SubjectID == 1 && period == 1
 
@@ -179,7 +179,7 @@ func cRule6Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 5 && period == 2
 	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 1
 
@@ -194,7 +194,7 @@ func cRule7Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 5 && period == 3
 	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
 
@@ -209,7 +209,7 @@ func cRule8Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bo
 	timeSlot := element.GetTimeSlot()
 
 	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%constants.NUM_CLASSES + 1
+	period := timeSlot%config.NumClasses + 1
 	preCheckPassed := SN.GradeID == 5 && period == 5
 	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
 	return preCheckPassed, isValid, nil

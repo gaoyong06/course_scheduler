@@ -2,7 +2,7 @@
 package genetic_algorithm
 
 import (
-	"course_scheduler/internal/constants"
+	"course_scheduler/config"
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
@@ -224,7 +224,7 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 	// log.Printf("Normalized score: %f\n", normalizedScore)
 
 	// Calculate the subject dispersion score
-	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, constants.PERIOD_THRESHOLD)
+	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, config.PeriodThreshold)
 	if err != nil {
 		return 0, err
 	}
@@ -280,7 +280,7 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 
 	// 找出已经占用的时间段和未占用的时间段
 	usedTimeSlots := make(map[int]bool)
-	unusedTimeSlots := lo.Range(constants.NUM_TIMESLOTS)
+	unusedTimeSlots := lo.Range(config.NumTimeSlots)
 
 	// 冲突时间段:冲突次数
 	conflictsMap := make(map[int]int)
@@ -389,12 +389,12 @@ func calcStandardDeviation(timeSlotsMap map[string][]int, countMap map[string]in
 
 	// Calculate the standard deviation for each subject or teacher
 	for key, timeSlots := range timeSlotsMap {
-		mean := float64(len(timeSlots)) / float64(constants.NUM_TIMESLOTS)
+		mean := float64(len(timeSlots)) / float64(config.NumTimeSlots)
 		variance := 0.0
 		for _, timeSlot := range timeSlots {
 			variance += math.Pow(float64(timeSlot)-mean, 2)
 		}
-		stdDev := math.Sqrt(variance / float64(constants.NUM_TIMESLOTS))
+		stdDev := math.Sqrt(variance / float64(config.NumTimeSlots))
 		stdDevMap[key] = stdDev
 	}
 
@@ -423,7 +423,7 @@ func (i Individual) calcSubjectDispersionScore(punishSamePeriod bool, samePeriod
 	periodCount := make(map[int]int)
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
-			period := gene.TimeSlot % constants.NUM_CLASSES
+			period := gene.TimeSlot % config.NumClasses
 			periodCount[period]++
 		}
 	}
@@ -461,7 +461,7 @@ func (i *Individual) calcTeacherDispersionScore() float64 {
 			teacherCount[teacherID]++
 			if teacherDispersion[teacherID] == nil {
 				teacherDispersion[teacherID] = make(map[int]bool)
-				for i := 0; i < constants.NUM_TIMESLOTS; i++ {
+				for i := 0; i < config.NumTimeSlots; i++ {
 					teacherDispersion[teacherID][i] = false
 				}
 			}
@@ -509,8 +509,8 @@ func (i *Individual) PrintSchedule() {
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
 			count++
-			day := gene.TimeSlot / constants.NUM_CLASSES
-			period := gene.TimeSlot % constants.NUM_CLASSES
+			day := gene.TimeSlot / config.NumClasses
+			period := gene.TimeSlot % config.NumClasses
 			classSN := gene.ClassSN
 			SN, err := types.ParseSN(classSN)
 			if err != nil {
@@ -536,9 +536,9 @@ func (i *Individual) PrintSchedule() {
 	log.Printf("课程表: 共%d节课\n", count)
 	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 	fmt.Println("---+-------------------------------------------")
-	for c := 0; c < constants.NUM_CLASSES; c++ {
+	for c := 0; c < config.NumClasses; c++ {
 		fmt.Printf("%-2d |", c+1)
-		for d := 0; d < constants.NUM_DAYS; d++ {
+		for d := 0; d < config.NumDays; d++ {
 			class, ok := schedule[d][c]
 			if !ok {
 				class = ""
