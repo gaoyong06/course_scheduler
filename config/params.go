@@ -32,3 +32,13 @@ const (
 const (
 	MaxPenaltyScore = 3 // 表示ClassMatrix中的元素可以具有的最大可能得分, 这个得分很重要,会直接影响适应度计算的结果, 一般和最高的奖励分是相同的
 )
+
+// 排课优先级
+const (
+	Fixed  = "fixed"  // 固定排课
+	Prefer = "prefer" // 优先排课(尽量排课)
+	Not    = "not"    // 禁止排课
+	Avoid  = "avoid"  // 尽量不排课
+	Min    = "min"    // 最少排课count节
+	Max    = "max"    // 最多排课count节
+)

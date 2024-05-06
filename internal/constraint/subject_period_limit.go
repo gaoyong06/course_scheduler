@@ -1,4 +1,5 @@
-// 相同节次的排课是否超过数量限制
+// 同一个年级,班级,科目相同节次的排课是否超过数量限制
+// 系统约束
 
 package constraint
 
@@ -7,10 +8,12 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var PCRule1 = &types.Rule{
-	Name:     "PCRule1",
+// #### 同一个年级,班级,科目相同节次的排课是否超过数量限制
+// 同一个年级,班级,科目相同节次最多排课 {2}次
+var subjectPeriodLimitRule = &types.Rule{
+	Name:     "periodCount",
 	Type:     "dynamic",
-	Fn:       pcRule1Fn,
+	Fn:       splRuleFn,
 	Score:    0,
 	Penalty:  1,
 	Weight:   1,
@@ -18,7 +21,7 @@ var PCRule1 = &types.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func pcRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
+func splRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()

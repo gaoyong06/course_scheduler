@@ -4,148 +4,112 @@
 package constraint
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"fmt"
+
+	"github.com/samber/lo"
 )
 
-var TRule1 = &types.Rule{
-	Name:     "TRule1",
-	Type:     "fixed",
-	Fn:       tRule1Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// ##### 教师固排禁排
+
+// - 教师默认分组(按学科)
+// - 教师自定义分组(行政领导)
+
+// | 教师分组 | 教师   | 时间         | 限制 | 描述   |
+// | -------- | ------ | ------------ | ---- | ------ |
+// | 数学组   |        | 周一 第 4 节 | 禁排 | 教研会 |
+// |          | 刘老师 | 周一 第 4 节 | 禁排 | 教研会 |
+// | 行政组 |        | 周二 第 7 节 | 禁排 | 例会   |
+// |          | 马老师 | 周二 第 7 节 | 禁排 | 例会   |
+// |          | 王老师 | 周二 第 2 节 | 尽量排 |        |
+// 教师教师固排禁排约束
+type Teacher struct {
+	ID             int    `json:"id" mapstructure:"id"`                             // 自增ID
+	TeacherGroupID int    `json:"teacher_group_id" mapstructure:"teacher_group_id"` // 教师分组ID
+	TeacherID      int    `json:"teacher_id" mapstructure:"teacher_id"`             // 老师ID
+	TimeSlot       int    `json:"time_slot" mapstructure:"time_slot"`               // 时间段
+	Limit          string `json:"limit" mapstructure:"limit"`                       // 限制: 固定排: fixed, 优先排: prefer, 禁排: not, 尽量不排: avoid
+	Desc           string `json:"desc" mapstructure:"desc"`                         // 描述
 }
 
-var TRule2 = &types.Rule{
-	Name:     "TRule2",
-	Type:     "fixed",
-	Fn:       tRule2Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// 生成字符串
+func (t *Teacher) String() string {
+	return fmt.Sprintf("ID: %d, TeacherGroupID: %d, TeacherID: %d, TimeSlot: %d, Limit: %s, Desc: %s", t.ID,
+		t.TeacherGroupID, t.TeacherID, t.TimeSlot, t.Limit, t.Desc)
 }
 
-var TRule3 = &types.Rule{
-	Name:     "TRule3",
-	Type:     "fixed",
-	Fn:       tRule3Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
-}
-
-var TRule4 = &types.Rule{
-	Name:     "TRule4",
-	Type:     "fixed",
-	Fn:       tRule4Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
-}
-
-var TRule5 = &types.Rule{
-	Name:     "TRule5",
-	Type:     "fixed",
-	Fn:       tRule5Fn,
-	Score:    3,
-	Penalty:  0,
-	Weight:   1,
-	Priority: 1,
-}
-
-// 9. 数学组 周一 第4节 禁排 教研会
-func tRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	teacher, err := models.FindTeacherByID(teacherID)
-	if err != nil {
-		return false, false, err
+// 获取班级固排禁排规则
+func GetTeacherRules() []*types.Rule {
+	constraints := loadTeacherConstraintsFromDB()
+	var rules []*types.Rule
+	for _, c := range constraints {
+		rule := c.genRule()
+		rules = append(rules, rule)
 	}
-	day := timeSlot/config.NumClasses + 1
-	period := timeSlot%config.NumClasses + 1
-
-	preCheckPassed := day == 1 && period == 4
-	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 2
-	return preCheckPassed, !shouldPenalize, nil
+	return rules
 }
 
-// 10. 刘老师 周一 第4节 禁排 教研会
-func tRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	teacher, err := models.FindTeacherByID(teacherID)
-	if err != nil {
-		return false, false, err
+// 生成规则
+func (c *Teacher) genRule() *types.Rule {
+	fn := c.genConstraintFn()
+	return &types.Rule{
+		Name:     c.String(),
+		Type:     "fixed",
+		Fn:       fn,
+		Score:    c.getScore(),
+		Penalty:  c.getPenalty(),
+		Weight:   1,
+		Priority: 1,
 	}
-	day := timeSlot/config.NumClasses + 1
-	period := timeSlot%config.NumClasses + 1
-
-	preCheckPassed := day == 1 && period == 4
-	shouldPenalize := preCheckPassed && teacher.TeacherID == 3
-	return preCheckPassed, !shouldPenalize, nil
 }
 
-// 11. 行政领导 周二 第7节 禁排 例会
-func tRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	teacher, err := models.FindTeacherByID(teacherID)
-	if err != nil {
-		return false, false, err
-	}
-	day := timeSlot/config.NumClasses + 1
-	period := timeSlot%config.NumClasses + 1
-
-	preCheckPassed := day == 2 && period == 7
-	shouldPenalize := preCheckPassed && teacher.TeacherGroupIDs[0] == 3
-	return preCheckPassed, !shouldPenalize, nil
+// 加载班级固排禁排规则
+func loadTeacherConstraintsFromDB() []*Teacher {
+	var constraints []*Teacher
+	return constraints
 }
 
-// 12. 马老师 周二 第7节 禁排 例会
-func tRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
+// 生成规则校验方法
+func (t *Teacher) genConstraintFn() types.ConstraintFn {
+	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+		teacherGroupID := t.TeacherGroupID
+		teacherID := t.TeacherID
+		timeSlot := t.TimeSlot
 
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
+		currTeacherID := element.GetTeacherID()
+		currTimeSlot := element.GetTimeSlot()
 
-	teacher, err := models.FindTeacherByID(teacherID)
-	if err != nil {
-		return false, false, err
+		currTeacher, err := models.FindTeacherByID(currTeacherID)
+		if err != nil {
+			return false, false, err
+		}
+
+		preCheckPassed := currTimeSlot == timeSlot
+		isValid := (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
+
+		return preCheckPassed, isValid, nil
 	}
-	day := timeSlot/config.NumClasses + 1
-	period := timeSlot%config.NumClasses + 1
-
-	preCheckPassed := day == 2 && period == 7
-	shouldPenalize := preCheckPassed && teacher.TeacherID == 5
-	return preCheckPassed, !shouldPenalize, nil
 }
 
-// 13. 王老师 周二 第2节 固排
-func tRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	teacher, err := models.FindTeacherByID(teacherID)
-	if err != nil {
-		return false, false, err
+// 奖励分
+func (t *Teacher) getScore() int {
+	score := 0
+	if t.Limit == "fixed" {
+		score = 3
+	} else if t.Limit == "prefer" {
+		score = 2
 	}
-	day := timeSlot/config.NumClasses + 1
-	period := timeSlot%config.NumClasses + 1
+	return score
+}
 
-	preCheckPassed := day == 2 && period == 2
-	isValid := preCheckPassed && teacher.TeacherID == 1
-
-	return preCheckPassed, isValid, nil
+// 惩罚分
+func (t *Teacher) getPenalty() int {
+	penalty := 0
+	if t.Limit == "not" {
+		penalty = 3
+	} else if t.Limit == "avoid" {
+		penalty = 2
+	}
+	return penalty
 }

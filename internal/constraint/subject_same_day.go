@@ -1,4 +1,5 @@
 // 科目课时小于天数,禁止同一天排多次相同科目的课
+// 系统约束
 // 这个约束需要根据当前已排的课程情况来判断是否满足约束。例如，在排课过程中，如果已经为某一天排好了一节语文课，那么在继续为这一天排课时，就需要考虑到这个约束，避免再为这一天排另一节语文课。
 // 因此，这个约束需要在排课过程中动态地检查和更新，因此它是一个动态约束条件
 
@@ -10,10 +11,10 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var SSDRule1 = &types.Rule{
-	Name:     "SSDRule1",
+var subjectSameDayRule = &types.Rule{
+	Name:     "subjectSameDayRule",
 	Type:     "dynamic",
-	Fn:       ssdRule1Fn,
+	Fn:       ssdRuleFn,
 	Score:    0,
 	Penalty:  config.MaxPenaltyScore,
 	Weight:   1,
@@ -21,9 +22,7 @@ var SSDRule1 = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	// fmt.Printf("---> ssdRule1Fn %d", element.TimeSlot)
+func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
@@ -41,11 +40,6 @@ func ssdRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, 
 
 		// 检查同一天是否安排科目的排课
 		ret := isSubjectSameDay(classMatrix, classSN, timeSlot)
-
-		// if element.ClassSN == "1_1_1" {
-		// 	fmt.Printf("ssdRule1Fn element.TimeSlot: %d\n", element.TimeSlot)
-		// }
-
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil

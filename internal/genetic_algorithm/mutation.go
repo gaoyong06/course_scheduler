@@ -12,7 +12,7 @@ import (
 // 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
 // Mutation performs mutation on the selected individuals with a given mutation rate
-func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int) ([]*Individual, error) {
+func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int, schedule *models.Schedule) ([]*Individual, int, int, error) {
 
 	prepared := 0
 	executed := 0
@@ -36,13 +36,13 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome)
 			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
-				return nil, err
+				return nil, prepared, executed, err
 			}
 
 			// 变异校验
 			isValid, err := validateMutation(selected[i], chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
 			if err != nil {
-				return nil, err
+				return nil, prepared, executed, err
 			}
 
 			// 校验通过
@@ -67,18 +67,18 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 				// 修复时间段冲突
 				_, _, err := selected[i].RepairTimeSlotConflicts()
 				if err != nil {
-					return nil, err
+					return nil, prepared, executed, err
 				}
 
 				// 个体内基因排序
 				selected[i].SortChromosomes()
 
 				// 更新个体适应度
-				classMatrix := selected[i].toClassMatrix()
-				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours)
+				classMatrix := selected[i].toClassMatrix(schedule)
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours, schedule)
 
 				if err != nil {
-					return nil, err
+					return nil, prepared, executed, err
 				}
 				selected[i].Fitness = newFitness
 			}
@@ -86,7 +86,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 	}
 
 	log.Printf("Prepared mutations: %d, Executed mutations: %d\n", prepared, executed)
-	return selected, nil
+	return selected, prepared, executed, nil
 }
 
 // validateMutation 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件

@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Individual, error) {
+func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int, schedule *models.Schedule) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -92,7 +92,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int) (*Ind
 	}
 
 	// 设置适应度
-	fitness, err := individual.EvaluateFitness(classMatrix, classHours)
+	fitness, err := individual.EvaluateFitness(classMatrix, classHours, schedule)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (i *Individual) UniqueId() string {
 
 // 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
-func (i *Individual) toClassMatrix() *types.ClassMatrix {
+func (i *Individual) toClassMatrix(schedule *models.Schedule) *types.ClassMatrix {
 	// 汇总课班集合
 	classes := types.InitClasses()
 
@@ -171,7 +171,7 @@ func (i *Individual) toClassMatrix() *types.ClassMatrix {
 
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			fixedRules := constraint.GetFixedRules()
-			dynamicRules := constraint.GetDynamicRules()
+			dynamicRules := constraint.GetDynamicRules(schedule)
 			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
 
 			// 修改基因内的约束状态信息
@@ -209,13 +209,13 @@ func (i *Individual) SortChromosomes() {
 // Fitness: 198
 // 给normalizedScore乘以100,目的是为了提升normalizedScore的重要性
 // 给subjectDispersionScore, teacherDispersionScore 乘以10, 目的是把数据归到同一个数量级和提升两者的重要度
-func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int) (int, error) {
+func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int, schedule *models.Schedule) (int, error) {
 	// Calculate the total score of the class matrix
 	totalScore := classMatrix.Score
 	// log.Printf("Total score: %d\n", totalScore)
 
-	minScore := constraint.GetMinElementScore()
-	maxScore := constraint.GetMaxElementScore()
+	minScore := constraint.GetMinElementScore(schedule)
+	maxScore := constraint.GetMaxElementScore(schedule)
 
 	// log.Printf("Min score: %d, Max score: %d\n", minScore, maxScore)
 

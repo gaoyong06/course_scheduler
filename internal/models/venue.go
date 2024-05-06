@@ -1,5 +1,12 @@
 package models
 
+// 教学场地
+type Venue struct {
+	Name     string `json:"name" mapstructure:"name"`         // 场地名称
+	Type     string `json:"type" mapstructure:"type"`         // 场地类型 exclusive: 专用教学场所, shared: 共享教学场所
+	Capacity int    `json:"capacity" mapstructure:"capacity"` // 教学场所能容纳的, 最多上课班级, 专用教学场所: 为固定值1, 共享教学场所: 默认值为 0,表示不限制
+}
+
 func GetVenueIDs() []int {
 
 	// 教室id列表

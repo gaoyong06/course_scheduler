@@ -13,24 +13,24 @@ type Subject struct {
 	SubjectGroupIDs []int  // 科目分组id
 }
 
-func GetSubjects() []Subject {
+func getSubjectsFromDB() []*Subject {
 
-	subjects := []Subject{
-		{SubjectID: 1, Name: "语文", SubjectGroupIDs: []int{1}},
-		{SubjectID: 2, Name: "数学", SubjectGroupIDs: []int{1}},
-		{SubjectID: 3, Name: "英语", SubjectGroupIDs: []int{1}},
-		{SubjectID: 4, Name: "音乐", SubjectGroupIDs: []int{3}},
-		{SubjectID: 5, Name: "美术", SubjectGroupIDs: []int{3}},
-		{SubjectID: 6, Name: "体育", SubjectGroupIDs: []int{3}},
-		{SubjectID: 7, Name: "物理", SubjectGroupIDs: []int{2}},
-		{SubjectID: 8, Name: "化学", SubjectGroupIDs: []int{2}},
-		{SubjectID: 9, Name: "政治", SubjectGroupIDs: []int{2}},
-		{SubjectID: 10, Name: "历史", SubjectGroupIDs: []int{3}},
-		{SubjectID: 11, Name: "生物", SubjectGroupIDs: []int{3}},
-		{SubjectID: 12, Name: "地理", SubjectGroupIDs: []int{3}},
-		{SubjectID: 13, Name: "劳技", SubjectGroupIDs: []int{3}},
-		{SubjectID: 14, Name: "活动", SubjectGroupIDs: []int{3}},
-		{SubjectID: 15, Name: "班会", SubjectGroupIDs: []int{3}},
+	subjects := []*Subject{
+		// {SubjectID: 1, Name: "语文", SubjectGroupIDs: []int{1}},
+		// {SubjectID: 2, Name: "数学", SubjectGroupIDs: []int{1}},
+		// {SubjectID: 3, Name: "英语", SubjectGroupIDs: []int{1}},
+		// {SubjectID: 4, Name: "音乐", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 5, Name: "美术", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 6, Name: "体育", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 7, Name: "物理", SubjectGroupIDs: []int{2}},
+		// {SubjectID: 8, Name: "化学", SubjectGroupIDs: []int{2}},
+		// {SubjectID: 9, Name: "政治", SubjectGroupIDs: []int{2}},
+		// {SubjectID: 10, Name: "历史", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 11, Name: "生物", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 12, Name: "地理", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 13, Name: "劳技", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 14, Name: "活动", SubjectGroupIDs: []int{3}},
+		// {SubjectID: 15, Name: "班会", SubjectGroupIDs: []int{3}},
 	}
 
 	return subjects
@@ -65,26 +65,29 @@ func GetClassHours() map[int]int {
 }
 
 // 根据科目id查找科目对象
+// subjectID 科目
 func FindSubjectByID(subjectID int) (*Subject, error) {
 
-	subjects := GetSubjects()
-	for _, subject := range subjects {
-		if subject.SubjectID == subjectID {
-			return &subject, nil
+	subjects := getSubjectsFromDB()
+	for _, s := range subjects {
+		if s.SubjectID == subjectID {
+			return s, nil
 		}
 	}
+
 	return nil, fmt.Errorf("subject not found")
 }
 
 // 根据科目组id查找科目
+// subjectID 科目
 func FindSubjectsByGroupID(groupID int) ([]*Subject, error) {
 
 	var subjectsByGroupID []*Subject
+	subjects := getSubjectsFromDB()
 
-	subjects := GetSubjects()
 	for _, subject := range subjects {
 		if lo.Contains(subject.SubjectGroupIDs, groupID) {
-			subjectsByGroupID = append(subjectsByGroupID, &subject)
+			subjectsByGroupID = append(subjectsByGroupID, subject)
 		}
 	}
 
@@ -92,4 +95,12 @@ func FindSubjectsByGroupID(groupID int) ([]*Subject, error) {
 		return subjectsByGroupID, nil
 	}
 	return nil, fmt.Errorf("no subjects found for group ID %d", groupID)
+}
+
+// ToMap 将Subject切片转换为map，key为SubjectID
+func (s *Subject) ToMap(subjects []*Subject) map[int]*Subject {
+	subjectMap := lo.KeyBy(subjects, func(subject *Subject) int {
+		return subject.SubjectID
+	})
+	return subjectMap
 }

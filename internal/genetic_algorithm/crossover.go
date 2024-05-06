@@ -2,6 +2,7 @@
 package genetic_algorithm
 
 import (
+	"course_scheduler/internal/models"
 	"fmt"
 	"math/rand"
 )
@@ -12,7 +13,7 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int) ([]*Individual, error) {
+func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int, schedule *models.Schedule) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -33,26 +34,26 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			// 交叉操作
 			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, classHours)
 			if err != nil {
-				return offspring, err
+				return offspring, prepared, executed, err
 			}
 
 			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
-				return offspring, err
+				return offspring, prepared, executed, err
 			}
 			if isValid {
 
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1 := offspring1.toClassMatrix()
-				offspringClassMatrix2 := offspring2.toClassMatrix()
+				offspringClassMatrix1 := offspring1.toClassMatrix(schedule)
+				offspringClassMatrix2 := offspring2.toClassMatrix(schedule)
 
-				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
-				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
+				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours, schedule)
+				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours, schedule)
 
 				if err1 != nil || err2 != nil {
-					return offspring, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
 				}
 
 				offspring1.Fitness = fitness1
@@ -80,7 +81,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 		// }
 	}
 
-	return offspring, nil
+	return offspring, prepared, executed, nil
 
 }
 

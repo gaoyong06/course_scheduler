@@ -2,136 +2,60 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
-	"course_scheduler/config"
+	"course_scheduler/internal/base"
 	"course_scheduler/internal/genetic_algorithm"
-	"course_scheduler/internal/models"
-	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 )
 
 func main() {
+	// 创建日志文件
+	logFile := utils.SetUpLogFile()
+	defer logFile.Close()
 
+	// 开始时间
 	startTime := time.Now()
 
-	// 参数定义
-	popSize := config.PopSize
-	selectionSize := config.SelectionSize
-	maxGen := config.MaxGen
-	mutationRate := config.MutationRate
-	crossoverRate := config.CrossoverRate
-	bestRatio := config.BestRatio
+	// 监控器
+	monitor := base.NewMonitor()
 
-	// 课班初始化
-	classes := types.InitClasses()
-
-	// 周课时初始化
-	classHours := models.GetClassHours()
-
-	// 初始化当前种群
-	currentPopulation, err := genetic_algorithm.InitPopulation(classes, classHours, popSize)
+	// 加载测试数据
+	scheduleInput, err := base.LoadTestData()
 	if err != nil {
-		log.Panic(err)
-	}
-	initPopulationTime := time.Since(startTime)
-	log.Printf("Init population runtime: %v\n", initPopulationTime)
-
-	// 当前种群内容重复的数量
-	dupCount := genetic_algorithm.CountDuplicates(currentPopulation)
-	log.Printf("Population size %d: duplicates count %d\n", popSize, dupCount)
-
-	// 定义最佳个体
-	bestIndividual := &genetic_algorithm.Individual{}
-	uniqueId := ""
-	bestGen := -1
-	replaced := false
-
-	for gen := 0; gen < maxGen; gen++ {
-
-		log.Printf("Generation %d START", gen)
-		// 获取当前最近个体标识符
-		uniqueId = bestIndividual.UniqueId()
-
-		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-		bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		// 如果 bestIndividual 被替换，则记录当前 gen 值
-		if replaced {
-			bestGen = gen
-		}
-
-		// 打印当前代中最好个体的适应度值
-		// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
-		log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", gen, uniqueId, bestGen, bestIndividual.Fitness)
-
-		// 选择
-		// 选择的个体是原个体数量的一半
-		selectedPopulation, err := genetic_algorithm.Selection(currentPopulation, selectionSize, bestRatio)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		selectedCount := len(selectedPopulation)
-
-		log.Printf("Current population size: %d, duplicates count: %d, selected count: %d\n", popSize, dupCount, selectedCount)
-
-		if selectedCount > 0 {
-
-			// 交叉
-			// 交叉前后的个体数量不变
-			offspring, err := genetic_algorithm.Crossover(selectedPopulation, crossoverRate, classHours)
-			if err != nil {
-				log.Panic(err)
-			}
-			// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
-
-			// 变异
-			offspring, err = genetic_algorithm.Mutation(offspring, mutationRate, classHours)
-			if err != nil {
-				log.Panic(err)
-			}
-
-			// 更新种群
-			// 更新前后的个体数量不变
-			hasConflicts := genetic_algorithm.CheckConflicts(currentPopulation)
-			if hasConflicts {
-				log.Panic("Population time slot conflicts")
-			}
-			// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
-			currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, offspring)
-		}
-		log.Printf("Generation %d END", gen)
-		fmt.Printf("\n\n")
+		log.Fatalf("load test data failed. %s", err)
 	}
 
-	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-	bestIndividual, replaced, err = genetic_algorithm.UpdateBest(currentPopulation, bestIndividual)
+	// 检查输入数据
+	if isValid, err := scheduleInput.CheckTeachTaskAllocation(); !isValid {
+
+		log.Fatalf("check teach task allocation failed. %s", err)
+	}
+
+	// 遗传算法排课
+	bestIndividual, bestGen, err := genetic_algorithm.Execute(scheduleInput, monitor, startTime)
 	if err != nil {
-		log.Panic(err)
-	}
-	// 如果 bestIndividual 被替换，则记录当前 gen 值
-	if replaced {
-		bestGen = maxGen - 1
+		log.Fatalf("genetic execute failed. %s", err)
 	}
 
-	// 打印当前代中最好个体的适应度值
-	// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
-	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", maxGen-1, uniqueId, bestGen, bestIndividual.Fitness)
+	// 结束时间
+	monitor.TotalTime = time.Since(startTime)
+
+	// 输出最终排课结果
+	log.Println("🍻 Best solution done!")
+
+	// 打印监控数据
+	monitor.Dump()
 
 	// 打印最好的个体
-	log.Printf("最佳个体适应度: %d, uniqueId: %s\n", bestIndividual.Fitness, uniqueId)
+	log.Printf("bestGen: %d, bestIndividual.Fitness: %d, uniqueId: %s\n", bestGen, bestIndividual.Fitness, bestIndividual.UniqueId())
 	bestIndividual.PrintSchedule()
 
 	// 打印个体的约束状态信息
 	log.Println("打印个体的约束状态信息")
 	bestIndividual.PrintConstraints()
 
-	// 计算总运行时间
-	elapsedTime := time.Since(startTime)
-	log.Printf("Total runtime: %v\n", elapsedTime)
+	// 打印监控数据
+	monitor.Dump()
 }

@@ -35,6 +35,14 @@ func GetTeachers() []Teacher {
 	return teachers
 }
 
+// ToMap 将Teacher切片转换为map，key为TeacherID
+func (t *Teacher) ToMap(teachers []*Teacher) map[int]*Teacher {
+	teacherMap := lo.KeyBy(teachers, func(teacher *Teacher) int {
+		return teacher.TeacherID
+	})
+	return teacherMap
+}
+
 // 根据教师id查找教师对象
 func FindTeacherByID(teacherID int) (*Teacher, error) {
 

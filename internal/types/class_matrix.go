@@ -70,8 +70,8 @@ func (cm *ClassMatrix) CalcElementFixedScores(rules []*Rule) error {
 // 计算一个元素的得分(含固定约束和动态约束)
 func (cm *ClassMatrix) UpdateElementScore(element *Element, fixedRules, dynamicRules []*Rule) {
 
-	fixedVal := cm.calcElementFixedScore(element, fixedRules)
-	dynamicVal := cm.calcElementDynamicScore(element, dynamicRules)
+	fixedVal := cm.calcElementFixedScore(*element, fixedRules)
+	dynamicVal := cm.calcElementDynamicScore(*element, dynamicRules)
 
 	// 更新固定约束得分
 	element.Val.ScoreInfo.FixedFailed = fixedVal.ScoreInfo.FixedFailed
@@ -217,17 +217,17 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 }
 
 // 计算固定约束条件得分
-func (cm *ClassMatrix) calcElementFixedScore(element ClassUnit, rules []*Rule) Val {
+func (cm *ClassMatrix) calcElementFixedScore(element Element, rules []*Rule) Val {
 	return cm.calcElementScore(element, rules, "fixed")
 }
 
 // 计算动态约束条件得分
-func (cm *ClassMatrix) calcElementDynamicScore(element ClassUnit, rules []*Rule) Val {
+func (cm *ClassMatrix) calcElementDynamicScore(element Element, rules []*Rule) Val {
 	return cm.calcElementScore(element, rules, "dynamic")
 }
 
 // 计算元素的约束条件得分
-func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreType string) Val {
+func (cm *ClassMatrix) calcElementScore(element Element, rules []*Rule, scoreType string) Val {
 
 	score := 0
 	penalty := 0
@@ -299,13 +299,13 @@ func (cm *ClassMatrix) updateElementDynamicScores(rules []*Rule) error {
 }
 
 // 更新课班适应性矩阵所有元素的得分
-func (cm *ClassMatrix) updateElementScores(calcFunc func(element ClassUnit, rules []*Rule) Val, rules []*Rule) error {
+func (cm *ClassMatrix) updateElementScores(calcFunc func(element Element, rules []*Rule) Val, rules []*Rule) error {
 
 	for sn, teacherMap := range cm.Elements {
 		for teacherID, venueMap := range teacherMap {
 			for venueID, timeSlotMap := range venueMap {
 				for timeSlot, element := range timeSlotMap {
-					elementVal := calcFunc(element, rules)
+					elementVal := calcFunc(*element, rules)
 					cm.Elements[sn][teacherID][venueID][timeSlot].Val = elementVal
 					element.Val.ScoreInfo.Score = element.Val.ScoreInfo.DynamicScore + element.Val.ScoreInfo.FixedScore
 				}
