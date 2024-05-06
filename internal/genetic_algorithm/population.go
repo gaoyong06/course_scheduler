@@ -13,7 +13,7 @@ import (
 )
 
 // 初始化种群
-func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int, schedule *models.Schedule) ([]*Individual, error) {
+func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) ([]*Individual, error) {
 
 	population := make([]*Individual, populationSize)
 	errChan := make(chan error, populationSize)
@@ -27,7 +27,7 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 		go func(i int) {
 			log.Printf("Initializing individual %d\n", i+1)
 
-			individual, err := createIndividual(classes, classSNs, classHours, schedule)
+			individual, err := createIndividual(classes, classSNs, classHours, schedule, subjects, teachers)
 			if err != nil {
 				errChan <- err
 				return
@@ -190,7 +190,7 @@ func CheckConflicts(population []*Individual) bool {
 // ============================================
 
 // 创建个体
-func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int, schedule *models.Schedule) (*Individual, error) {
+func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (*Individual, error) {
 
 	classMatrix := types.NewClassMatrix()
 
@@ -199,18 +199,18 @@ func createIndividual(classes []types.Class, classeSNs []string, classHours map[
 	copy(classesCopy, classes)
 	shuffleClassOrder(classesCopy)
 
-	err := initClassMatrix(classMatrix, classesCopy)
+	err := initClassMatrix(classMatrix, classesCopy, teachers)
 	if err != nil {
 		return nil, err
 	}
 
-	calculateFixedScores(classMatrix)
+	calculateFixedScores(classMatrix, subjects, teachers)
 	_, err = allocateClassMatrix(classMatrix, classeSNs, classHours, schedule)
 
 	if err != nil {
 		return nil, err
 	}
-	return newIndividual(classMatrix, classHours, schedule)
+	return newIndividual(classMatrix, classHours, schedule, subjects, teachers)
 }
 
 // 打乱课程顺序
@@ -223,20 +223,20 @@ func shuffleClassOrder(classes []types.Class) {
 }
 
 // 初始化课程矩阵
-func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) error {
+func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class, teachers []*models.Teacher) error {
 
 	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
 	if len(classes) != count {
 		return fmt.Errorf("failed to initialize class matrix: expected %d classes, got %d", count, len(classes))
 	}
-	classMatrix.Init(classes)
+	classMatrix.Init(classes, teachers)
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 	return nil
 }
 
 // 计算固定得分
-func calculateFixedScores(classMatrix *types.ClassMatrix) {
-	fixedRules := constraint.GetFixedRules()
+func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher) {
+	fixedRules := constraint.GetFixedRules(subjects, teachers)
 	err := classMatrix.CalcElementFixedScores(fixedRules)
 	if err != nil {
 		log.Fatalf("Failed to calculate fixed scores: %v", err)

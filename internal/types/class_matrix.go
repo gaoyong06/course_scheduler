@@ -31,7 +31,7 @@ func NewClassMatrix() *ClassMatrix {
 // 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 // key: [9][13][9][40]
-func (cm *ClassMatrix) Init(classes []Class) {
+func (cm *ClassMatrix) Init(classes []Class, teachers []*models.Teacher) {
 
 	for i := 0; i < len(classes); i++ {
 		class := classes[i]
@@ -40,7 +40,7 @@ func (cm *ClassMatrix) Init(classes []Class) {
 		gradeID := class.SN.GradeID
 		classID := class.SN.ClassID
 
-		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID)
+		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
 		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID)
 		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
 		sn := class.SN.Generate()

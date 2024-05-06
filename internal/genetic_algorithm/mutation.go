@@ -12,7 +12,7 @@ import (
 // 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
 // Mutation performs mutation on the selected individuals with a given mutation rate
-func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int, schedule *models.Schedule) ([]*Individual, int, int, error) {
+func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) ([]*Individual, int, int, error) {
 
 	prepared := 0
 	executed := 0
@@ -33,7 +33,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 			gene := chromosome.Genes[geneIndex]
 
 			// 找到给定课班的可用参数信息
-			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome)
+			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome, teachers)
 			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, prepared, executed, err
@@ -74,8 +74,8 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 				selected[i].SortChromosomes()
 
 				// 更新个体适应度
-				classMatrix := selected[i].toClassMatrix(schedule)
-				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours, schedule)
+				classMatrix := selected[i].toClassMatrix(schedule, subjects, teachers)
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours, schedule, subjects, teachers)
 
 				if err != nil {
 					return nil, prepared, executed, err
@@ -111,7 +111,7 @@ func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unused
 }
 
 // findUnusedTCt 查找基因中未使用的教师,教室,时间段
-func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
+func findUnusedTCt(chromosome *Chromosome, teachers []*models.Teacher) (int, int, int, error) {
 
 	SN, err := types.ParseSN(chromosome.ClassSN)
 	if err != nil {
@@ -122,7 +122,7 @@ func findUnusedTCt(chromosome *Chromosome) (int, int, int, error) {
 	gradeID := SN.GradeID
 	classID := SN.ClassID
 
-	teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID)
+	teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
 	venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID)
 	// timeSlots := types.ClassTimeSlots(teacherIDs, venueIDs)
 

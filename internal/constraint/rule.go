@@ -8,7 +8,7 @@ import (
 )
 
 // 所有固定约束条件
-func GetFixedRules() []*types.Rule {
+func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher) []*types.Rule {
 
 	var rules []*types.Rule
 
@@ -17,11 +17,11 @@ func GetFixedRules() []*types.Rule {
 	rules = append(rules, classRules...)
 
 	// 科目优先排禁排
-	subjectRules := GetSubjectRules()
+	subjectRules := GetSubjectRules(subjects)
 	rules = append(rules, subjectRules...)
 
 	// 教师固排禁排
-	teacherRules := GetTeacherRules()
+	teacherRules := GetTeacherRules(teachers)
 	rules = append(rules, teacherRules...)
 
 	sortRulesByPriority(rules)
@@ -71,9 +71,9 @@ func GetDynamicRules(schedule *models.Schedule) []*types.Rule {
 }
 
 // 获取元素最大得分
-func GetMaxElementScore(schedule *models.Schedule) int {
+func GetMaxElementScore(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) int {
 
-	rules := append(GetFixedRules(), GetDynamicRules(schedule)...)
+	rules := append(GetFixedRules(subjects, teachers), GetDynamicRules(schedule)...)
 	maxScore := 0
 	for _, rule := range rules {
 		maxScore += rule.Score * rule.Weight
@@ -82,9 +82,9 @@ func GetMaxElementScore(schedule *models.Schedule) int {
 }
 
 // 获取元素最小得分
-func GetMinElementScore(schedule *models.Schedule) int {
+func GetMinElementScore(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) int {
 
-	rules := append(GetFixedRules(), GetDynamicRules(schedule)...)
+	rules := append(GetFixedRules(subjects, teachers), GetDynamicRules(schedule)...)
 	minScore := 0
 
 	for _, rule := range rules {

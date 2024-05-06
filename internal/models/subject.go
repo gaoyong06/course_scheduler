@@ -13,7 +13,13 @@ type Subject struct {
 	SubjectGroupIDs []int  // 科目分组id
 }
 
-func getSubjectsFromDB() []*Subject {
+// 读取科目信息
+// 启动遗传算法之前，从数据库中读取必要的基本数据并将其输入到排课程序中
+// 优点:
+// 1.性能更好: 从数据库中阅读一次数据，然后在内存中处理它比在遗传算法执行期间重复查询数据库要快
+// 2.一致性: 通过加载数据一次，可以确保数据在遗传算法的整个执行过程中保持一致
+// 3.简单性: 一次读取数据并将其传递给遗传算法，简化了算法的实现。只需要处理一次数据加载和预处理，而不是在每次迭代中处理它
+func GetSubjectsFromDB() []*Subject {
 
 	subjects := []*Subject{
 		// {SubjectID: 1, Name: "语文", SubjectGroupIDs: []int{1}},
@@ -32,7 +38,6 @@ func getSubjectsFromDB() []*Subject {
 		// {SubjectID: 14, Name: "活动", SubjectGroupIDs: []int{3}},
 		// {SubjectID: 15, Name: "班会", SubjectGroupIDs: []int{3}},
 	}
-
 	return subjects
 }
 
@@ -66,9 +71,9 @@ func GetClassHours() map[int]int {
 
 // 根据科目id查找科目对象
 // subjectID 科目
-func FindSubjectByID(subjectID int) (*Subject, error) {
+// subjects 全部科目信息
+func FindSubjectByID(subjectID int, subjects []*Subject) (*Subject, error) {
 
-	subjects := getSubjectsFromDB()
 	for _, s := range subjects {
 		if s.SubjectID == subjectID {
 			return s, nil
@@ -80,11 +85,10 @@ func FindSubjectByID(subjectID int) (*Subject, error) {
 
 // 根据科目组id查找科目
 // subjectID 科目
-func FindSubjectsByGroupID(groupID int) ([]*Subject, error) {
+// subjects 全部科目信息
+func FindSubjectsByGroupID(groupID int, subjects []*Subject) ([]*Subject, error) {
 
 	var subjectsByGroupID []*Subject
-	subjects := getSubjectsFromDB()
-
 	for _, subject := range subjects {
 		if lo.Contains(subject.SubjectGroupIDs, groupID) {
 			subjectsByGroupID = append(subjectsByGroupID, subject)

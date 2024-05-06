@@ -39,19 +39,19 @@ func (s *Subject) String() string {
 }
 
 // 获取科目优先排禁排规则
-func GetSubjectRules() []*types.Rule {
+func GetSubjectRules(subjects []*models.Subject) []*types.Rule {
 	constraints := loadSubjectConstraintsFromDB()
 	var rules []*types.Rule
 	for _, s := range constraints {
-		rule := s.genRule()
+		rule := s.genRule(subjects)
 		rules = append(rules, rule)
 	}
 	return rules
 }
 
 // 生成规则
-func (s *Subject) genRule() *types.Rule {
-	fn := s.genConstraintFn()
+func (s *Subject) genRule(subjects []*models.Subject) *types.Rule {
+	fn := s.genConstraintFn(subjects)
 	return &types.Rule{
 		Name:     s.String(),
 		Type:     "fixed",
@@ -70,7 +70,7 @@ func loadSubjectConstraintsFromDB() []*Subject {
 }
 
 // 生成规则校验方法
-func (s *Subject) genConstraintFn() types.ConstraintFn {
+func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
 
 		classSN := element.GetClassSN()
@@ -80,13 +80,19 @@ func (s *Subject) genConstraintFn() types.ConstraintFn {
 		if err != nil {
 			return false, false, err
 		}
-		subject, err := models.FindSubjectByID(SN.SubjectID)
+		subject, err := models.FindSubjectByID(SN.SubjectID, subjects)
+		if err != nil {
+			return false, false, err
+		}
+
+		// 判断subjectGroupID是否已经排课完成
+		isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, s.SubjectGroupID, subjects)
 		if err != nil {
 			return false, false, err
 		}
 
 		preCheckPassed := timeSlot == s.TimeSlot
-		isValid := (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == SN.SubjectID)
+		isValid := (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == SN.SubjectID) && !isSubjectGroupScheduled
 		return preCheckPassed, isValid, nil
 	}
 }
@@ -258,11 +264,10 @@ func (s *Subject) getPriority() int {
 // }
 
 // 判断subjectGroupID的课程是否已经排完
-// Check if all courses in the subject group are scheduled
-func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, subjectGroupID int) (bool, error) {
+func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, subjectGroupID int, subjects []*models.Subject) (bool, error) {
 
 	// 根据科目分组得到所有的科目
-	subjects, err := models.FindSubjectsByGroupID(subjectGroupID)
+	subjects, err := models.FindSubjectsByGroupID(subjectGroupID, subjects)
 	if err != nil {
 		return false, err
 	}

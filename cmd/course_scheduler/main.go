@@ -50,7 +50,7 @@ func main() {
 
 	// 打印最好的个体
 	log.Printf("bestGen: %d, bestIndividual.Fitness: %d, uniqueId: %s\n", bestGen, bestIndividual.Fitness, bestIndividual.UniqueId())
-	bestIndividual.PrintSchedule()
+	bestIndividual.PrintSchedule(scheduleInput.Subjects)
 
 	// 打印个体的约束状态信息
 	log.Println("打印个体的约束状态信息")

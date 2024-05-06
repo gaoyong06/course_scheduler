@@ -40,19 +40,19 @@ func (t *Teacher) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherRules() []*types.Rule {
+func GetTeacherRules(teachers []*models.Teacher) []*types.Rule {
 	constraints := loadTeacherConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
-		rule := c.genRule()
+		rule := c.genRule(teachers)
 		rules = append(rules, rule)
 	}
 	return rules
 }
 
 // 生成规则
-func (c *Teacher) genRule() *types.Rule {
-	fn := c.genConstraintFn()
+func (c *Teacher) genRule(teachers []*models.Teacher) *types.Rule {
+	fn := c.genConstraintFn(teachers)
 	return &types.Rule{
 		Name:     c.String(),
 		Type:     "fixed",
@@ -71,7 +71,7 @@ func loadTeacherConstraintsFromDB() []*Teacher {
 }
 
 // 生成规则校验方法
-func (t *Teacher) genConstraintFn() types.ConstraintFn {
+func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
 		teacherGroupID := t.TeacherGroupID
 		teacherID := t.TeacherID
@@ -80,7 +80,7 @@ func (t *Teacher) genConstraintFn() types.ConstraintFn {
 		currTeacherID := element.GetTeacherID()
 		currTimeSlot := element.GetTimeSlot()
 
-		currTeacher, err := models.FindTeacherByID(currTeacherID)
+		currTeacher, err := models.FindTeacherByID(currTeacherID, teachers)
 		if err != nil {
 			return false, false, err
 		}
