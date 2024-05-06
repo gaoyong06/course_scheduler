@@ -11,11 +11,12 @@ import (
 
 // 排课输入信息
 type ScheduleInput struct {
-	Schedule                      *models.Schedule                 `json:"schedule" mapstructure:"schedule"`                                                         // 排课方案
-	TeachTaskAllocation           []*models.TeachTaskAllocation    `json:"teach_task_allocation" mapstructure:"teach_task_allocation"`                               // 教学任务
-	Teachers                      []*models.Teacher                `json:"teachers" mapstructure:"teachers"`                                                         // 教师
-	Subjects                      []*models.Subject                `json:"subjects" mapstructure:"subjects"`                                                         // 科目
-	Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
+	Schedule            *models.Schedule              `json:"schedule" mapstructure:"schedule"`                           // 排课方案
+	TeachTaskAllocation []*models.TeachTaskAllocation `json:"teach_task_allocation" mapstructure:"teach_task_allocation"` // 教学任务
+	Teachers            []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                           // 教师
+	Subjects            []*models.Subject             `json:"subjects" mapstructure:"subjects"`                           // 科目
+	// Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
+	SubjectVenueMap               map[string][]int                 `json:"venue_map" mapstructure:"venue_map"`                                                       // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
 	Grades                        []*models.Grade                  `json:"grades"`                                                                                   // 年级
 	ClassConstraints              []*constraint.Class              `json:"class_constraints" mapstructure:"class_constraints"`                                       // 班级固排禁排约束
 	SubjectMutexConstraints       []*constraint.SubjectMutex       `json:"subject_mutex_constraints" mapstructure:"subject_mutex_constraints"`                       // 科目互斥限制约束

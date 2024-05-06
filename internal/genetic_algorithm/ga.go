@@ -59,7 +59,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 	// 周课时初始化
 	classHours := models.GetClassHours()
 	// 初始化当前种群
-	currentPopulation, err := InitPopulation(classes, classHours, popSize, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers)
+	currentPopulation, err := InitPopulation(classes, classHours, popSize, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -129,7 +129,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 				if err != nil {
 					log.Panic(err)
 				}
@@ -139,7 +139,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 				// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers)
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 				if err != nil {
 					log.Panic(err)
 				}

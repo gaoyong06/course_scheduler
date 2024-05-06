@@ -13,7 +13,7 @@ import (
 )
 
 // 初始化种群
-func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) ([]*Individual, error) {
+func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) ([]*Individual, error) {
 
 	population := make([]*Individual, populationSize)
 	errChan := make(chan error, populationSize)
@@ -27,7 +27,7 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 		go func(i int) {
 			log.Printf("Initializing individual %d\n", i+1)
 
-			individual, err := createIndividual(classes, classSNs, classHours, schedule, subjects, teachers)
+			individual, err := createIndividual(classes, classSNs, classHours, schedule, subjects, teachers, subjectVenueMap)
 			if err != nil {
 				errChan <- err
 				return
@@ -190,7 +190,7 @@ func CheckConflicts(population []*Individual) bool {
 // ============================================
 
 // 创建个体
-func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (*Individual, error) {
+func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) (*Individual, error) {
 
 	classMatrix := types.NewClassMatrix()
 
@@ -199,7 +199,7 @@ func createIndividual(classes []types.Class, classeSNs []string, classHours map[
 	copy(classesCopy, classes)
 	shuffleClassOrder(classesCopy)
 
-	err := initClassMatrix(classMatrix, classesCopy, teachers)
+	err := initClassMatrix(classMatrix, classesCopy, teachers, subjectVenueMap)
 	if err != nil {
 		return nil, err
 	}
@@ -223,13 +223,13 @@ func shuffleClassOrder(classes []types.Class) {
 }
 
 // 初始化课程矩阵
-func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class, teachers []*models.Teacher) error {
+func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class, teachers []*models.Teacher, subjectVenueMap map[string][]int) error {
 
 	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
 	if len(classes) != count {
 		return fmt.Errorf("failed to initialize class matrix: expected %d classes, got %d", count, len(classes))
 	}
-	classMatrix.Init(classes, teachers)
+	classMatrix.Init(classes, teachers, subjectVenueMap)
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 	return nil
 }

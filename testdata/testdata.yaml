@@ -79,33 +79,49 @@ venues:
   - { name: "体育馆", type: "shared", capacity: 0 }
 
 grades:
-  - grade_id: 7
+  - school_id: 1
+    grade_id: 7
     name: "七年级"
     classes:
-      - class_id: 1
+      - school_id: 1
+        class_id: 1
         name: "(1)班"
-      - class_id: 2
+      - school_id: 1
+        class_id: 2
         name: "(2)班"
-      - class_id: 3
+      - school_id: 1
+        class_id: 3
         name: "(3)班"
-  - grade_id: 8
+  - school_id: 1
+    grade_id: 8
     name: "八年级"
     classes:
-      - class_id: 4
+      - school_id: 1
+        class_id: 4
         name: "(1)班"
-      - class_id: 5
+      - school_id: 1
+        class_id: 5
         name: "(2)班"
-      - class_id: 6
+      - school_id: 1
+        class_id: 6
         name: "(3)班"
-  - grade_id: 9
+  - school_id: 1
+    grade_id: 9
     name: "九年级"
     classes:
-      - class_id: 7
+      - school_id: 1
+        class_id: 7
         name: "(1)班"
-      - class_id: 8
+      - school_id: 1
+        class_id: 8
         name: "(2)班"
-      - class_id: 9
+      - school_id: 1
+        class_id: 9
         name: "(3)班"
+
+# TODO: 这里都返回默认值0
+# 不然这里要做135(15 * 3 * 3)条记录 
+subject_venue_map:
 
 # 班级固排禁排
 # 七年级(1)班,周一,第1节,语文, 固排

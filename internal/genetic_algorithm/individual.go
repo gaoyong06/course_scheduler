@@ -147,13 +147,13 @@ func (i *Individual) UniqueId() string {
 
 // 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
-func (i *Individual) toClassMatrix(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) *types.ClassMatrix {
+func (i *Individual) toClassMatrix(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) *types.ClassMatrix {
 	// 汇总课班集合
 	classes := types.InitClasses()
 
 	// 初始化课班适应性矩阵
 	classMatrix := types.NewClassMatrix()
-	classMatrix.Init(classes, teachers)
+	classMatrix.Init(classes, teachers, subjectVenueMap)
 
 	// 先标记占用情况
 	for _, chromosome := range i.Chromosomes {
