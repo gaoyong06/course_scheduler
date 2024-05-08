@@ -204,11 +204,14 @@ func createIndividual(classes []types.Class, classeSNs []string, schedule *model
 	// }
 
 	// 初始化课程矩阵
-	classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
+	err := classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
+	if err != nil {
+		return nil, err
+	}
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 
 	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs)
-	_, err := allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs)
+	_, err = allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs)
 
 	if err != nil {
 		return nil, err

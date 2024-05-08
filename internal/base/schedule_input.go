@@ -16,7 +16,7 @@ type ScheduleInput struct {
 	Teachers             []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                             // 教师
 	Subjects             []*models.Subject             `json:"subjects" mapstructure:"subjects"`                             // 科目
 	// Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
-	SubjectVenueMap               map[string][]int                 `json:"venue_map" mapstructure:"venue_map"`                                                       // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
+	SubjectVenueMap               map[string][]int                 `json:"subject_venue_map" mapstructure:"subject_venue_map"`                                       // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
 	Grades                        []*models.Grade                  `json:"grades"`                                                                                   // 年级
 	ClassConstraints              []*constraint.Class              `json:"class_constraints" mapstructure:"class_constraints"`                                       // 班级固排禁排约束
 	SubjectMutexConstraints       []*constraint.SubjectMutex       `json:"subject_mutex_constraints" mapstructure:"subject_mutex_constraints"`                       // 科目互斥限制约束
@@ -65,7 +65,7 @@ func LoadTestData() (*ScheduleInput, error) {
 	viper.SetConfigName("testdata")
 
 	// 添加配置文件搜索路径
-	viper.AddConfigPath("../testdata")
+	viper.AddConfigPath("../../testdata")
 
 	// 为 viper 添加自定义解析函数
 	viper.SetConfigType("yaml")

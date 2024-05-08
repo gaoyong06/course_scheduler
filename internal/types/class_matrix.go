@@ -3,6 +3,7 @@ package types
 
 import (
 	"course_scheduler/internal/models"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -30,35 +31,57 @@ func NewClassMatrix() *ClassMatrix {
 // 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 // key: [9][13][9][40]
-func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers []*models.Teacher, subjectVenueMap map[string][]int) {
+func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers []*models.Teacher, subjectVenueMap map[string][]int) error {
 
-	for i := 0; i < len(classes); i++ {
-		class := classes[i]
+	if len(classes) == 0 {
+		return errors.New("classes cannot be empty")
+	}
+	if schedule == nil {
+		return errors.New("schedule cannot be nil")
+	}
+	if len(teachers) == 0 {
+		return errors.New("teachers cannot be empty")
+	}
+	if len(subjectVenueMap) == 0 {
+		return errors.New("subjectVenueMap cannot be empty")
+	}
 
+	for _, class := range classes {
 		subjectID := class.SN.SubjectID
 		gradeID := class.SN.GradeID
 		classID := class.SN.ClassID
 
 		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
+		if len(teacherIDs) == 0 {
+			return fmt.Errorf("no teacher available for class %d-%d-%d", gradeID, classID, subjectID)
+		}
+
 		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, subjectVenueMap)
+		if len(venueIDs) == 0 {
+			return fmt.Errorf("no venue available for class %d-%d-%d", gradeID, classID, subjectID)
+		}
+
 		timeSlots := ClassTimeSlots(schedule, teacherIDs, venueIDs)
+		if len(timeSlots) == 0 {
+			return fmt.Errorf("no time slot available for class %d-%d-%d", gradeID, classID, subjectID)
+		}
+
 		sn := class.SN.Generate()
 
 		cm.Elements[sn] = make(map[int]map[int]map[int]*Element)
-		for j := 0; j < len(teacherIDs); j++ {
-			teacherID := teacherIDs[j]
+		for _, teacherID := range teacherIDs {
 			cm.Elements[sn][teacherID] = make(map[int]map[int]*Element)
-			for k := 0; k < len(venueIDs); k++ {
-				venueID := venueIDs[k]
+			for _, venueID := range venueIDs {
 				cm.Elements[sn][teacherID][venueID] = make(map[int]*Element)
-				for l := 0; l < len(timeSlots); l++ {
-					timeSlot := timeSlots[l]
+				for _, timeSlot := range timeSlots {
 					element := NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
 					cm.Elements[sn][teacherID][venueID][timeSlot] = element
 				}
 			}
 		}
 	}
+
+	return nil
 }
 
 // 计算课班适应性矩阵的所有元素, 固定约束条件下的得分
@@ -115,10 +138,10 @@ func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, ta
 
 				timeTable.Used[timeSlot] = true
 				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
-
 				numAssignedClasses++
 			} else {
-				return numAssignedClasses, fmt.Errorf("failed, sn: %s, current class hour: %d, subject num class hours: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassHours, teacherID, venueID, timeSlot, score)
+
+				return numAssignedClasses, fmt.Errorf("class matrix allocate failed, sn: %s, current class hour: %d, subject num class hours: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassHours, teacherID, venueID, timeSlot, score)
 			}
 		}
 	}

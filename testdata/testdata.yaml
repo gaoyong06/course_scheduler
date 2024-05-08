@@ -1,10 +1,9 @@
 schedule:
   name: "心远中学2024年第一学期课程表"
-  workdays: 5
-  days_off: 2
+  num_workdays: 5
+  num_days_off: 2
   num_morning_reading_classes: 0
-  num_morning_classes: 0
-  num_noon_classes: 4
+  num_forenoon_classes: 4
   num_afternoon_classes: 4
   num_night_classes: 0
 
@@ -40,7 +39,7 @@ teach_task_allocations:
   # - {id: 28, grade_id: 7, class_id: 2, subject_id: 16, teacher_id: 1, num_classes_per_week: 1, num_connected_classes_per_week: 0}
 
 teachers:
-  - { teacher_id: 1, name: "王老师", teacher_group_ids: [1, 3], subject_ids: [1] }
+  - { teacher_id: 1, name: "王老师", teacher_group_ids: [1, 3], subject_ids: [1, 16] }
   - { teacher_id: 2, name: "李老师", teacher_group_ids: [2], subject_ids: [2] }
   - { teacher_id: 3, name: "刘老师", teacher_group_ids: [3], subject_ids: [3] }
   - { teacher_id: 4, name: "张老师", teacher_group_ids: [4], subject_ids: [4] }
@@ -55,7 +54,7 @@ teachers:
   - { teacher_id: 13, name: "孟都", teacher_group_ids: [13], subject_ids: [13]}
   - { teacher_id: 14, name: "刘非", teacher_group_ids: [14], subject_ids: [14] }
   - { teacher_id: 15, name: "王麻子", teacher_group_ids: [15], subject_ids: [15]}
-
+  
 subjects:
   - {subject_id: 1, name: "语文", subject_group_ids: [1]}
   - {subject_id: 2, name: "数学", subject_group_ids: [1]}
@@ -86,42 +85,57 @@ grades:
       - school_id: 1
         class_id: 1
         name: "(1)班"
-      - school_id: 1
-        class_id: 2
-        name: "(2)班"
-      - school_id: 1
-        class_id: 3
-        name: "(3)班"
-  - school_id: 1
-    grade_id: 8
-    name: "八年级"
-    classes:
-      - school_id: 1
-        class_id: 4
-        name: "(1)班"
-      - school_id: 1
-        class_id: 5
-        name: "(2)班"
-      - school_id: 1
-        class_id: 6
-        name: "(3)班"
-  - school_id: 1
-    grade_id: 9
-    name: "九年级"
-    classes:
-      - school_id: 1
-        class_id: 7
-        name: "(1)班"
-      - school_id: 1
-        class_id: 8
-        name: "(2)班"
-      - school_id: 1
-        class_id: 9
-        name: "(3)班"
+  #     - school_id: 1
+  #       class_id: 2
+  #       name: "(2)班"
+  #     - school_id: 1
+  #       class_id: 3
+  #       name: "(3)班"
+  # - school_id: 1
+  #   grade_id: 8
+  #   name: "八年级"
+  #   classes:
+  #     - school_id: 1
+  #       class_id: 4
+  #       name: "(1)班"
+  #     - school_id: 1
+  #       class_id: 5
+  #       name: "(2)班"
+  #     - school_id: 1
+  #       class_id: 6
+  #       name: "(3)班"
+  # - school_id: 1
+  #   grade_id: 9
+  #   name: "九年级"
+  #   classes:
+  #     - school_id: 1
+  #       class_id: 7
+  #       name: "(1)班"
+  #     - school_id: 1
+  #       class_id: 8
+  #       name: "(2)班"
+  #     - school_id: 1
+  #       class_id: 9
+  #       name: "(3)班"
 
-# TODO: 这里都返回默认值0
-# 不然这里要做135(15 * 3 * 3)条记录 
+# 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
 subject_venue_map:
+  "1_7_1": [1]
+  "2_7_1": [1]
+  "3_7_1": [1]
+  "4_7_1": [1]
+  "5_7_1": [1]
+  "6_7_1": [1]
+  "7_7_1": [1]
+  "8_7_1": [1]
+  "9_7_1": [1]
+  "10_7_1": [1]
+  "11_7_1": [1]
+  "12_7_1": [1]
+  "13_7_1": [1]
+  "14_7_1": [1]
+  "15_7_1": [1]
+  "16_7_1": [1]
 
 # 班级固排禁排
 # 七年级(1)班,周一,第1节,语文, 固排
@@ -132,7 +146,7 @@ class_constraints:
     class_id: 1
     subject_id: 1
     teacher_id: 1
-    time_slot: 0,
+    time_slot: 0
     limit: "fixed"
     desc: ""
   - grade_id: 7

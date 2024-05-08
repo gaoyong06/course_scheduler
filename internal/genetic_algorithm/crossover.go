@@ -46,8 +46,11 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			if isValid {
 
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
-				offspringClassMatrix2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
+				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
+				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
+				if err1 != nil || err2 != nil {
+					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+				}
 
 				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, schedule, subjects, teachers)
 				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, schedule, subjects, teachers)

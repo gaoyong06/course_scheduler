@@ -7,10 +7,10 @@ import (
 )
 
 type Teacher struct {
-	TeacherID       int    // 教室id
-	Name            string // 教师姓名
-	TeacherGroupIDs []int  // 教师分组id, 一个老师会在多个分组中
-	SubjectIDs      []int  // 教授科目id
+	TeacherID       int    `json:"teacher_id" mapstructure:"teacher_id"`               // 教室id
+	Name            string `json:"name" mapstructure:"name"`                           // 教师姓名
+	TeacherGroupIDs []int  `json:"teacher_group_ids" mapstructure:"teacher_group_ids"` // 教师分组id, 一个老师会在多个分组中
+	SubjectIDs      []int  `json:"subject_ids" mapstructure:"subject_ids"`             // 教授科目id
 }
 
 func GetTeachersFromDB() []*Teacher {

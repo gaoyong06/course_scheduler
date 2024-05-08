@@ -74,9 +74,12 @@ func Mutation(selected []*Individual, mutationRate float64, schedule *models.Sch
 				selected[i].SortChromosomes()
 
 				// 更新个体适应度
-				classMatrix := selected[i].toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap)
-				newFitness, err := selected[i].EvaluateFitness(classMatrix, schedule, subjects, teachers)
+				classMatrix, err := selected[i].toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap)
+				if err != nil {
+					return nil, prepared, executed, err
+				}
 
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, schedule, subjects, teachers)
 				if err != nil {
 					return nil, prepared, executed, err
 				}
