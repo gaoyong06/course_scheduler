@@ -132,7 +132,7 @@ func IsSatIndividual(population []*Individual) bool {
 	// 如果找到满意的解则返回 true，否则返回 false
 	// 示例逻辑：如果种群中最优个体的适应度已经满足某个阈值，则认为找到了满意的解
 	bestIndividual := GetBestIndividual(population)
-	return bestIndividual.Fitness <= config.TargetFitness
+	return bestIndividual.Fitness >= config.TargetFitness
 }
 
 // HasImproved 判断种群是否有改进
@@ -218,14 +218,6 @@ func createIndividual(classes []types.Class, classeSNs []string, schedule *model
 	}
 	return newIndividual(classMatrix, schedule, subjects, teachers)
 }
-
-// 初始化课程矩阵
-// func initClassMatrix(classMatrix *types.ClassMatrix, classesCopy []types.Class, schedule *models.Schedule, teachers []*models.Teacher, subjectVenueMap map[string][]int) error {
-
-// 	classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
-// 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
-// 	return nil
-// }
 
 // 打乱课程顺序
 func shuffleClassOrder(classes []types.Class) {

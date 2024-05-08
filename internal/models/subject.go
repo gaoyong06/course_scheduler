@@ -8,9 +8,9 @@ import (
 )
 
 type Subject struct {
-	SubjectID       int    // 科目id
-	Name            string // 名称
-	SubjectGroupIDs []int  // 科目分组id
+	SubjectID       int    `json:"subject_id" mapstructure:"subject_id"`               // 科目id
+	Name            string `json:"name" mapstructure:"name"`                           // 名称
+	SubjectGroupIDs []int  `json:"subject_group_ids" mapstructure:"subject_group_ids"` // 科目分组id
 }
 
 // 读取科目信息

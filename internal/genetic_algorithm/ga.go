@@ -10,6 +10,7 @@ import (
 
 // 遗传算法的实现
 // scheduleInput 排课输入数据
+// monitor 业务监控
 // startTime 当前时间
 func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime time.Time) (*Individual, int, error) {
 
@@ -17,15 +18,13 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 	popSize := config.PopSize
 	// 选择操作,选择个体的数量
 	selectionSize := config.SelectionSize
-	// 最大迭代次数
-	maxGen := config.MaxGen
 	// 变异率
 	mutationRate := config.MutationRate
 	// 交叉率
 	crossoverRate := config.CrossoverRate
 	// 选择最佳个体百分比
 	bestRatio := config.BestRatio
-	// 找到满意的解
+	// 是否找到满意的解
 	foundSatIndividual := false
 	// 连续 n 代没有改进
 	genWithoutImprovement := 0
@@ -133,8 +132,6 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 				monitor.NumPreparedCrossover[gen] = prepared
 				monitor.NumExecutedCrossover[gen] = executed
 
-				// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
-
 				// 变异
 				offspring, prepared, executed, err = Mutation(offspring, mutationRate, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 				if err != nil {
@@ -149,31 +146,16 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 				if hasConflicts {
 					log.Panic("Population time slot conflicts")
 				}
-				// currentPopulation = genetic_algorithm.UpdatePopulation(currentPopulation, crossoverRet.Offspring)
 				currentPopulation = UpdatePopulation(currentPopulation, offspring)
 			}
 		}
 
-		// 在每次循环迭代时更新 currentIteration 的值
+		// 在每次循环迭代时更新 gen 的值
 		gen++
 		stop = TerminationCondition(gen, foundSatIndividual, genWithoutImprovement, startTime)
 	}
 
-	// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
-	bestIndividual, replaced, err = UpdateBest(currentPopulation, bestIndividual)
-	if err != nil {
-		log.Panic(err)
-	}
-	// 如果 bestIndividual 被替换，则记录当前 gen 值
-	if replaced {
-		bestGen = maxGen - 1
-	}
-
 	// 打印当前代中最好个体的适应度值
-	// log.Printf("Generation %d: Best Fitness = %d\n", gen, bestIndividual.Fitness)
-	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", maxGen-1, uniqueId, bestGen, bestIndividual.Fitness)
-
-	// 输出最终排课结果
-	// bestIndividual = GetBestIndividual(population)
+	log.Printf("Generation %d: Best uniqueId= %s, bestGen=%d, Fitness = %d\n", gen, uniqueId, bestGen, bestIndividual.Fitness)
 	return bestIndividual, bestGen, nil
 }

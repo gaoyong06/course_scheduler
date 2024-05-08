@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"time"
 )
@@ -47,7 +48,7 @@ func NewMonitor() *Monitor {
 // 打印监控信息
 func (m *Monitor) Dump() {
 
-	fmt.Println("Monitor:")
+	log.Println("Monitor:")
 	// 打印表头
 	fmt.Println("| Generation | Best Fitness | Average Fitness | Worst Fitness | Num Prepared Crossover | Num Executed Crossover | Num Prepared Mutation | Num Executed Mutation |")
 	fmt.Println("|------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|")

@@ -45,9 +45,6 @@ func main() {
 	// 输出最终排课结果
 	log.Println("🍻 Best solution done!")
 
-	// 打印监控数据
-	monitor.Dump()
-
 	// 打印最好的个体
 	log.Printf("bestGen: %d, bestIndividual.Fitness: %d, uniqueId: %s\n", bestGen, bestIndividual.Fitness, bestIndividual.UniqueId())
 	bestIndividual.PrintSchedule(scheduleInput.Schedule, scheduleInput.Subjects)

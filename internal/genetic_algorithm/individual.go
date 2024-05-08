@@ -530,7 +530,11 @@ func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models
 				fmt.Println(err)
 			}
 
-			subject, _ := models.FindSubjectByID(SN.SubjectID, subjects)
+			subject, err := models.FindSubjectByID(SN.SubjectID, subjects)
+			if err != nil {
+				log.Printf("Error finding subject with ID %d: %v", SN.SubjectID, err)
+				continue
+			}
 			if _, ok := scheduleMap[day]; !ok {
 				scheduleMap[day] = make(map[int]string)
 			}
