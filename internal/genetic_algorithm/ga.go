@@ -3,7 +3,6 @@ package genetic_algorithm
 import (
 	"course_scheduler/config"
 	"course_scheduler/internal/base"
-	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"log"
 	"time"
@@ -54,12 +53,10 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 	// }
 
 	// 课班初始化
-	classes := types.InitClasses()
+	classes := types.InitClasses(scheduleInput.TeachTaskAllocations)
 
-	// 周课时初始化
-	classHours := models.GetClassHours()
 	// 初始化当前种群
-	currentPopulation, err := InitPopulation(classes, classHours, popSize, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+	currentPopulation, err := InitPopulation(classes, popSize, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -129,7 +126,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 				if err != nil {
 					log.Panic(err)
 				}
@@ -139,7 +136,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 				// log.Printf("Crossover Gen: %d, selected: %d, offspring: %d, prepared: %d, executed: %d, error: %s\n", gen, len(selectedPopulation), len(crossoverRet.Offspring), crossoverRet.Prepared, crossoverRet.Executed, crossoverRet.Err)
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, classHours, scheduleInput.Schedule, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
 				if err != nil {
 					log.Panic(err)
 				}

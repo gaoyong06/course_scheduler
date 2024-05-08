@@ -4,6 +4,7 @@ package constraint
 
 import (
 	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 )
@@ -51,15 +52,15 @@ func (t *TeacherMutex) genRule() *types.Rule {
 }
 
 // 加载班级固排禁排规则
-func loadTeacherMutexConstraintsFromDB() []*SubjectMutex {
-	var constraints []*SubjectMutex
+func loadTeacherMutexConstraintsFromDB() []*TeacherMutex {
+	var constraints []*TeacherMutex
 	return constraints
 }
 
 // 生成规则校验方法
 func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		teacherAID := t.TeacherAID
 		teacherBID := t.TeacherBID
@@ -70,7 +71,7 @@ func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 
 		shouldPenalize := false
 		if preCheckPassed {
-			shouldPenalize = isTeacherSameDay(teacherAID, teacherBID, classMatrix, element)
+			shouldPenalize = isTeacherSameDay(teacherAID, teacherBID, classMatrix, element, schedule)
 		}
 
 		return preCheckPassed, !shouldPenalize, nil
@@ -78,13 +79,14 @@ func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 }
 
 // 判断教师A,教师B是否同一天都有课
-func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix, element types.Element) bool {
+func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) bool {
 
 	teacher1Days := make(map[int]bool)
 	teacher2Days := make(map[int]bool)
 	timeSlot := element.GetTimeSlot()
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
-	elementDay := timeSlot / config.NumClasses
+	elementDay := timeSlot / totalClassesPerDay
 
 	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
@@ -92,7 +94,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 				for _, timeSlotMap := range teacherMap {
 					for timeSlot, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / config.NumClasses
+							day := timeSlot / totalClassesPerDay
 							teacher1Days[day] = true // 将时间段转换为天数
 						}
 					}
@@ -101,7 +103,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 				for _, timeSlotMap := range teacherMap {
 					for timeSlot, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / config.NumClasses
+							day := timeSlot / totalClassesPerDay
 							teacher2Days[day] = true // 将时间段转换为天数
 						}
 					}

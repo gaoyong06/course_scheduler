@@ -13,7 +13,7 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) ([]*Individual, int, int, error) {
+func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -32,7 +32,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			parent2 := selected[i+1].Copy()
 
 			// 交叉操作
-			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, classHours)
+			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, schedule)
 			if err != nil {
 				return offspring, prepared, executed, err
 			}
@@ -46,11 +46,11 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			if isValid {
 
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1 := offspring1.toClassMatrix(schedule, subjects, teachers, subjectVenueMap)
-				offspringClassMatrix2 := offspring2.toClassMatrix(schedule, subjects, teachers, subjectVenueMap)
+				offspringClassMatrix1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
+				offspringClassMatrix2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
 
-				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours, schedule, subjects, teachers)
-				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours, schedule, subjects, teachers)
+				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, schedule, subjects, teachers)
+				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, schedule, subjects, teachers)
 
 				if err1 != nil || err2 != nil {
 					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
@@ -87,7 +87,7 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 
 // 两个个体之间进行交叉操作，生成两个子代个体
 // 返回两个子代个体和错误信息（如果有）
-func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, classHours map[int]int) (*Individual, *Individual, error) {
+func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, schedule *models.Schedule) (*Individual, *Individual, error) {
 
 	// 检查交叉点是否在有效范围内
 	if crossPoint <= 0 || crossPoint >= len(individual1.Chromosomes) {
@@ -139,8 +139,8 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	}
 
 	// 修复时间段冲突
-	_, _, err1 := offspring1.RepairTimeSlotConflicts()
-	_, _, err2 := offspring2.RepairTimeSlotConflicts()
+	_, _, err1 := offspring1.RepairTimeSlotConflicts(schedule)
+	_, _, err2 := offspring2.RepairTimeSlotConflicts(schedule)
 
 	if err1 == nil && err2 == nil {
 

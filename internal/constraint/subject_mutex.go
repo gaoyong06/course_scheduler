@@ -3,6 +3,7 @@ package constraint
 
 import (
 	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 )
@@ -58,7 +59,7 @@ func loadSubjectMutexConstraintsFromDB() []*SubjectMutex {
 // 生成规则校验方法
 func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		subjectAID := s.SubjectAID
 		subjectBID := s.SubjectBID
@@ -74,7 +75,7 @@ func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 
 		shouldPenalize := false
 		if preCheckPassed {
-			ret, err := isSubjectsSameDay(subjectAID, subjectBID, classMatrix, element)
+			ret, err := isSubjectsSameDay(subjectAID, subjectBID, classMatrix, element, schedule)
 			if err != nil {
 				return false, false, err
 			}
@@ -84,10 +85,11 @@ func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 	}
 }
 
-func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element) (bool, error) {
+func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
 	timeSlot := element.GetTimeSlot()
-	elementDay := timeSlot / config.NumClasses
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	elementDay := timeSlot / totalClassesPerDay
 
 	// key: day, val:bool
 	subjectADays := make(map[int]bool)
@@ -109,11 +111,11 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 				for ts, e := range venueMap {
 					if e.Val.Used == 1 {
 						if SN.SubjectID == subjectAID {
-							subjectADays[ts/config.NumClasses] = true // 将时间段转换为天数
-							subjectATimeSlots[ts] = ts / config.NumClasses
+							subjectADays[ts/totalClassesPerDay] = true // 将时间段转换为天数
+							subjectATimeSlots[ts] = ts / totalClassesPerDay
 						} else if SN.SubjectID == subjectBID {
-							subjectBDays[ts/config.NumClasses] = true // 将时间段转换为天数
-							subjectBTimeSlots[ts] = ts / config.NumClasses
+							subjectBDays[ts/totalClassesPerDay] = true // 将时间段转换为天数
+							subjectBTimeSlots[ts] = ts / totalClassesPerDay
 						}
 					}
 				}

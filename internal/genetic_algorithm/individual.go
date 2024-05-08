@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (*Individual, error) {
+func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -92,7 +92,7 @@ func newIndividual(classMatrix *types.ClassMatrix, classHours map[int]int, sched
 	}
 
 	// 设置适应度
-	fitness, err := individual.EvaluateFitness(classMatrix, classHours, schedule, subjects, teachers)
+	fitness, err := individual.EvaluateFitness(classMatrix, schedule, subjects, teachers)
 	if err != nil {
 		return nil, err
 	}
@@ -147,13 +147,13 @@ func (i *Individual) UniqueId() string {
 
 // 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
-func (i *Individual) toClassMatrix(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) *types.ClassMatrix {
+func (i *Individual) toClassMatrix(schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) *types.ClassMatrix {
 	// 汇总课班集合
-	classes := types.InitClasses()
+	classes := types.InitClasses(teachAllocs)
 
 	// 初始化课班适应性矩阵
 	classMatrix := types.NewClassMatrix()
-	classMatrix.Init(classes, teachers, subjectVenueMap)
+	classMatrix.Init(classes, schedule, teachers, subjectVenueMap)
 
 	// 先标记占用情况
 	for _, chromosome := range i.Chromosomes {
@@ -172,7 +172,7 @@ func (i *Individual) toClassMatrix(schedule *models.Schedule, subjects []*models
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
 			fixedRules := constraint.GetFixedRules(subjects, teachers)
 			dynamicRules := constraint.GetDynamicRules(schedule)
-			classMatrix.UpdateElementScore(element, fixedRules, dynamicRules)
+			classMatrix.UpdateElementScore(schedule, teachAllocs, element, fixedRules, dynamicRules)
 
 			// 修改基因内的约束状态信息
 			chromosome.Genes[i].PassedConstraints = element.GetPassedConstraints()
@@ -209,7 +209,7 @@ func (i *Individual) SortChromosomes() {
 // Fitness: 198
 // 给normalizedScore乘以100,目的是为了提升normalizedScore的重要性
 // 给subjectDispersionScore, teacherDispersionScore 乘以10, 目的是把数据归到同一个数量级和提升两者的重要度
-func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (int, error) {
+func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (int, error) {
 	// Calculate the total score of the class matrix
 	totalScore := classMatrix.Score
 	// log.Printf("Total score: %d\n", totalScore)
@@ -224,14 +224,14 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, classHours 
 	// log.Printf("Normalized score: %f\n", normalizedScore)
 
 	// Calculate the subject dispersion score
-	subjectDispersionScore, err := i.calcSubjectDispersionScore(true, config.PeriodThreshold)
+	subjectDispersionScore, err := i.calcSubjectDispersionScore(schedule, true, config.PeriodThreshold)
 	if err != nil {
 		return 0, err
 	}
 	// log.Printf("Subject dispersion score: %f\n", subjectDispersionScore)
 
 	// Calculate the teacher dispersion score
-	teacherDispersionScore := i.calcTeacherDispersionScore()
+	teacherDispersionScore := i.calcTeacherDispersionScore(schedule)
 	// log.Printf("Teacher dispersion score: %f\n", teacherDispersionScore)
 
 	// Calculate the fitness by multiplying the normalized score by a weight and adding the dispersion scores
@@ -272,15 +272,16 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 }
 
 // 修复时间段冲突总数, 修复是否段明细, 错误信息
-func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
+func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule) (int, [][]int, error) {
 	// 记录冲突的总数
 	var conflictCount int
 	// 修复的时间段对[[a,b],[c,d]], a修复为b, c修复为d
 	var repairs [][]int
 
 	// 找出已经占用的时间段和未占用的时间段
+	totalClassesPerWeek := schedule.TotalClassesPerWeek()
 	usedTimeSlots := make(map[int]bool)
-	unusedTimeSlots := lo.Range(config.NumTimeSlots)
+	unusedTimeSlots := lo.Range(totalClassesPerWeek)
 
 	// 冲突时间段:冲突次数
 	conflictsMap := make(map[int]int)
@@ -352,7 +353,7 @@ func (individual *Individual) RepairTimeSlotConflicts() (int, [][]int, error) {
 }
 
 // 计算各个课程班级的分散度
-func (i *Individual) calcSubjectStandardDeviation() (map[string]float64, error) {
+func (i *Individual) calcSubjectStandardDeviation(schedule *models.Schedule) (map[string]float64, error) {
 	subjectTimeSlots := make(map[string][]int) // 记录每个班级的每个科目的课时数
 	subjectCount := make(map[string]int)       // 记录每个班级的每个科目在每个时间段内的课时数
 
@@ -365,11 +366,11 @@ func (i *Individual) calcSubjectStandardDeviation() (map[string]float64, error) 
 		subjectCount[classSN] = len(chromosome.Genes)
 	}
 
-	return calcStandardDeviation(subjectTimeSlots, subjectCount)
+	return calcStandardDeviation(schedule, subjectTimeSlots, subjectCount)
 }
 
 // 计算各个教师的分散度
-func (i *Individual) calcTeacherStandardDeviation() (map[string]float64, error) {
+func (i *Individual) calcTeacherStandardDeviation(schedule *models.Schedule) (map[string]float64, error) {
 	teacherTimeSlots := make(map[string][]int)
 	teacherCount := make(map[string]int)
 
@@ -381,20 +382,22 @@ func (i *Individual) calcTeacherStandardDeviation() (map[string]float64, error) 
 		}
 	}
 
-	return calcStandardDeviation(teacherTimeSlots, teacherCount)
+	return calcStandardDeviation(schedule, teacherTimeSlots, teacherCount)
 }
 
-func calcStandardDeviation(timeSlotsMap map[string][]int, countMap map[string]int) (map[string]float64, error) {
+func calcStandardDeviation(schedule *models.Schedule, timeSlotsMap map[string][]int, countMap map[string]int) (map[string]float64, error) {
 	stdDevMap := make(map[string]float64)
+	totalClassesPerWeek := schedule.TotalClassesPerWeek()
 
 	// Calculate the standard deviation for each subject or teacher
 	for key, timeSlots := range timeSlotsMap {
-		mean := float64(len(timeSlots)) / float64(config.NumTimeSlots)
+
+		mean := float64(len(timeSlots)) / float64(totalClassesPerWeek)
 		variance := 0.0
 		for _, timeSlot := range timeSlots {
 			variance += math.Pow(float64(timeSlot)-mean, 2)
 		}
-		stdDev := math.Sqrt(variance / float64(config.NumTimeSlots))
+		stdDev := math.Sqrt(variance / float64(totalClassesPerWeek))
 		stdDevMap[key] = stdDev
 	}
 
@@ -402,9 +405,9 @@ func calcStandardDeviation(timeSlotsMap map[string][]int, countMap map[string]in
 }
 
 // 计算一个个体（全校所有年级所有班级的课程表）的科目分散度
-func (i Individual) calcSubjectDispersionScore(punishSamePeriod bool, samePeriodThreshold int) (float64, error) {
+func (i Individual) calcSubjectDispersionScore(schedule *models.Schedule, punishSamePeriod bool, samePeriodThreshold int) (float64, error) {
 	// 调用 calcSubjectStandardDeviation 方法计算每个班级的科目分散度
-	classSubjectStdDev, err := i.calcSubjectStandardDeviation()
+	classSubjectStdDev, err := i.calcSubjectStandardDeviation(schedule)
 	if err != nil {
 		return 0.0, err
 	}
@@ -420,10 +423,11 @@ func (i Individual) calcSubjectDispersionScore(punishSamePeriod bool, samePeriod
 	}
 
 	// 统计每节课出现的课程数量
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	periodCount := make(map[int]int)
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
-			period := gene.TimeSlot % config.NumClasses
+			period := gene.TimeSlot % totalClassesPerDay
 			periodCount[period]++
 		}
 	}
@@ -449,10 +453,11 @@ func (i Individual) calcSubjectDispersionScore(punishSamePeriod bool, samePeriod
 
 // 计算教师分散度得分
 // 通过计算信息熵来计算
-func (i *Individual) calcTeacherDispersionScore() float64 {
+func (i *Individual) calcTeacherDispersionScore(schedule *models.Schedule) float64 {
 
 	teacherDispersion := make(map[int]map[int]bool) // 记录每个教师在每个时间段是否已经排课
 	teacherCount := make(map[int]int)               // 记录每个教师的课时数
+	totalClassesPerWeek := schedule.TotalClassesPerWeek()
 
 	// 遍历每个基因，统计每个教师在每个时间段的排课情况
 	for _, chromosome := range i.Chromosomes {
@@ -461,7 +466,7 @@ func (i *Individual) calcTeacherDispersionScore() float64 {
 			teacherCount[teacherID]++
 			if teacherDispersion[teacherID] == nil {
 				teacherDispersion[teacherID] = make(map[int]bool)
-				for i := 0; i < config.NumTimeSlots; i++ {
+				for i := 0; i < totalClassesPerWeek; i++ {
 					teacherDispersion[teacherID][i] = false
 				}
 			}
@@ -499,18 +504,23 @@ func (i *Individual) calcTeacherDispersionScore() float64 {
 //
 
 // 打印课程表
-func (i *Individual) PrintSchedule(subjects []*models.Subject) {
+func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models.Subject) {
 
 	// schedule[周][节次]=科目
-	schedule := make(map[int]map[int]string)
+	scheduleMap := make(map[int]map[int]string)
 	count := 0
+
+	// 一周总课时
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	// 一周工作日
+	numWorkdays := schedule.NumWorkdays
 
 	// Fill the schedule map with the class information for each gene
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
 			count++
-			day := gene.TimeSlot / config.NumClasses
-			period := gene.TimeSlot % config.NumClasses
+			day := gene.TimeSlot / totalClassesPerDay
+			period := gene.TimeSlot % totalClassesPerDay
 			classSN := gene.ClassSN
 			SN, err := types.ParseSN(classSN)
 			if err != nil {
@@ -518,14 +528,14 @@ func (i *Individual) PrintSchedule(subjects []*models.Subject) {
 			}
 
 			subject, _ := models.FindSubjectByID(SN.SubjectID, subjects)
-			if _, ok := schedule[day]; !ok {
-				schedule[day] = make(map[int]string)
+			if _, ok := scheduleMap[day]; !ok {
+				scheduleMap[day] = make(map[int]string)
 			}
 
-			if schedule[day][period] != "" {
+			if scheduleMap[day][period] != "" {
 				log.Printf("CONFLICT! timeSlot: %d,  day: %d, period: %d\n", gene.TimeSlot, day, period)
 			}
-			schedule[day][period] = fmt.Sprintf("%s(%d)", subject.Name, gene.TimeSlot)
+			scheduleMap[day][period] = fmt.Sprintf("%s(%d)", subject.Name, gene.TimeSlot)
 		}
 	}
 
@@ -536,10 +546,10 @@ func (i *Individual) PrintSchedule(subjects []*models.Subject) {
 	log.Printf("课程表: 共%d节课\n", count)
 	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 	fmt.Println("---+-------------------------------------------")
-	for c := 0; c < config.NumClasses; c++ {
+	for c := 0; c < totalClassesPerDay; c++ {
 		fmt.Printf("%-2d |", c+1)
-		for d := 0; d < config.NumDays; d++ {
-			class, ok := schedule[d][c]
+		for d := 0; d < numWorkdays; d++ {
+			class, ok := scheduleMap[d][c]
 			if !ok {
 				class = ""
 			}

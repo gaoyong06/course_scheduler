@@ -4,6 +4,7 @@
 package constraint
 
 import (
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 )
@@ -70,7 +71,7 @@ func loadClassConstraintsFromDB() []*Class {
 
 // 生成规则校验方法
 func (c *Class) genConstraintFn() types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 		preCheckPassed := c.preCheck(element)
 		isValid := c.constraintCheck(element)
 		return preCheckPassed, isValid, nil

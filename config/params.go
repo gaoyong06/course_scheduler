@@ -17,15 +17,6 @@ const (
 )
 
 const (
-	NumDays            = 5                    // 每周上课天数
-	NumClasses         = 8                    // 每天上课节数
-	NumSubjects        = 15                   // 课程数
-	NumGrades          = 1                    // 年级数
-	NumClassesPreGrade = 1                    // 每年级班级数
-	NumTimeSlots       = NumDays * NumClasses // 每周课程表格子数
-)
-
-const (
 	PeriodThreshold = 2 // 相同节次排课数量限制
 )
 

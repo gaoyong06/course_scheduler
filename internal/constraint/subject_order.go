@@ -3,7 +3,7 @@
 package constraint
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 	"sort"
@@ -62,7 +62,7 @@ func loadSubjectOrderConstraintsFromDB() []*SubjectOrder {
 // 生成规则校验方法
 func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		subjectAID := s.SubjectAID
 		subjectBID := s.SubjectBID
@@ -77,7 +77,7 @@ func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
 		preCheckPassed := subjectID == subjectAID || subjectID == subjectBID
 		shouldPenalize := false
 		if preCheckPassed {
-			ret, err := isSubjectABeforeSubjectB(subjectAID, subjectBID, classMatrix, element)
+			ret, err := isSubjectABeforeSubjectB(subjectAID, subjectBID, classMatrix, element, schedule)
 			if err != nil {
 				return false, false, err
 			}
@@ -89,8 +89,9 @@ func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
 
 // 判断体育课后是否就是数学课
 // 判断课程A(体育)是在课程B(数学)之前
-func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element) (bool, error) {
+func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
 	timeSlot := element.GetTimeSlot()
@@ -128,8 +129,8 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 
 			if timeSlotA == timeSlot || timeSlotB == timeSlot {
 
-				dayA := timeSlotA / config.NumClasses
-				dayB := timeSlotB / config.NumClasses
+				dayA := timeSlotA / totalClassesPerDay
+				dayB := timeSlotB / totalClassesPerDay
 
 				if dayA == dayB && timeSlotB == timeSlotA+1 {
 					return true, nil

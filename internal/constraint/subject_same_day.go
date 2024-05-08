@@ -22,41 +22,46 @@ var subjectSameDayRule = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
+	numWorkdays := schedule.NumWorkdays
 
 	SN, _ := types.ParseSN(classSN)
+
+	gradeID := SN.GradeID
+	classID := SN.ClassID
 	subjectID := SN.SubjectID
 
-	// 周课时初始化
-	classHours := models.GetClassHours()
+	// 科目周课时
+	classHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-	preCheckPassed := classHours[subjectID] <= config.NumDays
+	preCheckPassed := classHours <= numWorkdays
 
 	shouldPenalize := false
 	if preCheckPassed {
 
 		// 检查同一天是否安排科目的排课
-		ret := isSubjectSameDay(classMatrix, classSN, timeSlot)
+		ret := isSubjectSameDay(classMatrix, classSN, timeSlot, schedule)
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 检查同一科目是否在同一天已经排课
-func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int) bool {
+func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int, schedule *models.Schedule) bool {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	count := 0
-	day := timeSlot / config.NumClasses
+	day := timeSlot / totalClassesPerDay
 
 	for _, teacherMap := range classMatrix.Elements[sn] {
 		for _, venueMap := range teacherMap {
 			for timeSlot1, element := range venueMap {
 
 				if element.Val.Used == 1 && timeSlot != timeSlot1 {
-					day1 := timeSlot1 / config.NumClasses
+					day1 := timeSlot1 / totalClassesPerDay
 					if day == day1 {
 						count++
 					}

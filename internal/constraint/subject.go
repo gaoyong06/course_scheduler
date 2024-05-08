@@ -71,7 +71,7 @@ func loadSubjectConstraintsFromDB() []*Subject {
 
 // 生成规则校验方法
 func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		classSN := element.GetClassSN()
 		timeSlot := element.GetTimeSlot()
@@ -86,7 +86,9 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 		}
 
 		// 判断subjectGroupID是否已经排课完成
-		isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, s.SubjectGroupID, subjects)
+		gradeID := SN.GradeID
+		classID := SN.ClassID
+		isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, gradeID, classID, s.SubjectGroupID, subjects, taskAllocs)
 		if err != nil {
 			return false, false, err
 		}
@@ -189,8 +191,8 @@ func (s *Subject) getPriority() int {
 // 	if err != nil {
 // 		return false, false, err
 // 	}
-// 	day := timeSlot/config.NumClasses + 1
-// 	period := timeSlot%config.NumClasses + 1
+// 	day := timeSlot/totalClassesPerDay + 1
+// 	period := timeSlot%totalClassesPerDay + 1
 
 // 	// 判断subjectGroupID是否已经排课完成
 // 	isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, subjectGroupID)
@@ -218,7 +220,7 @@ func (s *Subject) getPriority() int {
 // 	if err != nil {
 // 		return false, false, err
 // 	}
-// 	period := timeSlot%config.NumClasses + 1
+// 	period := timeSlot%totalClassesPerDay + 1
 
 // 	preCheckPassed := period == 1 || period == 2 || period == 3
 
@@ -237,7 +239,7 @@ func (s *Subject) getPriority() int {
 // 	if err != nil {
 // 		return false, false, err
 // 	}
-// 	period := timeSlot%config.NumClasses + 1
+// 	period := timeSlot%totalClassesPerDay + 1
 // 	preCheckPassed := period == 8
 
 // 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
@@ -256,7 +258,7 @@ func (s *Subject) getPriority() int {
 // 	if err != nil {
 // 		return false, false, err
 // 	}
-// 	period := timeSlot%config.NumClasses + 1
+// 	period := timeSlot%totalClassesPerDay + 1
 // 	preCheckPassed := period == 7
 
 // 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
@@ -264,7 +266,7 @@ func (s *Subject) getPriority() int {
 // }
 
 // 判断subjectGroupID的课程是否已经排完
-func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, subjectGroupID int, subjects []*models.Subject) (bool, error) {
+func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, gradeID, classID, subjectGroupID int, subjects []*models.Subject, taskAllocs []*models.TeachTaskAllocation) (bool, error) {
 
 	// 根据科目分组得到所有的科目
 	subjects, err := models.FindSubjectsByGroupID(subjectGroupID, subjects)
@@ -273,11 +275,11 @@ func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, subjectGroupID int,
 	}
 
 	// 根据科目得到该科目的一周课时
-	classHours := models.GetClassHours()
+	// classHours := models.GetClassHours()
 
 	for _, subject := range subjects {
 		subjectID := subject.SubjectID
-		subjectClassHours := classHours[subjectID]
+		subjectClassHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 		totalScheduledHours := 0
 
 		for sn, classMap := range classMatrix.Elements {

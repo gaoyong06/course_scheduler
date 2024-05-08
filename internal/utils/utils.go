@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 	"io"
@@ -22,19 +22,21 @@ type ClassMatrixItem struct {
 }
 
 // PrintClassMatrix 以Markdown格式打印classMatrix
-func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val) {
+func PrintClassMatrix(classMatrix map[string]map[int]map[int]map[int]types.Val, schedule *models.Schedule) {
 
 	fmt.Println("| Time Slot| Day | Period | Score |")
 	fmt.Println("| --- | --- | --- | --- |")
 
 	items := make([]ClassMatrixItem, 0)
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
 	for classSN, teacherMap := range classMatrix {
 		if classSN == "1_1_1" {
 			for _, venueMap := range teacherMap {
 				for _, timeSlotMap := range venueMap {
 					for timeSlot, val := range timeSlotMap {
-						day := timeSlot / config.NumClasses
-						period := timeSlot % config.NumClasses
+						day := timeSlot / totalClassesPerDay
+						period := timeSlot % totalClassesPerDay
 						item := ClassMatrixItem{
 							ClassSN:  classSN,
 							TimeSlot: timeSlot,

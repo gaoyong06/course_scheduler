@@ -4,7 +4,6 @@
 package constraint
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
@@ -32,20 +31,20 @@ func (t *TeacherRangeLimit) String() string {
 }
 
 // 获取教师时间段限制规则
-func GetTeacherRangeLimitRules(schedule *models.Schedule) []*types.Rule {
+func GetTeacherRangeLimitRules() []*types.Rule {
 
 	constraints := loadTeacherRangeLimitConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
-		rule := c.genRule(schedule)
+		rule := c.genRule()
 		rules = append(rules, rule)
 	}
 	return rules
 }
 
 // 生成规则
-func (t *TeacherRangeLimit) genRule(schedule *models.Schedule) *types.Rule {
-	fn := t.genConstraintFn(schedule)
+func (t *TeacherRangeLimit) genRule() *types.Rule {
+	fn := t.genConstraintFn()
 	return &types.Rule{
 		Name:     t.String(),
 		Type:     "dynamic",
@@ -64,10 +63,11 @@ func loadTeacherRangeLimitConstraintsFromDB() []*TeacherRangeLimit {
 }
 
 // 生成规则校验方法
-func (t *TeacherRangeLimit) genConstraintFn(schedule *models.Schedule) types.ConstraintFn {
+func (t *TeacherRangeLimit) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
+		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 		// 规则参数
 		teacherID := t.TeacherID
 		maxClasses := t.MaxClasses
@@ -77,7 +77,7 @@ func (t *TeacherRangeLimit) genConstraintFn(schedule *models.Schedule) types.Con
 
 		currTeacherID := element.GetTeacherID()
 		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % config.NumClasses
+		currPeriod := currTimeSlot % totalClassesPerDay
 		count := countTeacherClassesInRange(teacherID, startPeriod, endPeriod, classMatrix)
 
 		preCheckPassed := currTeacherID == teacherID && currPeriod >= startPeriod && currPeriod <= endPeriod

@@ -6,7 +6,6 @@
 package constraint
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"sort"
@@ -23,17 +22,20 @@ var subjectConnectedRule = &types.Rule{
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func scRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+func scRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 
 	SN, _ := types.ParseSN(classSN)
+	gradeID := SN.GradeID
+	classID := SN.ClassID
 	subjectID := SN.SubjectID
 
-	// 周课时初始化
-	classHours := models.GetClassHours()
+	// 科目周课时
+	classHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-	preCheckPassed := classHours[subjectID] > config.NumDays
+	numWorkdays := schedule.NumWorkdays
+	preCheckPassed := classHours > numWorkdays
 
 	shouldPenalize := false
 	if preCheckPassed {

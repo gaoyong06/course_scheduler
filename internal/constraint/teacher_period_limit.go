@@ -2,7 +2,7 @@
 package constraint
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
 )
@@ -61,20 +61,21 @@ func loadTeacherPeriodLimitConstraintsFromDB() []*TeacherPeriodLimit {
 
 // 生成规则校验方法
 func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
+		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 		teacherID := t.TeacherID
 		period := t.Period
 		maxClassesCount := t.MaxClassesCount
 
 		currTeacherID := element.GetTeacherID()
 		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % config.NumClasses
+		currPeriod := currTimeSlot % totalClassesPerDay
 		preCheckPassed := teacherID == currTeacherID && period == currPeriod
 
 		shouldPenalize := false
 		if preCheckPassed {
-			count := countTeacherClassInPeriod(teacherID, period, classMatrix)
+			count := countTeacherClassInPeriod(teacherID, period, classMatrix, schedule)
 			shouldPenalize = preCheckPassed && count > maxClassesCount
 		}
 
@@ -83,7 +84,9 @@ func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 }
 
 // 计算教师某节课的上课次数
-func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.ClassMatrix) int {
+func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.ClassMatrix, schedule *models.Schedule) int {
+
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	count := 0
 	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
@@ -93,7 +96,7 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 						continue
 					}
 					for timeSlot, element := range timeSlotMap {
-						if element.Val.Used == 1 && timeSlot%config.NumClasses+1 == period {
+						if element.Val.Used == 1 && timeSlot%totalClassesPerDay+1 == period {
 							count++
 						}
 					}

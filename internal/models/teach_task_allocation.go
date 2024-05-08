@@ -35,3 +35,17 @@ func NewTeachTaskAllocation(id, gradeID, classID, subjectID, teacherID, numClass
 	}
 	return course
 }
+
+// 获取一个科目的周课时
+func GetNumClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) int {
+
+	count := 0
+	for _, task := range teachAllocs {
+
+		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
+			count = task.NumClassesPerWeek
+			break
+		}
+	}
+	return count
+}

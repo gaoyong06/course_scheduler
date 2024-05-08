@@ -57,10 +57,10 @@ package evaluation
 // 	}
 
 // 	// 周几
-// 	day := timeSlot/config.NumClasses + 1
+// 	day := timeSlot/totalClassesPerDay + 1
 
 // 	// 课节数
-// 	lesson := timeSlot%config.NumClasses + 1
+// 	lesson := timeSlot%totalClassesPerDay + 1
 
 // 	// 班级固排禁排
 // 	score, penalty, scoreDetails = classFixedAndForbidden(SN, teacherID, lesson, score, penalty, scoreDetails)
@@ -106,7 +106,7 @@ package evaluation
 // 	}
 
 // 	// 科目课时小于天数
-// 	if classHours[subject.SubjectID] <= config.NumDays {
+// 	if classHours[subject.SubjectID] <= numWorkdays {
 
 // 		// 科目课时小于天数,禁止同一天排多次相同科目的课
 // 		penalty, scoreDetails = checkSubjectSameDay(classMatrix, sn, timeSlot, penalty, scoreDetails)
@@ -128,7 +128,7 @@ package evaluation
 // 	// 检查相同节次的排课是否超过数量限制
 // 	periodCount := countPeriodClasses(classMatrix, sn, teacherID, venueID)
 
-// 	period := timeSlot % config.NumClasses
+// 	period := timeSlot % totalClassesPerDay
 // 	// count是当前现有的数量,所以要使用count >= periodThreshold
 // 	// 不能使用count > periodThreshold
 // 	if count, ok := periodCount[period]; ok && count >= config.PeriodThreshold {
@@ -512,7 +512,7 @@ package evaluation
 // 				for _, timeSlotMap := range teacherMap {
 // 					for timeSlot, val := range timeSlotMap {
 // 						if val.Used == 1 {
-// 							teacher1Days[timeSlot/config.NumClasses] = true // 将时间段转换为天数
+// 							teacher1Days[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
 // 						}
 // 					}
 // 				}
@@ -520,14 +520,14 @@ package evaluation
 // 				for _, timeSlotMap := range teacherMap {
 // 					for timeSlot, val := range timeSlotMap {
 // 						if val.Used == 1 {
-// 							teacher2Days[timeSlot/config.NumClasses] = true // 将时间段转换为天数
+// 							teacher2Days[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
 // 						}
 // 					}
 // 				}
 // 			}
 // 		}
 // 	}
-// 	for day := 0; day < config.NumDays; day++ {
+// 	for day := 0; day < numWorkdays; day++ {
 // 		if teacher1Days[day] && teacher2Days[day] {
 // 			return true
 // 		}
@@ -570,9 +570,9 @@ package evaluation
 // 				for timeSlot, val := range venueMap {
 // 					if val.Used == 1 {
 // 						if SN.SubjectID == subjectAID {
-// 							subjectADays[timeSlot/config.NumClasses] = true // 将时间段转换为天数
+// 							subjectADays[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
 // 						} else if SN.SubjectID == subjectBID {
-// 							subjectBDays[timeSlot/config.NumClasses] = true // 将时间段转换为天数
+// 							subjectBDays[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
 // 						}
 // 					}
 // 				}
@@ -580,7 +580,7 @@ package evaluation
 // 		}
 // 	}
 
-// 	for day := 0; day < config.NumDays; day++ {
+// 	for day := 0; day < numWorkdays; day++ {
 // 		if subjectADays[day] && subjectBDays[day] {
 // 			return true, nil
 // 		}
@@ -635,14 +635,14 @@ package evaluation
 // func isSubjectSameDay(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, timeSlot int) bool {
 
 // 	count := 0
-// 	day := timeSlot / config.NumClasses
+// 	day := timeSlot / totalClassesPerDay
 
 // 	for _, teacherMap := range classMatrix[sn] {
 // 		for _, venueMap := range teacherMap {
 // 			for timeSlot1, val := range venueMap {
 
 // 				if val.Score > 1 {
-// 					day1 := timeSlot1 / config.NumClasses
+// 					day1 := timeSlot1 / totalClassesPerDay
 // 					if day == day1 && timeSlot != timeSlot1 {
 // 						count++
 // 					}
@@ -700,7 +700,7 @@ package evaluation
 // 		// 此时还没有执行到AllocateClassMatrix
 // 		// 所以,此时val.Used都是0
 // 		if val.Score > 0 {
-// 			period := timeSlot % config.NumClasses
+// 			period := timeSlot % totalClassesPerDay
 // 			periodCount[period]++
 // 		}
 // 	}
@@ -712,7 +712,7 @@ package evaluation
 // func checkPeriodThreshold(classMatrix map[string]map[int]map[int]map[int]types.Val, sn string, teacherID, venueID, timeSlot, penalty int, scoreDetails []ScoreDetail) (int, []ScoreDetail) {
 
 // 	periodCount := countPeriodClasses(classMatrix, sn, teacherID, venueID)
-// 	period := timeSlot % config.NumClasses
+// 	period := timeSlot % totalClassesPerDay
 
 // 	if count, ok := periodCount[period]; ok && count >= config.PeriodThreshold {
 

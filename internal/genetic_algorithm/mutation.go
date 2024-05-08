@@ -12,7 +12,7 @@ import (
 // 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
 // Mutation performs mutation on the selected individuals with a given mutation rate
-func Mutation(selected []*Individual, mutationRate float64, classHours map[int]int, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int) ([]*Individual, int, int, error) {
+func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int) ([]*Individual, int, int, error) {
 
 	prepared := 0
 	executed := 0
@@ -33,14 +33,14 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 			gene := chromosome.Genes[geneIndex]
 
 			// 找到给定课班的可用参数信息
-			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome, teachers, venueMap)
+			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome, schedule, teachers, venueMap)
 			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, prepared, executed, err
 			}
 
 			// 变异校验
-			isValid, err := validateMutation(selected[i], chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot, classHours)
+			isValid, err := validateMutation(selected[i], chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, prepared, executed, err
 			}
@@ -65,7 +65,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 				selected[i].Chromosomes[chromosomeIndex] = chromosome
 
 				// 修复时间段冲突
-				_, _, err := selected[i].RepairTimeSlotConflicts()
+				_, _, err := selected[i].RepairTimeSlotConflicts(schedule)
 				if err != nil {
 					return nil, prepared, executed, err
 				}
@@ -74,8 +74,8 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 				selected[i].SortChromosomes()
 
 				// 更新个体适应度
-				classMatrix := selected[i].toClassMatrix(schedule, subjects, teachers, venueMap)
-				newFitness, err := selected[i].EvaluateFitness(classMatrix, classHours, schedule, subjects, teachers)
+				classMatrix := selected[i].toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap)
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, schedule, subjects, teachers)
 
 				if err != nil {
 					return nil, prepared, executed, err
@@ -90,7 +90,7 @@ func Mutation(selected []*Individual, mutationRate float64, classHours map[int]i
 }
 
 // validateMutation 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件
-func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot int, classHours map[int]int) (bool, error) {
+func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unusedTeacherID, unusedVenueID, unusedTimeSlot int) (bool, error) {
 
 	// 检查突变是否会产生有效的基因，找到未使用的教师、教室和时间段
 	newGene := individual.Chromosomes[chromosomeIndex].Genes[geneIndex]
@@ -111,7 +111,7 @@ func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unused
 }
 
 // findUnusedTCt 查找基因中未使用的教师,教室,时间段
-func findUnusedTCt(chromosome *Chromosome, teachers []*models.Teacher, venueMap map[string][]int) (int, int, int, error) {
+func findUnusedTCt(chromosome *Chromosome, schedule *models.Schedule, teachers []*models.Teacher, venueMap map[string][]int) (int, int, int, error) {
 
 	SN, err := types.ParseSN(chromosome.ClassSN)
 	if err != nil {
@@ -158,7 +158,7 @@ func findUnusedTCt(chromosome *Chromosome, teachers []*models.Teacher, venueMap 
 	}
 
 	// 时间集合
-	timeSlots := types.ClassTimeSlots(unusedTeacherIDs, unusedVenueIDs)
+	timeSlots := types.ClassTimeSlots(schedule, unusedTeacherIDs, unusedVenueIDs)
 	for _, timeSlot := range timeSlots {
 		timeSlotUsed := false
 		for _, gene := range chromosome.Genes {

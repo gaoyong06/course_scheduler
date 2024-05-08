@@ -1,5 +1,7 @@
 package types
 
+import "course_scheduler/internal/models"
+
 // 约束处理函数
 // 参数
 //
@@ -13,7 +15,7 @@ package types
 //	error 错误信息
 //
 // type ConstraintFn func(classMatrix map[string]map[int]map[int]map[int]Val, element element) (bool, bool, error)
-type ConstraintFn func(classMatrix *ClassMatrix, element Element) (bool, bool, error)
+type ConstraintFn func(classMatrix *ClassMatrix, element Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error)
 
 // Rule 表示评分规则
 type Rule struct {

@@ -11,10 +11,10 @@ import (
 
 // 排课输入信息
 type ScheduleInput struct {
-	Schedule            *models.Schedule              `json:"schedule" mapstructure:"schedule"`                           // 排课方案
-	TeachTaskAllocation []*models.TeachTaskAllocation `json:"teach_task_allocation" mapstructure:"teach_task_allocation"` // 教学任务
-	Teachers            []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                           // 教师
-	Subjects            []*models.Subject             `json:"subjects" mapstructure:"subjects"`                           // 科目
+	Schedule             *models.Schedule              `json:"schedule" mapstructure:"schedule"`                             // 排课方案
+	TeachTaskAllocations []*models.TeachTaskAllocation `json:"teach_task_allocations" mapstructure:"teach_task_allocations"` // 教学任务
+	Teachers             []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                             // 教师
+	Subjects             []*models.Subject             `json:"subjects" mapstructure:"subjects"`                             // 科目
 	// Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
 	SubjectVenueMap               map[string][]int                 `json:"venue_map" mapstructure:"venue_map"`                                                       // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
 	Grades                        []*models.Grade                  `json:"grades"`                                                                                   // 年级
@@ -33,11 +33,11 @@ type ScheduleInput struct {
 func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 
 	// 1. 检查每周总课时数是否超过总课时数
-	totalClassesPerWeek := s.Schedule.GetTotalClassesPerDay() * s.Schedule.Workdays
+	totalClassesPerWeek := s.Schedule.GetTotalClassesPerDay() * s.Schedule.NumWorkdays
 	count := 0
 	// key: 科目ID, value: 每周上课总次数
 	subjectClasses := make(map[int]int)
-	for _, task := range s.TeachTaskAllocation {
+	for _, task := range s.TeachTaskAllocations {
 		count += task.NumClassesPerWeek
 		// 上课次数 = 科目每周课时 - 每周连堂课课时
 		subjectClasses[task.SubjectID] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek
@@ -49,7 +49,7 @@ func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 	// 2. 检查每个科目每周上课总次数是否正确
 	// 每周工作5天,所以最多上5次课
 	for subjectID, time := range subjectClasses {
-		if time > s.Schedule.Workdays {
+		if time > s.Schedule.NumWorkdays {
 			return false, fmt.Errorf("subject %d has invalid weekly Classes count", subjectID)
 		}
 	}
@@ -79,8 +79,8 @@ func LoadTestData() (*ScheduleInput, error) {
 	}
 
 	// 对 Courses 属性的值按照 NumClassesPerWeek 排序
-	sort.Slice(config.TeachTaskAllocation, func(i, j int) bool {
-		return config.TeachTaskAllocation[i].NumClassesPerWeek > config.TeachTaskAllocation[j].NumClassesPerWeek
+	sort.Slice(config.TeachTaskAllocations, func(i, j int) bool {
+		return config.TeachTaskAllocations[i].NumClassesPerWeek > config.TeachTaskAllocations[j].NumClassesPerWeek
 	})
 
 	return &config, nil

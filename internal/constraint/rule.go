@@ -55,7 +55,7 @@ func GetDynamicRules(schedule *models.Schedule) []*types.Rule {
 	rules = append(rules, teacherMutexRules...)
 
 	// 教师不跨中午约束
-	teacherNoonBreakRules := GetTeacherNoonBreakRules(schedule)
+	teacherNoonBreakRules := GetTeacherNoonBreakRules()
 	rules = append(rules, teacherNoonBreakRules...)
 
 	// 教师节数限制
@@ -63,7 +63,7 @@ func GetDynamicRules(schedule *models.Schedule) []*types.Rule {
 	rules = append(rules, teacherClassLimitRules...)
 
 	// 教师时间段限制
-	teacherRangeLimitRules := GetTeacherRangeLimitRules(schedule)
+	teacherRangeLimitRules := GetTeacherRangeLimitRules()
 	rules = append(rules, teacherRangeLimitRules...)
 
 	sortRulesByPriority(rules)

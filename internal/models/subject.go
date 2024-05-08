@@ -41,34 +41,6 @@ func GetSubjectsFromDB() []*Subject {
 	return subjects
 }
 
-// 获取课时信息
-// 每周各个科目,分别ji
-func GetClassHours() map[int]int {
-
-	// 课时
-	// subjectID: 课时
-	// 共39
-	classHours := map[int]int{
-		1:  5, // 语文
-		2:  4, // 数学
-		3:  4, // 英语
-		4:  3, // 音乐
-		5:  3, // 美术
-		6:  3, // 体育
-		7:  3, // 物理
-		8:  3, // 化学
-		9:  2, // 政治
-		10: 2, // 历史
-		11: 2, // 生物
-		12: 2, // 地理
-		13: 1, // 劳技
-		14: 1, // 活动
-		15: 1, // 班会
-	}
-
-	return classHours
-}
-
 // 根据科目id查找科目对象
 // subjectID 科目
 // subjects 全部科目信息

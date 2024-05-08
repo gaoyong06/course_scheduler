@@ -5,6 +5,7 @@ package constraint
 
 import (
 	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 )
 
@@ -21,15 +22,16 @@ var subjectPeriodLimitRule = &types.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func splRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
 	venueID := element.GetVenueID()
 	timeSlot := element.GetTimeSlot()
 
-	periodCount := countPeriodClasses(classMatrix, classSN, teacherID, venueID)
-	period := timeSlot % config.NumClasses
+	periodCount := countPeriodClasses(classMatrix, classSN, teacherID, venueID, schedule)
+	period := timeSlot % totalClassesPerDay
 
 	preCheckPassed := false
 	count := 0
@@ -46,15 +48,16 @@ func splRuleFn(classMatrix *types.ClassMatrix, element types.Element) (bool, boo
 }
 
 // countPeriodClasses 计算每个时间段的科目数量
-func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venueID int) map[int]int {
+func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venueID int, schedule *models.Schedule) map[int]int {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// key: 节次, val: 数量
 	periodCount := make(map[int]int)
 
 	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {
 
 		if element.Val.Used == 1 {
-			period := timeSlot % config.NumClasses
+			period := timeSlot % totalClassesPerDay
 			periodCount[period]++
 		}
 	}

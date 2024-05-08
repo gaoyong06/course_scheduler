@@ -10,8 +10,8 @@ import (
 // 每周上课天数, 每天上课节数
 type Schedule struct {
 	Name                     string `json:"name" mapstructure:"name"`                                               // 课表名称, 如: 心远中学2023年第一学期课程表
-	Workdays                 int    `json:"workdays" mapstructure:"workdays"`                                       // 一周工作日, 默认:5天
-	DaysOff                  int    `json:"days_off" mapstructure:"days_off"`                                       // 一周休息日, 默认:2天
+	NumWorkdays              int    `json:"num_workdays" mapstructure:"num_workdays"`                               // 一周工作日, 默认:5天
+	NumDaysOff               int    `json:"num_days_off" mapstructure:"num_days_off"`                               // 一周休息日, 默认:2天
 	NumMorningReadingClasses int    `json:"num_morning_reading_classes" mapstructure:"num_morning_reading_classes"` // 早读 几节课, 默认: 0节
 	NumForenoonClasses       int    `json:"num_forenoon_classes" mapstructure:"num_forenoon_classes"`               // 上午 几节课, 默认: 0节
 	// 下面和约束条件中的教师时间段约束不一致,教师时间段约束中没有中午,容易出现混乱,先去掉
@@ -57,12 +57,24 @@ func (s *Schedule) GetPeriodWithRange(r string) (int, int) {
 // 生成一周课程时间段
 func (s *Schedule) GenWeekTimeSlots() []int {
 
+	// // 每天总课时
+	// dayTotalClasses := s.GetTotalClassesPerDay()
+	// // 每周总课时
+	// weekTotalClasses := s.NumWorkdays * dayTotalClasses
+	totalClassesPerWeek := s.TotalClassesPerWeek()
+
+	timeSlots := lo.Range(totalClassesPerWeek)
+
+	return timeSlots
+}
+
+// 每周总课时数
+// TODO: 这个名字要统计下
+func (s *Schedule) TotalClassesPerWeek() int {
+
 	// 每天总课时
 	dayTotalClasses := s.GetTotalClassesPerDay()
 	// 每周总课时
-	weekTotalClasses := s.Workdays * dayTotalClasses
-
-	timeSlots := lo.Range(weekTotalClasses)
-
-	return timeSlots
+	totalClassesPerWeek := s.NumWorkdays * dayTotalClasses
+	return totalClassesPerWeek
 }

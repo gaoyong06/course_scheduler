@@ -26,19 +26,19 @@ func (t *TeacherNoonBreak) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherNoonBreakRules(schedule *models.Schedule) []*types.Rule {
+func GetTeacherNoonBreakRules() []*types.Rule {
 	constraints := loadTeacherNoonBreakConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
-		rule := c.genRule(schedule)
+		rule := c.genRule()
 		rules = append(rules, rule)
 	}
 	return rules
 }
 
 // 生成规则
-func (t *TeacherNoonBreak) genRule(schedule *models.Schedule) *types.Rule {
-	fn := t.genConstraintFn(schedule)
+func (t *TeacherNoonBreak) genRule() *types.Rule {
+	fn := t.genConstraintFn()
 	return &types.Rule{
 		Name:     t.String(),
 		Type:     "dynamic",
@@ -57,9 +57,9 @@ func loadTeacherNoonBreakConstraintsFromDB() []*TeacherNoonBreak {
 }
 
 // 生成规则校验方法
-func (t *TeacherNoonBreak) genConstraintFn(schedule *models.Schedule) types.ConstraintFn {
+func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		teacherID := t.TeacherID
 		currTeacherID := element.GetTeacherID()
