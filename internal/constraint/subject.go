@@ -39,8 +39,8 @@ func (s *Subject) String() string {
 }
 
 // 获取科目优先排禁排规则
-func GetSubjectRules(subjects []*models.Subject) []*types.Rule {
-	constraints := loadSubjectConstraintsFromDB()
+func GetSubjectRules(subjects []*models.Subject, constraints []*Subject) []*types.Rule {
+	// constraints := loadSubjectConstraintsFromDB()
 	var rules []*types.Rule
 	for _, s := range constraints {
 		rule := s.genRule(subjects)

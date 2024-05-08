@@ -39,8 +39,8 @@ func (c *Class) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetClassRules() []*types.Rule {
-	constraints := loadClassConstraintsFromDB()
+func GetClassRules(constraints []*Class) []*types.Rule {
+	// constraints := loadClassConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

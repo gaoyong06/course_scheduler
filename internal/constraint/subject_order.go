@@ -29,8 +29,8 @@ func (s *SubjectOrder) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetSubjectOrderRules() []*types.Rule {
-	constraints := loadSubjectOrderConstraintsFromDB()
+func GetSubjectOrderRules(constraints []*SubjectOrder) []*types.Rule {
+	// constraints := loadSubjectOrderConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

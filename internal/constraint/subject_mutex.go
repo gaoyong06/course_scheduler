@@ -26,8 +26,8 @@ func (sm *SubjectMutex) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetSubjectMutexRules() []*types.Rule {
-	constraints := loadSubjectMutexConstraintsFromDB()
+func GetSubjectMutexRules(constraints []*SubjectMutex) []*types.Rule {
+	// constraints := loadSubjectMutexConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

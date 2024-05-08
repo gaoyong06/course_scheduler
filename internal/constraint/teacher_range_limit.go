@@ -31,9 +31,9 @@ func (t *TeacherRangeLimit) String() string {
 }
 
 // 获取教师时间段限制规则
-func GetTeacherRangeLimitRules() []*types.Rule {
+func GetTeacherRangeLimitRules(constraints []*TeacherRangeLimit) []*types.Rule {
 
-	constraints := loadTeacherRangeLimitConstraintsFromDB()
+	// constraints := loadTeacherRangeLimitConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

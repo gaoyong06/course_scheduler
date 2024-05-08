@@ -27,8 +27,8 @@ func (t *TeacherMutex) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherMutexRules() []*types.Rule {
-	constraints := loadTeacherMutexConstraintsFromDB()
+func GetTeacherMutexRules(constraints []*TeacherMutex) []*types.Rule {
+	// constraints := loadTeacherMutexConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

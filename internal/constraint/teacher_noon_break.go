@@ -26,8 +26,8 @@ func (t *TeacherNoonBreak) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherNoonBreakRules() []*types.Rule {
-	constraints := loadTeacherNoonBreakConstraintsFromDB()
+func GetTeacherNoonBreakRules(constraints []*TeacherNoonBreak) []*types.Rule {
+	// constraints := loadTeacherNoonBreakConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()

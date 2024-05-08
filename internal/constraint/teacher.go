@@ -40,8 +40,8 @@ func (t *Teacher) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherRules(teachers []*models.Teacher) []*types.Rule {
-	constraints := loadTeacherConstraintsFromDB()
+func GetTeacherRules(teachers []*models.Teacher, constraints []*Teacher) []*types.Rule {
+	// constraints := loadTeacherConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule(teachers)

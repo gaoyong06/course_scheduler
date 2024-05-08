@@ -29,8 +29,8 @@ func (t *TeacherPeriodLimit) String() string {
 }
 
 // 获取班级固排禁排规则
-func GetTeacherClassLimitRules() []*types.Rule {
-	constraints := loadTeacherPeriodLimitConstraintsFromDB()
+func GetTeacherClassLimitRules(constraints []*TeacherPeriodLimit) []*types.Rule {
+	// constraints := loadTeacherPeriodLimitConstraintsFromDB()
 	var rules []*types.Rule
 	for _, c := range constraints {
 		rule := c.genRule()
