@@ -72,6 +72,8 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 		uniqueId = bestIndividual.UniqueId()
 
 		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
+		// 下面的bestIndividual会发生更新,所以在这里复制一份
+		prevBestIndividual := bestIndividual.Copy()
 		bestIndividual, replaced, err = UpdateBest(currentPopulation, bestIndividual)
 		if err != nil {
 			log.Panic(err)
@@ -97,7 +99,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 		monitor.AvgFitnessPerGen[gen] = CalcAvgFitness(gen, currentPopulation)
 
 		// 检查是否连续 n 代没有改进
-		if HasImproved(bestIndividual, currentPopulation) {
+		if HasImproved(prevBestIndividual, currentPopulation) {
 			genWithoutImprovement = 0
 		} else {
 			genWithoutImprovement++

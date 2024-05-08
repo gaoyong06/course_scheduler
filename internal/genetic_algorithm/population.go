@@ -6,6 +6,7 @@ import (
 	"course_scheduler/internal/constraint"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -143,6 +144,7 @@ func HasImproved(prevBestIndividual *Individual, population []*Individual) bool 
 	prevBestFitness := prevBestIndividual.Fitness
 	for _, individual := range population {
 
+		fmt.Printf("prevBestFitness: %d, individual.Fitness: %d\n", prevBestFitness, individual.Fitness)
 		// 如果有更优秀的个体，则种群有改进
 		if individual.Fitness > prevBestFitness {
 			return true
