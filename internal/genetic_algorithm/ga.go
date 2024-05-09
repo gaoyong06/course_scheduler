@@ -12,7 +12,7 @@ import (
 // scheduleInput 排课输入数据
 // monitor 业务监控
 // startTime 当前时间
-func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime time.Time) (*Individual, int, error) {
+func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Time) (*Individual, int, error) {
 
 	// 种群大小
 	popSize := config.PopSize
@@ -52,10 +52,11 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 	// }
 
 	// 课班初始化
-	classes := types.InitClasses(scheduleInput.TeachTaskAllocations)
+	classes := types.InitClasses(input.TeachTaskAllocations)
 
 	// 初始化当前种群
-	currentPopulation, err := InitPopulation(classes, popSize, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+	constraints := input.ConvertConstraints()
+	currentPopulation, err := InitPopulation(classes, popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -127,7 +128,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 				if err != nil {
 					log.Panic(err)
 				}
@@ -135,7 +136,7 @@ func Execute(scheduleInput *base.ScheduleInput, monitor *base.Monitor, startTime
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, scheduleInput.Schedule, scheduleInput.TeachTaskAllocations, scheduleInput.Subjects, scheduleInput.Teachers, scheduleInput.SubjectVenueMap)
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 				if err != nil {
 					log.Panic(err)
 				}

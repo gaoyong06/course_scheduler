@@ -40,7 +40,7 @@ func GetTeacherNoonBreakRules(constraints []*TeacherNoonBreak) []*types.Rule {
 func (t *TeacherNoonBreak) genRule() *types.Rule {
 	fn := t.genConstraintFn()
 	return &types.Rule{
-		Name:     t.String(),
+		Name:     "teacherNoonBreak",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

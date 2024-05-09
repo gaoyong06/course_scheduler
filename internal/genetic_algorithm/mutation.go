@@ -12,7 +12,7 @@ import (
 // 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
 // Mutation performs mutation on the selected individuals with a given mutation rate
-func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int) ([]*Individual, int, int, error) {
+func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, int, int, error) {
 
 	prepared := 0
 	executed := 0
@@ -74,12 +74,12 @@ func Mutation(selected []*Individual, mutationRate float64, schedule *models.Sch
 				selected[i].SortChromosomes()
 
 				// 更新个体适应度
-				classMatrix, err := selected[i].toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap)
+				classMatrix, err := selected[i].toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap, constraints)
 				if err != nil {
 					return nil, prepared, executed, err
 				}
 
-				newFitness, err := selected[i].EvaluateFitness(classMatrix, schedule, subjects, teachers)
+				newFitness, err := selected[i].EvaluateFitness(classMatrix, schedule, subjects, teachers, constraints)
 				if err != nil {
 					return nil, prepared, executed, err
 				}

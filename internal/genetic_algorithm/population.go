@@ -12,7 +12,7 @@ import (
 )
 
 // 初始化种群
-func InitPopulation(classes []types.Class, populationSize int, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) ([]*Individual, error) {
+func InitPopulation(classes []types.Class, populationSize int, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, error) {
 
 	population := make([]*Individual, populationSize)
 	errChan := make(chan error, populationSize)
@@ -26,7 +26,7 @@ func InitPopulation(classes []types.Class, populationSize int, schedule *models.
 		go func(i int) {
 			log.Printf("Initializing individual %d\n", i+1)
 
-			individual, err := createIndividual(classes, classSNs, schedule, taskAllocs, subjects, teachers, subjectVenueMap)
+			individual, err := createIndividual(classes, classSNs, schedule, taskAllocs, subjects, teachers, subjectVenueMap, constraints)
 			if err != nil {
 				errChan <- err
 				return
@@ -189,7 +189,7 @@ func CheckConflicts(population []*Individual) bool {
 // ============================================
 
 // 创建个体
-func createIndividual(classes []types.Class, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) (*Individual, error) {
+func createIndividual(classes []types.Class, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
 
 	classMatrix := types.NewClassMatrix()
 
@@ -210,13 +210,13 @@ func createIndividual(classes []types.Class, classeSNs []string, schedule *model
 	}
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 
-	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs)
-	_, err = allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs)
+	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
+	_, err = allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs, constraints)
 
 	if err != nil {
 		return nil, err
 	}
-	return newIndividual(classMatrix, schedule, subjects, teachers)
+	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }
 
 // 打乱课程顺序
@@ -229,8 +229,8 @@ func shuffleClassOrder(classes []types.Class) {
 }
 
 // 计算固定得分
-func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) {
-	fixedRules := constraint.GetFixedRules(subjects, teachers)
+func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
+	fixedRules := constraint.GetFixedRules(subjects, teachers, constraints)
 	err := classMatrix.CalcElementFixedScores(schedule, taskAllocs, fixedRules)
 	if err != nil {
 		log.Fatalf("Failed to calculate fixed scores: %v", err)
@@ -239,8 +239,8 @@ func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Sub
 }
 
 // 分配课程矩阵
-func allocateClassMatrix(classMatrix *types.ClassMatrix, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (int, error) {
-	dynamicRules := constraint.GetDynamicRules(schedule)
+func allocateClassMatrix(classMatrix *types.ClassMatrix, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) (int, error) {
+	dynamicRules := constraint.GetDynamicRules(schedule, constraints)
 	return classMatrix.Allocate(classeSNs, schedule, taskAllocs, dynamicRules)
 }
 

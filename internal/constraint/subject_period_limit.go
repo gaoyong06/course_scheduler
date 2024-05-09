@@ -12,7 +12,7 @@ import (
 // #### 同一个年级,班级,科目相同节次的排课是否超过数量限制
 // 同一个年级,班级,科目相同节次最多排课 {2}次
 var subjectPeriodLimitRule = &types.Rule{
-	Name:     "periodCount",
+	Name:     "subjectPeriodLimit",
 	Type:     "dynamic",
 	Fn:       splRuleFn,
 	Score:    0,

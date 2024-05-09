@@ -12,7 +12,7 @@ import (
 )
 
 var subjectSameDayRule = &types.Rule{
-	Name:     "subjectSameDayRule",
+	Name:     "subjectSameDay",
 	Type:     "dynamic",
 	Fn:       ssdRuleFn,
 	Score:    0,

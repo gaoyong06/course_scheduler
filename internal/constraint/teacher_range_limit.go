@@ -46,7 +46,7 @@ func GetTeacherRangeLimitRules(constraints []*TeacherRangeLimit) []*types.Rule {
 func (t *TeacherRangeLimit) genRule() *types.Rule {
 	fn := t.genConstraintFn()
 	return &types.Rule{
-		Name:     t.String(),
+		Name:     "teacherRangeLimit",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

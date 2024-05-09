@@ -43,7 +43,7 @@ func GetSubjectOrderRules(constraints []*SubjectOrder) []*types.Rule {
 func (s *SubjectOrder) genRule() *types.Rule {
 	fn := s.genConstraintFn()
 	return &types.Rule{
-		Name:     s.String(),
+		Name:     "subjectOrder",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

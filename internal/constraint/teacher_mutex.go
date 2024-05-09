@@ -41,7 +41,7 @@ func GetTeacherMutexRules(constraints []*TeacherMutex) []*types.Rule {
 func (t *TeacherMutex) genRule() *types.Rule {
 	fn := t.genConstraintFn()
 	return &types.Rule{
-		Name:     t.String(),
+		Name:     "teacherMutex",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

@@ -40,7 +40,7 @@ func GetSubjectMutexRules(constraints []*SubjectMutex) []*types.Rule {
 func (s *SubjectMutex) genRule() *types.Rule {
 	fn := s.genConstraintFn()
 	return &types.Rule{
-		Name:     s.String(),
+		Name:     "subjectMutex",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

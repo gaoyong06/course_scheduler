@@ -13,7 +13,7 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) ([]*Individual, int, int, error) {
+func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -46,14 +46,14 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			if isValid {
 
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
-				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap)
+				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraints)
+				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraints)
 				if err1 != nil || err2 != nil {
 					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
 				}
 
-				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, schedule, subjects, teachers)
-				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, schedule, subjects, teachers)
+				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, schedule, subjects, teachers, constraints)
+				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, schedule, subjects, teachers, constraints)
 
 				if err1 != nil || err2 != nil {
 					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())

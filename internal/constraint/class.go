@@ -53,7 +53,7 @@ func GetClassRules(constraints []*Class) []*types.Rule {
 func (c *Class) genRule() *types.Rule {
 	fn := c.genConstraintFn()
 	return &types.Rule{
-		Name:     c.String(),
+		Name:     "class",
 		Type:     "fixed",
 		Fn:       fn,
 		Score:    c.getScore(),

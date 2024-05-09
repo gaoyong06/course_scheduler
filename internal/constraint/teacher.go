@@ -54,7 +54,7 @@ func GetTeacherRules(teachers []*models.Teacher, constraints []*Teacher) []*type
 func (c *Teacher) genRule(teachers []*models.Teacher) *types.Rule {
 	fn := c.genConstraintFn(teachers)
 	return &types.Rule{
-		Name:     c.String(),
+		Name:     "teacher",
 		Type:     "fixed",
 		Fn:       fn,
 		Score:    c.getScore(),

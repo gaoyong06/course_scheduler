@@ -56,6 +56,22 @@ func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 	return true, nil
 }
 
+func (s *ScheduleInput) ConvertConstraints() map[string]interface{} {
+
+	constraints := make(map[string]interface{})
+	constraints["Class"] = s.ClassConstraints
+	constraints["Subject"] = s.SubjectConstraints
+	constraints["Teacher"] = s.TeacherConstraints
+	constraints["SubjectMutex"] = s.SubjectMutexConstraints
+	constraints["SubjectOrder"] = s.SubjectOrderConstraints
+	constraints["TeacherMutex"] = s.TeacherMutexConstraints
+	constraints["TeacherNoonBreak"] = s.TeacherNoonBreakConstraints
+	constraints["TeacherPeriodLimit"] = s.TeacherPeriodLimitConstraints
+	constraints["TeacherRangeLimit"] = s.TeacherRangeLimitConstraints
+
+	return constraints
+}
+
 // 加载yaml测试数据
 func LoadTestData() (*ScheduleInput, error) {
 	var config ScheduleInput

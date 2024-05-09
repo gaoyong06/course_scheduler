@@ -43,7 +43,7 @@ func GetTeacherClassLimitRules(constraints []*TeacherPeriodLimit) []*types.Rule 
 func (t *TeacherPeriodLimit) genRule() *types.Rule {
 	fn := t.genConstraintFn()
 	return &types.Rule{
-		Name:     t.String(),
+		Name:     "teacherPeriodLimit",
 		Type:     "dynamic",
 		Fn:       fn,
 		Score:    0,

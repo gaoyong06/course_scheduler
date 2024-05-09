@@ -53,7 +53,7 @@ func GetSubjectRules(subjects []*models.Subject, constraints []*Subject) []*type
 func (s *Subject) genRule(subjects []*models.Subject) *types.Rule {
 	fn := s.genConstraintFn(subjects)
 	return &types.Rule{
-		Name:     s.String(),
+		Name:     "subject",
 		Type:     "fixed",
 		Fn:       fn,
 		Score:    s.getScore(),

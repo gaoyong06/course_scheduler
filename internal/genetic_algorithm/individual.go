@@ -28,7 +28,7 @@ type Individual struct {
 // classMatrix 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Val
 // key: [9][13][9][40],
-func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (*Individual, error) {
+func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) (*Individual, error) {
 
 	// fmt.Println("================ classMatrix =====================")
 	// printClassMatrix(classMatrix)
@@ -92,7 +92,7 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 	}
 
 	// 设置适应度
-	fitness, err := individual.EvaluateFitness(classMatrix, schedule, subjects, teachers)
+	fitness, err := individual.EvaluateFitness(classMatrix, schedule, subjects, teachers, constraints)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (i *Individual) UniqueId() string {
 
 // 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
-func (i *Individual) toClassMatrix(schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) (*types.ClassMatrix, error) {
+func (i *Individual) toClassMatrix(schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*types.ClassMatrix, error) {
 	// 汇总课班集合
 	classes := types.InitClasses(teachAllocs)
 
@@ -173,8 +173,8 @@ func (i *Individual) toClassMatrix(schedule *models.Schedule, teachAllocs []*mod
 		for i, gene := range chromosome.Genes {
 
 			element := classMatrix.Elements[gene.ClassSN][gene.TeacherID][gene.VenueID][gene.TimeSlot]
-			fixedRules := constraint.GetFixedRules(subjects, teachers)
-			dynamicRules := constraint.GetDynamicRules(schedule)
+			fixedRules := constraint.GetFixedRules(subjects, teachers, constraints)
+			dynamicRules := constraint.GetDynamicRules(schedule, constraints)
 			classMatrix.UpdateElementScore(schedule, teachAllocs, element, fixedRules, dynamicRules)
 
 			// 修改基因内的约束状态信息
@@ -212,13 +212,13 @@ func (i *Individual) SortChromosomes() {
 // Fitness: 198
 // 给normalizedScore乘以100,目的是为了提升normalizedScore的重要性
 // 给subjectDispersionScore, teacherDispersionScore 乘以10, 目的是把数据归到同一个数量级和提升两者的重要度
-func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher) (int, error) {
+func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) (int, error) {
 	// Calculate the total score of the class matrix
 	totalScore := classMatrix.Score
 	// log.Printf("Total score: %d\n", totalScore)
 
-	minScore := constraint.GetMinElementScore(schedule, subjects, teachers)
-	maxScore := constraint.GetMaxElementScore(schedule, subjects, teachers)
+	minScore := constraint.GetMinElementScore(schedule, subjects, teachers, constraints)
+	maxScore := constraint.GetMaxElementScore(schedule, subjects, teachers, constraints)
 
 	// log.Printf("Min score: %d, Max score: %d\n", minScore, maxScore)
 
