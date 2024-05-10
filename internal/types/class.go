@@ -53,14 +53,16 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation) []Class {
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
 func ClassTimeSlots(schedule *models.Schedule, teacherIDs []int, venueIDs []int) []int {
 
-	var timeSlots []int
-	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	// var timeSlots []int
+	// totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
-	for i := 0; i < schedule.NumWorkdays; i++ {
-		for j := 0; j < totalClassesPerDay; j++ {
-			timeSlot := i*totalClassesPerDay + j
-			timeSlots = append(timeSlots, timeSlot)
-		}
-	}
+	// for i := 0; i < schedule.NumWorkdays; i++ {
+	// 	for j := 0; j < totalClassesPerDay; j++ {
+	// 		timeSlot := i*totalClassesPerDay + j
+	// 		timeSlots = append(timeSlots, timeSlot)
+	// 	}
+	// }
+	// return timeSlots
+	timeSlots := schedule.GenWeekTimeSlots()
 	return timeSlots
 }

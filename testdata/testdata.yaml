@@ -140,7 +140,7 @@ subject_venue_map:
 # 班级固排禁排
 # 七年级(1)班,周一,第1节,语文, 固排
 # 七年级(2)班,周二,第2节,数学, 固排
-# 七年级(1)班,周五,第8节,禁排(打扫卫生)
+# 七年级(1)班,周五,第8节,禁排(打扫卫生)-2024.5.9 规则不对
 class_constraints:
   - grade_id: 7
     class_id: 1
@@ -156,13 +156,13 @@ class_constraints:
     time_slot: 9
     limit: "fixed"
     desc: ""
-  - grade_id: 7
-    class_id: 1
-    subject_id: 0
-    teacher_id: 0
-    time_slot: 39
-    limit: "not"
-    desc: ""
+  # - grade_id: 7
+  #   class_id: 1
+  #   subject_id: 0
+  #   teacher_id: 0
+  #   time_slot: 39
+  #   limit: "not"
+  #   desc: ""
 
 # 体育 不排在上午1,2,3,4节
 subject_constraints:
