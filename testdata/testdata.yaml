@@ -166,6 +166,7 @@ class_constraints:
 
 # 副课 不排在上午1,2,3,4节
 # 英语 不排在第1节
+# 历史 固定排周一6,7节
 subject_constraints:
   - subject_group_id: 3
     subject_id: 0
@@ -292,6 +293,16 @@ subject_constraints:
     time_slot: 32    
     limit: "not"
     desc: ""
+  - subject_group_id: 0
+    subject_id: 10
+    time_slot: 6   
+    limit: "fixed"
+    desc: ""
+  - subject_group_id: 0
+    subject_id: 10
+    time_slot: 7    
+    limit: "fixed"
+    desc: ""
   
 
 # 体育和活动不排在同一天
@@ -303,7 +314,8 @@ subject_mutex_constraints:
 subject_order_constraints:
   - subject_a_id: 6
     subject_b_id: 2
-
+  - subject_a_id: 1
+    subject_b_id: 2
 
 # teacher_connected_lesson_constraints:
 #   - teacher_id: 1

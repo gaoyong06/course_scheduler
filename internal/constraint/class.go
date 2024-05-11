@@ -77,16 +77,22 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 		if err != nil {
 			return false, false, err
 		}
-		preCheckPassed := c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
-			(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 
+		preCheckPassed := false
 		isReward := false
 
+		// 固排,优先排是: 排了有奖励,不排有处罚
 		if c.Limit == "fixed" || c.Limit == "prefer" {
-			isReward = true
+			preCheckPassed := c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
+			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 		}
 
+		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if c.Limit == "not" || c.Limit == "avoid" {
+
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 			isReward = false
 		}
 

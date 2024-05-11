@@ -598,7 +598,7 @@ func (i *Individual) PrintConstraints() {
 		failedStr := strings.Join(failedConstraints, ", ")
 		passedStr := strings.Join(passedConstraints, ", ")
 
-		fmt.Printf("SN: %s, TeacherID: %d, VenueID: %d, TimeSlot: %d, Failed Constraints: [%s], Passed Constraints: [%s]\n",
+		fmt.Printf("SN: %s\tTeacherID: %d\tVenueID: %d\tTimeSlot: %d\tFailed Constraints: [%s]\tPassed Constraints: [%s]\n",
 			gene.ClassSN, gene.TeacherID, gene.VenueID, gene.TimeSlot, failedStr, passedStr)
 	}
 

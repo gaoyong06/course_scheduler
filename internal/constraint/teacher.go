@@ -85,14 +85,18 @@ func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn
 			return false, false, err
 		}
 
-		preCheckPassed := currTimeSlot == timeSlot && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
+		preCheckPassed := false
 		isReward := false
 
+		// 固排,优先排是: 排了有奖励,不排有处罚
 		if t.Limit == "fixed" || t.Limit == "prefer" {
-			isReward = true
+			preCheckPassed := currTimeSlot == timeSlot
+			isReward = preCheckPassed && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
 		}
 
+		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if t.Limit == "not" || t.Limit == "avoid" {
+			preCheckPassed = currTimeSlot == timeSlot && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
 			isReward = false
 		}
 		return preCheckPassed, isReward, nil
