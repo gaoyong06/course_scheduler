@@ -198,11 +198,6 @@ func createIndividual(classes []types.Class, classeSNs []string, schedule *model
 	copy(classesCopy, classes)
 	shuffleClassOrder(classesCopy)
 
-	// err := initClassMatrix(classMatrix, classesCopy, schedule, teachers, subjectVenueMap)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	// 初始化课程矩阵
 	err := classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
 	if err != nil {
@@ -210,12 +205,16 @@ func createIndividual(classes []types.Class, classeSNs []string, schedule *model
 	}
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 
+	// 打印课班适应性矩阵信息
+	classMatrix.PrintKeysAndLength()
+
 	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
 	_, err = allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs, constraints)
 
 	if err != nil {
 		return nil, err
 	}
+
 	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }
 
@@ -230,6 +229,7 @@ func shuffleClassOrder(classes []types.Class) {
 
 // 计算固定得分
 func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
+
 	fixedRules := constraint.GetFixedRules(subjects, teachers, constraints)
 	err := classMatrix.CalcElementFixedScores(schedule, taskAllocs, fixedRules)
 	if err != nil {

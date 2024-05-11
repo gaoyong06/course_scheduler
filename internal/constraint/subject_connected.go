@@ -8,7 +8,6 @@ package constraint
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"fmt"
 	"sort"
 )
 
@@ -33,77 +32,22 @@ func scRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *m
 	subjectID := SN.SubjectID
 
 	// 科目周课时
-	classHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
 	numWorkdays := schedule.NumWorkdays
-	preCheckPassed := classHours > numWorkdays
-
-	// if subjectID == 1 {
-	// 	fmt.Printf("classHours: %d, numWorkdays: %d, preCheckPassed: %v\n", classHours, numWorkdays, preCheckPassed)
-	// 	panic("aaaaa")
-	// }
-
-	isValid := false
+	preCheckPassed := numClassesPerWeek > numWorkdays
+	isConnected := false
 	var err error
 	if preCheckPassed {
 
 		// 检查同一科目一天安排多次是否是连堂
-		isValid, err = isSubjectConnected(classMatrix, element, schedule)
+		isConnected, err = isSubjectConnected(classMatrix, element, schedule)
 		if err != nil {
 			return false, false, err
 		}
-
-		if subjectID == 1 {
-			fmt.Printf("gradeID: %d, classID: %d, subjectID: %d, timeSlot: %d, isValid: %v\n", element.GradeID, element.ClassID, element.SubjectID, element.TimeSlot, isValid)
-		}
-
 	}
-
-	return preCheckPassed, isValid, nil
+	return preCheckPassed, isConnected, nil
 }
-
-// // 检查科目是否连续排课
-// func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
-
-// 	gradeID := element.GradeID
-// 	classID := element.ClassID
-// 	subjectID := element.SubjectID
-
-// 	// // 每天课节数
-// 	// totalClassesPerDay := schedule.GetTotalClassesPerDay()
-
-// 	// // 每周的课节数
-// 	// totalClassesPerWeek := schedule.TotalClassesPerWeek()
-
-// 	// 一周课程时间段
-// 	// weekTimeSlots := schedule.GenWeekTimeSlots()
-
-// 	subjectTimeSlots := make([]int, 0)
-// 	for sn, classMap := range classMatrix.Elements {
-// 		SN, err := types.ParseSN(sn)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		if SN.GradeID != gradeID && SN.ClassID != classID && SN.SubjectID != subjectID {
-// 			for _, teacherMap := range classMap {
-// 				for _, venueMap := range teacherMap {
-// 					for timeSlot, element := range venueMap {
-// 						if element.Val.Used == 1 {
-// 							subjectTimeSlots = append(subjectTimeSlots, timeSlot)
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	sort.Ints(subjectTimeSlots)
-// 	for i := 0; i < len(subjectTimeSlots)-1; i++ {
-// 		if subjectTimeSlots[i]+1 == subjectTimeSlots[i+1] {
-// 			return true, nil
-// 		}
-// 	}
-// 	return false, nil
-// }
 
 // 检查科目是否连续排课
 func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
@@ -115,37 +59,51 @@ func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, s
 	// 每天课节数
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	subjectTimeSlots := make([]int, 0)
+
+	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 	for sn, classMap := range classMatrix.Elements {
+
 		SN, err := types.ParseSN(sn)
 		if err != nil {
 			return false, err
 		}
-		if SN.GradeID != gradeID && SN.ClassID != classID && SN.SubjectID != subjectID {
+		if SN.GradeID != gradeID || SN.ClassID != classID || SN.SubjectID != subjectID {
 			continue
 		}
+
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
+
 				for timeSlot, element := range venueMap {
-					if element.Val.Used == 1 {
+
+					if element.Val.Used == 1 && element.GradeID == gradeID && element.ClassID == classID && element.SubjectID == subjectID {
 						subjectTimeSlots = append(subjectTimeSlots, timeSlot)
 					}
 				}
 			}
 		}
 	}
+
 	sort.Ints(subjectTimeSlots)
+	// log.Printf(" gradeID: %d, classID: %d, subjectID: %d, current subject time slots: %#v\n", gradeID, classID, subjectID, subjectTimeSlots)
+
+	dayTimeSlots := make(map[int][]int)
+	for i := 0; i < len(subjectTimeSlots); i++ {
+
+		day := subjectTimeSlots[i] / totalClassesPerDay
+		dayTimeSlots[day] = append(dayTimeSlots[day], subjectTimeSlots[i])
+	}
 
 	// 计算当前时间节点是第几天
-	day := element.TimeSlot / totalClassesPerDay
-
+	elementDay := element.TimeSlot / totalClassesPerDay
 	// 遍历同一天的时间段
-	for i := 0; i < len(subjectTimeSlots)-1; i++ {
-
-		// 获取时间段对应的天数
-		timeSlotDay := subjectTimeSlots[i] / totalClassesPerDay
-		if timeSlotDay == day && subjectTimeSlots[i]+1 == subjectTimeSlots[i+1] {
-			return true, nil
+	timeSlots := dayTimeSlots[elementDay]
+	for i := 0; i < len(timeSlots)-1; i++ {
+		if timeSlots[i]+1 != timeSlots[i+1] {
+			return false, nil
 		}
 	}
-	return false, nil
+
+	// log.Printf("elementDay: %d, timeSlots: %v\n", elementDay, timeSlots)
+	return true, nil
 }

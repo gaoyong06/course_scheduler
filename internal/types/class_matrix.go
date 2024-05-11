@@ -125,9 +125,9 @@ func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, ta
 		gradeID := SN.GradeID
 		classID := SN.ClassID
 		subjectID := SN.SubjectID
-		numClassHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-		for i := 0; i < numClassHours; i++ {
+		for i := 0; i < numClassesPerWeek; i++ {
 
 			teacherID, venueID, timeSlot, score := cm.findBestTimeSlot(sn, timeTable)
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
@@ -138,10 +138,15 @@ func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, ta
 
 				timeTable.Used[timeSlot] = true
 				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
+
+				// if sn == "1_7_1" {
+				// 	log.Printf("class matrix allocate sn: %s, teacherID: %d, venueID: %d, timeSlot: %d, score: %d\n", sn, teacherID, venueID, timeSlot, score)
+				// }
+
 				numAssignedClasses++
 			} else {
 
-				return numAssignedClasses, fmt.Errorf("class matrix allocate failed, sn: %s, current class hour: %d, subject num class hours: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassHours, teacherID, venueID, timeSlot, score)
+				return numAssignedClasses, fmt.Errorf("class matrix allocate failed, sn: %s, current class hour: %d, subject num classes per week: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassesPerWeek, teacherID, venueID, timeSlot, score)
 			}
 		}
 	}
@@ -205,7 +210,7 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 		fmt.Printf("Key: %s, Length: %d ", sn, len(teacherMap))
 		for teacherID, venueMap := range teacherMap {
 			for venueID, timeSlotMap := range venueMap {
-				fmt.Printf("teacherID: %d, %d: venueID: %d\n", teacherID, venueID, len(timeSlotMap))
+				fmt.Printf("teacherID: %d, venueID: %d: len(timeSlotMap): %d\n", teacherID, venueID, len(timeSlotMap))
 			}
 		}
 	}

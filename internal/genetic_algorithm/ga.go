@@ -37,7 +37,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 最佳个体唯一id
 	uniqueId := ""
 	// 最佳个体是否发生替换
-	// replaced := false
+	replaced := false
 	// 最优的个体
 	bestIndividual := &Individual{}
 	// 最差的个体
@@ -75,16 +75,15 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
 		// 下面的bestIndividual会发生更新,所以在这里复制一份
 		// prevBestIndividual := bestIndividual.Copy()
-		// bestIndividual, replaced, err = UpdateBest(currentPopulation, bestIndividual)
-		bestIndividual, _, _ = UpdateBest(currentPopulation, bestIndividual)
-		// if err != nil {
-		// 	log.Panic(err)
-		// }
+		bestIndividual, replaced, err = UpdateBest(currentPopulation, bestIndividual)
+		if err != nil {
+			log.Panic(err)
+		}
 
-		// // 如果 bestIndividual 被替换，则记录当前 gen 值
-		// if replaced {
-		// 	bestGen = gen
-		// }
+		// 如果 bestIndividual 被替换，则记录当前 gen 值
+		if replaced {
+			bestGen = gen
+		}
 
 		// // 评估适应度
 		// // for _, individual := range population {

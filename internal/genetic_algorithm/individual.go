@@ -217,8 +217,8 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *m
 	totalScore := classMatrix.Score
 	// log.Printf("Total score: %d\n", totalScore)
 
-	minScore := constraint.GetMinElementScore(schedule, subjects, teachers, constraints)
-	maxScore := constraint.GetMaxElementScore(schedule, subjects, teachers, constraints)
+	minScore := constraint.GetElementsMinScore(schedule, subjects, teachers, constraints)
+	maxScore := constraint.GetElementsMaxScore(schedule, subjects, teachers, constraints)
 
 	// log.Printf("Min score: %d, Max score: %d\n", minScore, maxScore)
 
