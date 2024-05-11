@@ -156,116 +156,143 @@ class_constraints:
     time_slot: 9
     limit: "fixed"
     desc: ""
-  # - grade_id: 7
-  #   class_id: 1
-  #   subject_id: 0
-  #   teacher_id: 0
-  #   time_slot: 39
-  #   limit: "not"
-  #   desc: ""
+  - grade_id: 7
+    class_id: 1
+    subject_id: 0
+    teacher_id: 0
+    time_slot: 39
+    limit: "not"
+    desc: ""
 
-# 体育 不排在上午1,2,3,4节
+# 副课 不排在上午1,2,3,4节
+# 英语 不排在第1节
 subject_constraints:
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 0
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 1
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 2
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 3
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 8
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 9
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 10
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 11
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 16
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 17
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 18
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 19
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 24
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 25
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 26
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 27
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 32
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 33
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 34
+    limit: "not"
+    desc: ""
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 35    
+    limit: "not"
+    desc: ""
   - subject_group_id: 0
-    subject_id: 6
+    subject_id: 3
     time_slot: 0
     limit: "not"
     desc: ""
   - subject_group_id: 0
-    subject_id: 6
-    time_slot: 1
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 2
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 3
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
+    subject_id: 3
     time_slot: 8
     limit: "not"
     desc: ""
   - subject_group_id: 0
-    subject_id: 6
-    time_slot: 9
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 10
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 11
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
+    subject_id: 3
     time_slot: 16
     limit: "not"
     desc: ""
   - subject_group_id: 0
-    subject_id: 6
-    time_slot: 17
+    subject_id: 3
+    time_slot: 24    
     limit: "not"
     desc: ""
   - subject_group_id: 0
-    subject_id: 6
-    time_slot: 18
+    subject_id: 3
+    time_slot: 32    
     limit: "not"
     desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 19
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 24
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 25
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 26
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 27
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 32
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 33
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 34
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 6
-    time_slot: 35    
-    limit: "not"
-    desc: ""
+  
 
 # 体育和活动不排在同一天
 subject_mutex_constraints:
@@ -288,6 +315,11 @@ teacher_constraints:
     teacher_id: 1
     time_slot: 32
     limit: "not"
+    desc: ""
+  - teacher_group_id: 0
+    teacher_id: 2
+    time_slot: 8
+    limit: "fixed"
     desc: ""
 
 

@@ -72,26 +72,26 @@ func loadClassConstraintsFromDB() []*Class {
 // 生成规则校验方法
 func (c *Class) genConstraintFn() types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
-		preCheckPassed := c.preCheck(element)
-		isValid := c.constraintCheck(element)
-		return preCheckPassed, isValid, nil
-	}
-}
 
-// 判断前置条件是否成立
-func (c *Class) preCheck(element types.Element) bool {
-	SN, err := types.ParseSN(element.ClassSN)
-	if err != nil {
-		return false
-	}
-	return c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
-}
+		SN, err := types.ParseSN(element.ClassSN)
+		if err != nil {
+			return false, false, err
+		}
+		preCheckPassed := c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+			(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 
-// 判断是否符合约束条件
-func (c *Class) constraintCheck(element types.Element) bool {
-	return (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
-		(c.TeacherID == 0 || c.TeacherID == element.TeacherID) &&
-		(c.Limit == "fixed" || c.Limit == "prefer")
+		isReward := false
+
+		if c.Limit == "fixed" || c.Limit == "prefer" {
+			isReward = true
+		}
+
+		if c.Limit == "not" || c.Limit == "avoid" {
+			isReward = false
+		}
+
+		return preCheckPassed, isReward, nil
+	}
 }
 
 // 奖励分

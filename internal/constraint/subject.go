@@ -58,8 +58,8 @@ func (s *Subject) genRule(subjects []*models.Subject) *types.Rule {
 		Fn:       fn,
 		Score:    s.getScore(),
 		Penalty:  s.getPenalty(),
-		Weight:   s.getWeight(),
-		Priority: s.getPriority(),
+		Weight:   1,
+		Priority: 1,
 	}
 }
 
@@ -73,29 +73,26 @@ func loadSubjectConstraintsFromDB() []*Subject {
 func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
-		classSN := element.GetClassSN()
-		timeSlot := element.GetTimeSlot()
+		subjectID := element.SubjectID
+		timeSlot := element.TimeSlot
 
-		SN, err := types.ParseSN(classSN)
-		if err != nil {
-			return false, false, err
-		}
-		subject, err := models.FindSubjectByID(SN.SubjectID, subjects)
+		subject, err := models.FindSubjectByID(subjectID, subjects)
 		if err != nil {
 			return false, false, err
 		}
 
-		// 判断subjectGroupID是否已经排课完成
-		gradeID := SN.GradeID
-		classID := SN.ClassID
-		isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, gradeID, classID, s.SubjectGroupID, subjects, taskAllocs)
-		if err != nil {
-			return false, false, err
+		preCheckPassed := timeSlot == s.TimeSlot && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
+		isReward := false
+
+		if s.Limit == "fixed" || s.Limit == "prefer" {
+			isReward = true
 		}
 
-		preCheckPassed := timeSlot == s.TimeSlot
-		isValid := (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == SN.SubjectID) && !isSubjectGroupScheduled
-		return preCheckPassed, isValid, nil
+		if s.Limit == "not" || s.Limit == "avoid" {
+			isReward = false
+		}
+
+		return preCheckPassed, isReward, nil
 	}
 }
 
@@ -120,150 +117,6 @@ func (s *Subject) getPenalty() int {
 	}
 	return penalty
 }
-
-// 权重
-func (s *Subject) getWeight() int {
-	return 1
-}
-
-// 优先级
-func (s *Subject) getPriority() int {
-	return 1
-}
-
-// // 14. 语数英 周一~周五 第1节 优先排
-// // 15. 语数英 周一~周五 第2节 优先排
-// // 16. 语数英 周一~周五 第3节 优先排
-// var SRule1 = &types.Rule{
-// 	Name:     "SRule1",
-// 	Type:     "fixed",
-// 	Fn:       sRule1Fn,
-// 	Score:    2,
-// 	Penalty:  0,
-// 	Weight:   1,
-// 	Priority: 1,
-// }
-
-// // 副课 安排在第1,2,3节 扣分
-// var SRule2 = &types.Rule{
-// 	Name:     "SRule2",
-// 	Type:     "fixed",
-// 	Fn:       sRule2Fn,
-// 	Score:    0,
-// 	Penalty:  2,
-// 	Weight:   1,
-// 	Priority: 2,
-// }
-
-// // 17. 主课 周一~周五 第8节 禁排
-// var SRule3 = &types.Rule{
-// 	Name:     "SRule3",
-// 	Type:     "fixed",
-// 	Fn:       sRule3Fn,
-// 	Score:    0,
-// 	Penalty:  config.MaxPenaltyScore,
-// 	Weight:   1,
-// 	Priority: 1,
-// }
-
-// // 18. 主课 周一~周五 第7节 尽量不排
-// var SRule4 = &types.Rule{
-// 	Name:     "SRule4",
-// 	Type:     "fixed",
-// 	Fn:       sRule4Fn,
-// 	Score:    0,
-// 	Penalty:  1,
-// 	Weight:   1,
-// 	Priority: 1,
-// }
-
-// // 14. 语数英 周一~周五 第1节 优先排
-// // 15. 语数英 周一~周五 第2节 优先排
-// // 16. 语数英 周一~周五 第3节 优先排
-// func sRule1Fn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
-
-// 	subjectGroupID := 1
-// 	classSN := element.GetClassSN()
-// 	timeSlot := element.GetTimeSlot()
-
-// 	SN, _ := types.ParseSN(classSN)
-// 	subject, err := models.FindSubjectByID(SN.SubjectID)
-// 	if err != nil {
-// 		return false, false, err
-// 	}
-// 	day := timeSlot/totalClassesPerDay + 1
-// 	period := timeSlot%totalClassesPerDay + 1
-
-// 	// 判断subjectGroupID是否已经排课完成
-// 	isSubjectGroupScheduled, err := isSubjectGroupScheduled(classMatrix, subjectGroupID)
-// 	if err != nil {
-// 		return false, false, err
-// 	}
-// 	preCheckPassed := (period == 1 || period == 2 || period == 3) && (day >= 1 && day <= 5)
-
-// 	// FindAvailableSubjectsByGroupID
-// 	shouldPenalize := preCheckPassed && !lo.Contains(subject.SubjectGroupIDs, subjectGroupID) && !isSubjectGroupScheduled
-
-// 	// fmt.Printf("sRule1Fn sn: %s, timeSlot: %d, subjectGroupIDs: %d\n", classSN, timeSlot, subject.SubjectGroupIDs)
-// 	return preCheckPassed, !shouldPenalize, nil
-// }
-
-// // 副课 安排在第1,2,3节 扣分
-// // 满足该条件扣分, 不满足该该条件, 不增加分数, 也不扣分
-// func sRule2Fn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
-
-// 	classSN := element.GetClassSN()
-// 	timeSlot := element.GetTimeSlot()
-
-// 	SN, _ := types.ParseSN(classSN)
-// 	subject, err := models.FindSubjectByID(SN.SubjectID)
-// 	if err != nil {
-// 		return false, false, err
-// 	}
-// 	period := timeSlot%totalClassesPerDay + 1
-
-// 	preCheckPassed := period == 1 || period == 2 || period == 3
-
-// 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 3)
-// 	return preCheckPassed, !shouldPenalize, nil
-// }
-
-// // 17. 主课 周一~周五 第8节 禁排
-// func sRule3Fn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
-
-// 	classSN := element.GetClassSN()
-// 	timeSlot := element.GetTimeSlot()
-
-// 	SN, _ := types.ParseSN(classSN)
-// 	subject, err := models.FindSubjectByID(SN.SubjectID)
-// 	if err != nil {
-// 		return false, false, err
-// 	}
-// 	period := timeSlot%totalClassesPerDay + 1
-// 	preCheckPassed := period == 8
-
-// 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
-// 	// fmt.Printf("sRule3Fn sn: %s, timeSlot: %d, shouldPenalize: %v\n", classSN, timeSlot, shouldPenalize)
-// 	return preCheckPassed, !shouldPenalize, nil
-// }
-
-// // 18. 主课 周一~周五 第7节 尽量不排
-// func sRule4Fn(classMatrix *types.ClassMatrix, element types.Element) (bool, bool, error) {
-
-// 	classSN := element.GetClassSN()
-// 	timeSlot := element.GetTimeSlot()
-
-// 	SN, _ := types.ParseSN(classSN)
-// 	subject, err := models.FindSubjectByID(SN.SubjectID)
-// 	if err != nil {
-// 		return false, false, err
-// 	}
-// 	period := timeSlot%totalClassesPerDay + 1
-// 	preCheckPassed := period == 7
-
-// 	shouldPenalize := preCheckPassed && lo.Contains(subject.SubjectGroupIDs, 2)
-// 	return preCheckPassed, !shouldPenalize, nil
-// }
 
 // 判断subjectGroupID的课程是否已经排完
 func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, gradeID, classID, subjectGroupID int, subjects []*models.Subject, taskAllocs []*models.TeachTaskAllocation) (bool, error) {
