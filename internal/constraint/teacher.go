@@ -90,7 +90,7 @@ func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if t.Limit == "fixed" || t.Limit == "prefer" {
-			preCheckPassed := currTimeSlot == timeSlot
+			preCheckPassed = currTimeSlot == timeSlot
 			isReward = preCheckPassed && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
 		}
 

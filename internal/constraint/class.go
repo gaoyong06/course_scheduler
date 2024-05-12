@@ -83,7 +83,7 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if c.Limit == "fixed" || c.Limit == "prefer" {
-			preCheckPassed := c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
 			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 		}
