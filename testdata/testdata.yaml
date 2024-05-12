@@ -137,10 +137,11 @@ subject_venue_map:
   "15_7_1": [1]
   "16_7_1": [1]
 
-# 班级固排禁排
-# 七年级(1)班,周一,第1节,语文, 固排
-# 七年级(2)班,周二,第2节,数学, 固排
-# 七年级(1)班,周五,第8节,禁排(打扫卫生)-2024.5.9 规则不对
+##### 班级固排禁排
+# 七年级(1)班 语文 周一 第1节 固排
+# 七年级 数学 周二 第2节 尽量排
+# 七年级 语文 周四 第4节 禁排
+# 七年级 英语 周三 第1节 尽量不排 
 class_constraints:
   - grade_id: 7
     class_id: 1
@@ -150,158 +151,155 @@ class_constraints:
     limit: "fixed"
     desc: ""
   - grade_id: 7
-    class_id: 2
+    class_id: 0
     subject_id: 2
     teacher_id: 2
     time_slot: 9
-    limit: "fixed"
+    limit: "prefer"
     desc: ""
   - grade_id: 7
-    class_id: 1
-    subject_id: 0
-    teacher_id: 0
-    time_slot: 39
-    limit: "not"
-    desc: ""
-
-# 副课 不排在上午1,2,3,4节
-# 英语 不排在第1节
-# 历史 固定排周一6,7节
-subject_constraints:
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 0
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 1
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 2
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 3
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 8
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 9
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 10
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 11
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 16
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 17
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 18
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 19
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 24
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 25
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
-    time_slot: 26
-    limit: "not"
-    desc: ""
-  - subject_group_id: 3
-    subject_id: 0
+    class_id: 0
+    subject_id: 1
+    teacher_id: 1
     time_slot: 27
     limit: "not"
     desc: ""
-  - subject_group_id: 3
+  - grade_id: 7
+    class_id: 0
+    subject_id: 3
+    teacher_id: 3
+    time_slot: 16
+    limit: "avoid"
+    desc: ""    
+
+# 语数英 周一~周五, 第 1,2,3 节 优先排
+# 主课 周一~周五, 第 8 节 禁排 
+# 副课 周一~周五, 第 7 节 尽量不排
+subject_constraints:
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 0
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 1
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 2
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 8
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 9
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 10
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 16
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 17
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 18
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 24
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 25
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
+    subject_id: 0
+    time_slot: 26
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 1
     subject_id: 0
     time_slot: 32
-    limit: "not"
+    limit: "prefer"
     desc: ""
-  - subject_group_id: 3
+  - subject_group_id: 1
     subject_id: 0
     time_slot: 33
-    limit: "not"
+    limit: "prefer"
     desc: ""
-  - subject_group_id: 3
+  - subject_group_id: 1
     subject_id: 0
     time_slot: 34
+    limit: "prefer"
+    desc: ""
+  - subject_group_id: 2
+    subject_id: 0
+    time_slot: 7
+    limit: "not"
+    desc: ""
+  - subject_group_id: 2
+    subject_id: 0
+    time_slot: 15
+    limit: "not"
+    desc: ""
+  - subject_group_id: 2
+    subject_id: 0
+    time_slot: 23
+    limit: "not"
+    desc: ""
+  - subject_group_id: 2
+    subject_id: 0
+    time_slot: 31
+    limit: "not"
+    desc: ""
+  - subject_group_id: 2
+    subject_id: 0
+    time_slot: 39    
     limit: "not"
     desc: ""
   - subject_group_id: 3
     subject_id: 0
-    time_slot: 35    
-    limit: "not"
+    time_slot: 6
+    limit: "avoid"
     desc: ""
-  - subject_group_id: 0
-    subject_id: 3
-    time_slot: 0
-    limit: "not"
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 14
+    limit: "avoid"
     desc: ""
-  - subject_group_id: 0
-    subject_id: 3
-    time_slot: 8
-    limit: "not"
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 22
+    limit: "avoid"
     desc: ""
-  - subject_group_id: 0
-    subject_id: 3
-    time_slot: 16
-    limit: "not"
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 30    
+    limit: "avoid"
     desc: ""
-  - subject_group_id: 0
-    subject_id: 3
-    time_slot: 24    
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 3
-    time_slot: 32    
-    limit: "not"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 10
-    time_slot: 6   
-    limit: "fixed"
-    desc: ""
-  - subject_group_id: 0
-    subject_id: 10
-    time_slot: 7    
-    limit: "fixed"
+  - subject_group_id: 3
+    subject_id: 0
+    time_slot: 38    
+    limit: "avoid"
     desc: ""
   
 
@@ -314,54 +312,69 @@ subject_mutex_constraints:
 subject_order_constraints:
   - subject_a_id: 6
     subject_b_id: 2
-  - subject_a_id: 1
-    subject_b_id: 2
+
 
 # teacher_connected_lesson_constraints:
 #   - teacher_id: 1
 #   - teacher_id: 2
 
-# 王老师(语文) 周五 第1节 禁排
+# 教师固排禁排
+# 数学组 周一 第4节 禁排
+# 刘老师 周二 第4节 禁排
+# 王老师 周三 第2节 固排
 teacher_constraints:
-  - teacher_group_id: 0
-    teacher_id: 1
-    time_slot: 32
+  - teacher_group_id: 2
+    teacher_id: 0
+    time_slot: 3
     limit: "not"
     desc: ""
   - teacher_group_id: 0
-    teacher_id: 2
-    time_slot: 8
-    limit: "fixed"
+    teacher_id: 3
+    time_slot: 11
+    limit: "not"
     desc: ""
+  - teacher_group_id: 0
+    teacher_id: 1
+    time_slot: 17
+    limit: "fixed"
+    desc: ""    
 
 
-# 英语课教师第4节最多3次课
-# 体育课教师第5节最多1次课
+# 教师节数限制
+# 李老师(数学)  上午第 4 节  3 次
+# 刘老师(英语)  上午第 4 节  3 次
 teacher_period_limit_constraints:
-  - teacher_id: 1
-    period: 0
-    max_classes_count: 1
   - teacher_id: 2
-    period: 1
-    max_classes_count: 1
+    period: 3
+    max_classes_count: 3
+  - teacher_id: 3
+    period: 3
+    max_classes_count: 3
 
-# 语文老师和生物老师不同时上课
+# 教师互斥限制
+# 王老师(语文) 马老师(美术) 不同时上课
+# 李老师(数学) 黄老师(体育) 不同时上课
 teacher_mutex_constraints:
   - teacher_a_id: 1
-    teacher_b_id: 11
+    teacher_b_id: 5
+  - teacher_a_id: 2
+    teacher_b_id: 6
 
-
+# 教师不跨中午
+# 王老师(语文)
+# 李老师(数学)
 teacher_noon_break_constraints:
   - teacher_id: 1
   - teacher_id: 2
-  - teacher_id: 3
 
-
+# 教师时间段限制
+# 黄老师(生物) 上午 最多2节
+# 体育(王成思) 下午 最多3节
 teacher_range_limit_constraints:
-  - teacher_id: 1
+  - teacher_id: 6
     Range: "forenoon"
     max_classes_count: 2
-  - teacher_id: 2
+  - teacher_id: 8
     Range: "afternoon"
     max_classes_count: 3
 

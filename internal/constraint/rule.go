@@ -4,7 +4,6 @@ package constraint
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"fmt"
 	"sort"
 )
 
@@ -159,7 +158,6 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 // 获取所有元素的最大得分
 func GetElementsMaxScore(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) int {
 
-	fmt.Println("获取所有元素的最大得分")
 	rules := append(GetFixedRules(subjects, teachers, constraints), GetDynamicRules(schedule, constraints)...)
 	maxScore := 0
 	for _, rule := range rules {
@@ -171,7 +169,6 @@ func GetElementsMaxScore(schedule *models.Schedule, subjects []*models.Subject, 
 // 获取所有元素的最小得分
 func GetElementsMinScore(schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) int {
 
-	fmt.Println("获取所有元素的最小得分")
 	rules := append(GetFixedRules(subjects, teachers, constraints), GetDynamicRules(schedule, constraints)...)
 	minScore := 0
 

@@ -17,7 +17,7 @@ var subjectSameDayRule = &types.Rule{
 	Fn:       ssdRuleFn,
 	Score:    0,
 	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
+	Weight:   2,
 	Priority: 1,
 }
 
