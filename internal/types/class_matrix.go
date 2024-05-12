@@ -53,17 +53,17 @@ func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers
 
 		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
 		if len(teacherIDs) == 0 {
-			return fmt.Errorf("no teacher available for class %d-%d-%d", gradeID, classID, subjectID)
+			return fmt.Errorf("no teacher available for class %d_%d_%d", subjectID, gradeID, classID)
 		}
 
 		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, subjectVenueMap)
 		if len(venueIDs) == 0 {
-			return fmt.Errorf("no venue available for class %d-%d-%d", gradeID, classID, subjectID)
+			return fmt.Errorf("no venue available for class %d_%d_%d", subjectID, gradeID, classID)
 		}
 
 		timeSlots := ClassTimeSlots(schedule, teacherIDs, venueIDs)
 		if len(timeSlots) == 0 {
-			return fmt.Errorf("no time slot available for class %d-%d-%d", gradeID, classID, subjectID)
+			return fmt.Errorf("no time slot available for class %d_%d_%d", subjectID, gradeID, classID)
 		}
 
 		sn := class.SN.Generate()

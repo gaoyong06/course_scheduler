@@ -6,6 +6,8 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // ###### 教师不跨中午约束
@@ -61,38 +63,64 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
+		totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
 		teacherID := t.TeacherID
-		currTeacherID := element.GetTeacherID()
-		preCheckPassed := currTeacherID == teacherID
+		currTeacherID := element.TeacherID
+		currTimeSlot := element.TimeSlot
+		currPeriod := currTimeSlot % totalClassesPerDay
 
-		shouldPenalize := false
+		// 上午
+		_, forenoonEndPeriod := schedule.GetPeriodWithRange("forenoon")
+		// 下午
+		afternoonStartPeriod, _ := schedule.GetPeriodWithRange("afternoon")
+		preCheckPassed := currTeacherID == teacherID && (currPeriod == forenoonEndPeriod || currPeriod == afternoonStartPeriod)
+		isReward := false
 		if preCheckPassed {
-
-			// 上午
-			_, forenoonEndPeriod := schedule.GetPeriodWithRange("forenoon")
-			// 下午
-			afternoonStartPeriod, _ := schedule.GetPeriodWithRange("afternoon")
-			shouldPenalize = isTeacherInBothPeriods(teacherID, forenoonEndPeriod, afternoonStartPeriod, classMatrix)
+			isReward = !isTeacherInBothPeriods(element, teacherID, forenoonEndPeriod, afternoonStartPeriod, classMatrix, schedule)
 		}
 
-		return preCheckPassed, !shouldPenalize, nil
+		return preCheckPassed, isReward, nil
 	}
 }
 
 // 判断教师是否在两个节次都有课
-func isTeacherInBothPeriods(teacherID int, period1, period2 int, classMatrix *types.ClassMatrix) bool {
-	for _, classMap := range classMatrix.Elements {
-		for id, teacherMap := range classMap {
-			if id == teacherID {
-				for _, periodMap := range teacherMap {
-					if element1, ok := periodMap[period1]; ok && element1.Val.Used == 1 {
-						if element2, ok := periodMap[period2]; ok && element2.Val.Used == 1 {
-							return true
+func isTeacherInBothPeriods(element types.Element, teacherID int, period1, period2 int, classMatrix *types.ClassMatrix, schedule *models.Schedule) bool {
+
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	elementDay := element.TimeSlot / totalClassesPerDay
+	dayPeriodCount := calcTeacherDayClasses(classMatrix, teacherID, schedule)
+
+	if periods, ok := dayPeriodCount[elementDay]; ok {
+		if lo.Contains(periods, period1) && lo.Contains(periods, period2) {
+			return true
+		}
+	}
+	return false
+}
+
+// countTeacherPeriodClasses 计算老师每天的排课节数列表
+func calcTeacherDayClasses(classMatrix *types.ClassMatrix, teacherID int, schedule *models.Schedule) map[int][]int {
+
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	// key: 天, val: 节次列表
+	dayPeriodCount := make(map[int][]int)
+
+	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
+	for _, teacherMap := range classMatrix.Elements {
+		for id, venueMap := range teacherMap {
+			if teacherID == id {
+				for _, timeSlotMap := range venueMap {
+					for timeSlot, element := range timeSlotMap {
+						if element.Val.Used == 1 {
+							period := timeSlot % totalClassesPerDay
+							day := timeSlot / totalClassesPerDay
+							dayPeriodCount[day] = append(dayPeriodCount[day], period)
 						}
 					}
 				}
 			}
 		}
 	}
-	return false
+	return dayPeriodCount
 }

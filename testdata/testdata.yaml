@@ -354,6 +354,8 @@ teacher_mutex_constraints:
 teacher_noon_break_constraints:
   - teacher_id: 1
   - teacher_id: 2
+  - teacher_id: 3
+
 
 teacher_range_limit_constraints:
   - teacher_id: 1

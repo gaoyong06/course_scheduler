@@ -26,29 +26,31 @@ func (s *Schedule) GetTotalClassesPerDay() int {
 	return s.NumMorningReadingClasses + s.NumForenoonClasses + s.NumAfternoonClasses + s.NumNightClasses
 }
 
-// 根据时间区间获取每天的节次值
+// 根据时间区间获取每天的节次值(前闭后开)
 // startPeriod 起始节次
 // endPeriod 截止节次
+// startPeriod, endPeriod 前闭后闭, -1 表示不存在
 func (s *Schedule) GetPeriodWithRange(r string) (int, int) {
-	timeRanges := map[string]int{
-		"morning_reading": s.NumMorningReadingClasses,
-		"forenoon":        s.NumForenoonClasses,
-		"afternoon":       s.NumAfternoonClasses,
-		"night":           s.NumNightClasses,
+	timeRanges := []struct {
+		name       string
+		numClasses int
+	}{
+		{"morning_reading", s.NumMorningReadingClasses},
+		{"forenoon", s.NumForenoonClasses},
+		{"afternoon", s.NumAfternoonClasses},
+		{"night", s.NumNightClasses},
 	}
 
 	totalClasses := 0
-	startPeriod, endPeriod := 0, 0
+	startPeriod, endPeriod := -1, -1
 
-	for rangeName, numClasses := range timeRanges {
-		if rangeName == r {
-			if numClasses > 0 {
-				startPeriod = totalClasses
-				endPeriod = startPeriod + numClasses - 1
-			}
+	for _, rangeInfo := range timeRanges {
+		if rangeInfo.name == r && rangeInfo.numClasses > 0 {
+			startPeriod = totalClasses
+			endPeriod = startPeriod + rangeInfo.numClasses - 1
 			break
 		}
-		totalClasses += numClasses
+		totalClasses += rangeInfo.numClasses
 	}
 
 	return startPeriod, endPeriod
