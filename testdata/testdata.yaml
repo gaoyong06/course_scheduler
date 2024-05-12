@@ -336,14 +336,14 @@ teacher_constraints:
 
 
 # 英语课教师第4节最多3次课
-# 体育课教师第5节最多3次课
+# 体育课教师第5节最多1次课
 teacher_period_limit_constraints:
-  - teacher_id: 3
-    period: 4
-    max_classes_count: 3
-  - teacher_id: 6
-    period: 5
-    max_classes_count: 3
+  - teacher_id: 1
+    period: 0
+    max_classes_count: 1
+  - teacher_id: 2
+    period: 1
+    max_classes_count: 1
 
 # 语文老师和生物老师不同时上课
 teacher_mutex_constraints:

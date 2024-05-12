@@ -88,16 +88,18 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	count := 0
-	for _, classMap := range classMatrix.Elements {
-		for id, teacherMap := range classMap {
+
+	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
+	for _, teacherMap := range classMatrix.Elements {
+		for id, venueMap := range teacherMap {
 			if teacherID == id {
-				for _, timeSlotMap := range teacherMap {
-					if timeSlotMap == nil {
-						continue
-					}
+				for _, timeSlotMap := range venueMap {
 					for timeSlot, element := range timeSlotMap {
-						if element.Val.Used == 1 && timeSlot%totalClassesPerDay+1 == period {
-							count++
+						if element.Val.Used == 1 {
+							elementPeriod := timeSlot % totalClassesPerDay
+							if elementPeriod == period {
+								count++
+							}
 						}
 					}
 				}
