@@ -1,7 +1,7 @@
 package types
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"fmt"
 )
 
@@ -20,30 +20,25 @@ func (c *Class) String() string {
 }
 
 // 初始化课班
-func InitClasses() []Class {
+func InitClasses(teachAllocs []*models.TeachTaskAllocation) []Class {
 
 	var classes []Class
-	// subjects := models.GetSubjects()
 
 	// 这里根据年级,班级,科目生成课班
-	for i := 0; i < config.NumGrades; i++ {
-		for j := 0; j < config.NumClassesPreGrade; j++ {
-			for k := 0; k < config.NumSubjects; k++ {
+	for _, task := range teachAllocs {
 
-				subjectID := k + 1
-				gradeID := i + 1
-				classID := j + 1
+		subjectID := task.SubjectID
+		gradeID := task.GradeID
+		classID := task.ClassID
 
-				class := Class{
-					SubjectID: subjectID,
-					GradeID:   gradeID,
-					ClassID:   classID,
-					SN:        SN{SubjectID: subjectID, GradeID: gradeID, ClassID: classID},
-					// Name:      fmt.Sprintf("%d年级(%d)班 %s", gradeID, classID, subjects[k].Name),
-				}
-				classes = append(classes, class)
-			}
+		class := Class{
+			SubjectID: subjectID,
+			GradeID:   gradeID,
+			ClassID:   classID,
+			SN:        SN{SubjectID: subjectID, GradeID: gradeID, ClassID: classID},
+			Name:      fmt.Sprintf("gradeID: %d, classID: %d, subjectID: %d", gradeID, classID, subjectID),
 		}
+		classes = append(classes, class)
 	}
 	return classes
 }
@@ -56,14 +51,18 @@ func InitClasses() []Class {
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func ClassTimeSlots(teacherIDs []int, venueIDs []int) []int {
+func ClassTimeSlots(schedule *models.Schedule, teacherIDs []int, venueIDs []int) []int {
 
-	var timeSlots []int
-	for i := 0; i < config.NumDays; i++ {
-		for j := 0; j < config.NumClasses; j++ {
-			timeSlot := i*config.NumClasses + j
-			timeSlots = append(timeSlots, timeSlot)
-		}
-	}
+	// var timeSlots []int
+	// totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
+	// for i := 0; i < schedule.NumWorkdays; i++ {
+	// 	for j := 0; j < totalClassesPerDay; j++ {
+	// 		timeSlot := i*totalClassesPerDay + j
+	// 		timeSlots = append(timeSlots, timeSlot)
+	// 	}
+	// }
+	// return timeSlots
+	timeSlots := schedule.GenWeekTimeSlots()
 	return timeSlots
 }

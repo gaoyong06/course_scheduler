@@ -1,9 +1,7 @@
 // time_table.go
 package types
 
-import (
-	"course_scheduler/config"
-)
+import "course_scheduler/internal/models"
 
 // 时间表
 type TimeTable struct {
@@ -12,13 +10,15 @@ type TimeTable struct {
 }
 
 // 初始化时间表
-func initTimeTable() *TimeTable {
+func initTimeTable(schedule *models.Schedule) *TimeTable {
 
 	var timeSlots []int
 	used := make(map[int]bool)
-	for i := 0; i < config.NumDays; i++ {
-		for j := 0; j < config.NumClasses; j++ {
-			timeSlot := i*config.NumClasses + j
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
+	for i := 0; i < schedule.NumWorkdays; i++ {
+		for j := 0; j < totalClassesPerDay; j++ {
+			timeSlot := i*totalClassesPerDay + j
 			used[timeSlot] = false
 			timeSlots = append(timeSlots, timeSlot)
 		}

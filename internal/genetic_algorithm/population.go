@@ -4,15 +4,15 @@ package genetic_algorithm
 import (
 	"course_scheduler/config"
 	"course_scheduler/internal/constraint"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"fmt"
 	"log"
 	"math/rand"
 	"sort"
 )
 
 // 初始化种群
-func InitPopulation(classes []types.Class, classHours map[int]int, populationSize int) ([]*Individual, error) {
+func InitPopulation(classes []types.Class, populationSize int, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, error) {
 
 	population := make([]*Individual, populationSize)
 	errChan := make(chan error, populationSize)
@@ -26,7 +26,7 @@ func InitPopulation(classes []types.Class, classHours map[int]int, populationSiz
 		go func(i int) {
 			log.Printf("Initializing individual %d\n", i+1)
 
-			individual, err := createIndividual(classes, classSNs, classHours)
+			individual, err := createIndividual(classes, classSNs, schedule, taskAllocs, subjects, teachers, subjectVenueMap, constraints)
 			if err != nil {
 				errChan <- err
 				return
@@ -102,6 +102,65 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 	return bestIndividual, replaced, nil
 }
 
+// 获取质量最优的个体,适应度得分最高的个体
+func GetBestIndividual(population []*Individual) *Individual {
+
+	// 获取适应度得分最低的个体作为最优解
+	sort.Slice(population, func(i, j int) bool {
+		return population[i].Fitness > population[j].Fitness
+	})
+	bestIndividual := population[0]
+
+	return bestIndividual
+}
+
+// 获取质量最差的个体,适应度得分最低的个体
+func GetWorstIndividual(population []*Individual) *Individual {
+
+	// 获取适应度得分最高的个体作为最差解
+	sort.Slice(population, func(i, j int) bool {
+		return population[i].Fitness < population[j].Fitness
+	})
+	worstIndividual := population[0]
+	return worstIndividual
+}
+
+// IsSatIndividual 检查是否找到满意的解
+func IsSatIndividual(population []*Individual) bool {
+	// 在这里实现你的检查逻辑
+	// 检查种群中是否有满意的解，根据具体的业务逻辑进行判断
+	// 如果找到满意的解则返回 true，否则返回 false
+	// 示例逻辑：如果种群中最优个体的适应度已经满足某个阈值，则认为找到了满意的解
+	bestIndividual := GetBestIndividual(population)
+	return bestIndividual.Fitness >= config.TargetFitness
+}
+
+// HasImproved 判断种群是否有改进
+// prevBestIndividual 父种群中最优的个体
+// population 当前种群
+func HasImproved(prevBestIndividual *Individual, population []*Individual) bool {
+
+	prevBestFitness := prevBestIndividual.Fitness
+	for _, individual := range population {
+
+		// 如果有更优秀的个体，则种群有改进
+		if individual.Fitness > prevBestFitness {
+			return true
+		}
+	}
+	return false
+}
+
+// 计算平均适应度值
+func CalcAvgFitness(generation int, population []*Individual) float64 {
+	var totalFitness float64
+	for _, individual := range population {
+		totalFitness += float64(individual.Fitness)
+	}
+	averageFitness := totalFitness / float64(len(population))
+	return averageFitness
+}
+
 // countDuplicates 种群中相同个体的数量
 func CountDuplicates(population []*Individual) int {
 	duplicates := checkDuplicates(population)
@@ -130,7 +189,7 @@ func CheckConflicts(population []*Individual) bool {
 // ============================================
 
 // 创建个体
-func createIndividual(classes []types.Class, classeSNs []string, classHours map[int]int) (*Individual, error) {
+func createIndividual(classes []types.Class, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
 
 	classMatrix := types.NewClassMatrix()
 
@@ -139,18 +198,24 @@ func createIndividual(classes []types.Class, classeSNs []string, classHours map[
 	copy(classesCopy, classes)
 	shuffleClassOrder(classesCopy)
 
-	err := initClassMatrix(classMatrix, classesCopy)
+	// 初始化课程矩阵
+	err := classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
+
+	// 打印课班适应性矩阵信息
+	classMatrix.PrintKeysAndLength()
+
+	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
+	_, err = allocateClassMatrix(classMatrix, classeSNs, schedule, taskAllocs, constraints)
+
 	if err != nil {
 		return nil, err
 	}
 
-	calculateFixedScores(classMatrix)
-	_, err = allocateClassMatrix(classMatrix, classeSNs, classHours)
-
-	if err != nil {
-		return nil, err
-	}
-	return newIndividual(classMatrix, classHours)
+	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }
 
 // 打乱课程顺序
@@ -162,22 +227,11 @@ func shuffleClassOrder(classes []types.Class) {
 	log.Println("Class order shuffled")
 }
 
-// 初始化课程矩阵
-func initClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class) error {
-
-	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
-	if len(classes) != count {
-		return fmt.Errorf("failed to initialize class matrix: expected %d classes, got %d", count, len(classes))
-	}
-	classMatrix.Init(classes)
-	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
-	return nil
-}
-
 // 计算固定得分
-func calculateFixedScores(classMatrix *types.ClassMatrix) {
-	fixedRules := constraint.GetFixedRules()
-	err := classMatrix.CalcElementFixedScores(fixedRules)
+func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
+
+	fixedRules := constraint.GetFixedRules(subjects, teachers, constraints)
+	err := classMatrix.CalcElementFixedScores(schedule, taskAllocs, fixedRules)
 	if err != nil {
 		log.Fatalf("Failed to calculate fixed scores: %v", err)
 	}
@@ -185,9 +239,9 @@ func calculateFixedScores(classMatrix *types.ClassMatrix) {
 }
 
 // 分配课程矩阵
-func allocateClassMatrix(classMatrix *types.ClassMatrix, classeSNs []string, classHours map[int]int) (int, error) {
-	dynamicRules := constraint.GetDynamicRules()
-	return classMatrix.Allocate(classeSNs, classHours, dynamicRules)
+func allocateClassMatrix(classMatrix *types.ClassMatrix, classeSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) (int, error) {
+	dynamicRules := constraint.GetDynamicRules(schedule, constraints)
+	return classMatrix.Allocate(classeSNs, schedule, taskAllocs, dynamicRules)
 }
 
 // checkDuplicates 种群中重复个体的映射，以其唯一ID为键

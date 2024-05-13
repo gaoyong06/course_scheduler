@@ -1,4 +1,5 @@
 // 科目课时小于天数,禁止同一天排多次相同科目的课
+// 系统约束
 // 这个约束需要根据当前已排的课程情况来判断是否满足约束。例如，在排课过程中，如果已经为某一天排好了一节语文课，那么在继续为这一天排课时，就需要考虑到这个约束，避免再为这一天排另一节语文课。
 // 因此，这个约束需要在排课过程中动态地检查和更新，因此它是一个动态约束条件
 
@@ -10,59 +11,57 @@ import (
 	"course_scheduler/internal/types"
 )
 
-var SSDRule1 = &types.Rule{
-	Name:     "SSDRule1",
+var subjectSameDayRule = &types.Rule{
+	Name:     "subjectSameDay",
 	Type:     "dynamic",
-	Fn:       ssdRule1Fn,
+	Fn:       ssdRuleFn,
 	Score:    0,
 	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
+	Weight:   2,
 	Priority: 1,
 }
 
 // 科目课时小于天数,禁止同一天排多次相同科目的课
-func ssdRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	// fmt.Printf("---> ssdRule1Fn %d", element.TimeSlot)
+func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlot := element.GetTimeSlot()
+	numWorkdays := schedule.NumWorkdays
 
 	SN, _ := types.ParseSN(classSN)
+
+	gradeID := SN.GradeID
+	classID := SN.ClassID
 	subjectID := SN.SubjectID
 
-	// 周课时初始化
-	classHours := models.GetClassHours()
+	// 科目周课时
+	classHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-	preCheckPassed := classHours[subjectID] <= config.NumDays
+	preCheckPassed := classHours <= numWorkdays
 
 	shouldPenalize := false
 	if preCheckPassed {
 
 		// 检查同一天是否安排科目的排课
-		ret := isSubjectSameDay(classMatrix, classSN, timeSlot)
-
-		// if element.ClassSN == "1_1_1" {
-		// 	fmt.Printf("ssdRule1Fn element.TimeSlot: %d\n", element.TimeSlot)
-		// }
-
+		ret := isSubjectSameDay(classMatrix, classSN, timeSlot, schedule)
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 检查同一科目是否在同一天已经排课
-func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int) bool {
+func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int, schedule *models.Schedule) bool {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	count := 0
-	day := timeSlot / config.NumClasses
+	day := timeSlot / totalClassesPerDay
 
 	for _, teacherMap := range classMatrix.Elements[sn] {
 		for _, venueMap := range teacherMap {
 			for timeSlot1, element := range venueMap {
 
 				if element.Val.Used == 1 && timeSlot != timeSlot1 {
-					day1 := timeSlot1 / config.NumClasses
+					day1 := timeSlot1 / totalClassesPerDay
 					if day == day1 {
 						count++
 					}

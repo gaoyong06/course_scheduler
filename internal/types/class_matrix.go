@@ -2,8 +2,8 @@
 package types
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -31,47 +31,69 @@ func NewClassMatrix() *ClassMatrix {
 // 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 // key: [9][13][9][40]
-func (cm *ClassMatrix) Init(classes []Class) {
+func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers []*models.Teacher, subjectVenueMap map[string][]int) error {
 
-	for i := 0; i < len(classes); i++ {
-		class := classes[i]
+	if len(classes) == 0 {
+		return errors.New("classes cannot be empty")
+	}
+	if schedule == nil {
+		return errors.New("schedule cannot be nil")
+	}
+	if len(teachers) == 0 {
+		return errors.New("teachers cannot be empty")
+	}
+	if len(subjectVenueMap) == 0 {
+		return errors.New("subjectVenueMap cannot be empty")
+	}
 
+	for _, class := range classes {
 		subjectID := class.SN.SubjectID
 		gradeID := class.SN.GradeID
 		classID := class.SN.ClassID
 
-		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID)
-		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID)
-		timeSlots := ClassTimeSlots(teacherIDs, venueIDs)
+		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
+		if len(teacherIDs) == 0 {
+			return fmt.Errorf("no teacher available for class %d_%d_%d", subjectID, gradeID, classID)
+		}
+
+		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, subjectVenueMap)
+		if len(venueIDs) == 0 {
+			return fmt.Errorf("no venue available for class %d_%d_%d", subjectID, gradeID, classID)
+		}
+
+		timeSlots := ClassTimeSlots(schedule, teacherIDs, venueIDs)
+		if len(timeSlots) == 0 {
+			return fmt.Errorf("no time slot available for class %d_%d_%d", subjectID, gradeID, classID)
+		}
+
 		sn := class.SN.Generate()
 
 		cm.Elements[sn] = make(map[int]map[int]map[int]*Element)
-		for j := 0; j < len(teacherIDs); j++ {
-			teacherID := teacherIDs[j]
+		for _, teacherID := range teacherIDs {
 			cm.Elements[sn][teacherID] = make(map[int]map[int]*Element)
-			for k := 0; k < len(venueIDs); k++ {
-				venueID := venueIDs[k]
+			for _, venueID := range venueIDs {
 				cm.Elements[sn][teacherID][venueID] = make(map[int]*Element)
-				for l := 0; l < len(timeSlots); l++ {
-					timeSlot := timeSlots[l]
+				for _, timeSlot := range timeSlots {
 					element := NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlot)
 					cm.Elements[sn][teacherID][venueID][timeSlot] = element
 				}
 			}
 		}
 	}
+
+	return nil
 }
 
 // 计算课班适应性矩阵的所有元素, 固定约束条件下的得分
-func (cm *ClassMatrix) CalcElementFixedScores(rules []*Rule) error {
-	return cm.updateElementScores(cm.calcElementFixedScore, rules)
+func (cm *ClassMatrix) CalcElementFixedScores(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) error {
+	return cm.updateElementScores(cm.calcElementFixedScore, schedule, taskAllocs, rules)
 }
 
 // 计算一个元素的得分(含固定约束和动态约束)
-func (cm *ClassMatrix) UpdateElementScore(element *Element, fixedRules, dynamicRules []*Rule) {
+func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, element *Element, fixedRules, dynamicRules []*Rule) {
 
-	fixedVal := cm.calcElementFixedScore(element, fixedRules)
-	dynamicVal := cm.calcElementDynamicScore(element, dynamicRules)
+	fixedVal := cm.calcElementFixedScore(schedule, taskAllocs, *element, fixedRules)
+	dynamicVal := cm.calcElementDynamicScore(schedule, taskAllocs, *element, dynamicRules)
 
 	// 更新固定约束得分
 	element.Val.ScoreInfo.FixedFailed = fixedVal.ScoreInfo.FixedFailed
@@ -89,10 +111,10 @@ func (cm *ClassMatrix) UpdateElementScore(element *Element, fixedRules, dynamicR
 
 // 根据班级适应性矩阵分配课时
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
-func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules []*Rule) (int, error) {
+func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) (int, error) {
 
 	var numAssignedClasses int
-	timeTable := initTimeTable()
+	timeTable := initTimeTable(schedule)
 
 	for _, sn := range classSNs {
 		SN, err := ParseSN(sn)
@@ -100,10 +122,12 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 			return numAssignedClasses, err
 		}
 
+		gradeID := SN.GradeID
+		classID := SN.ClassID
 		subjectID := SN.SubjectID
-		numClassHours := classHours[subjectID]
+		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-		for i := 0; i < numClassHours; i++ {
+		for i := 0; i < numClassesPerWeek; i++ {
 
 			teacherID, venueID, timeSlot, score := cm.findBestTimeSlot(sn, timeTable)
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
@@ -113,11 +137,12 @@ func (cm *ClassMatrix) Allocate(classSNs []string, classHours map[int]int, rules
 				cm.Elements[sn][teacherID][venueID][timeSlot].Val = temp
 
 				timeTable.Used[timeSlot] = true
-				cm.updateElementDynamicScores(rules)
+				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
 
 				numAssignedClasses++
 			} else {
-				return numAssignedClasses, fmt.Errorf("failed, sn: %s, current class hour: %d, subject num class hours: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassHours, teacherID, venueID, timeSlot, score)
+
+				return numAssignedClasses, fmt.Errorf("class matrix allocate failed, sn: %s, current class hour: %d, subject num classes per week: %d, teacher ID: %d, venue ID: %d, time slot: %d, score: %d", sn, i+1, numClassesPerWeek, teacherID, venueID, timeSlot, score)
 			}
 		}
 	}
@@ -181,7 +206,7 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 		fmt.Printf("Key: %s, Length: %d ", sn, len(teacherMap))
 		for teacherID, venueMap := range teacherMap {
 			for venueID, timeSlotMap := range venueMap {
-				fmt.Printf("teacherID: %d, %d: venueID: %d\n", teacherID, venueID, len(timeSlotMap))
+				fmt.Printf("teacherID: %d, venueID: %d: len(timeSlotMap): %d\n", teacherID, venueID, len(timeSlotMap))
 			}
 		}
 	}
@@ -217,17 +242,17 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 }
 
 // 计算固定约束条件得分
-func (cm *ClassMatrix) calcElementFixedScore(element ClassUnit, rules []*Rule) Val {
-	return cm.calcElementScore(element, rules, "fixed")
+func (cm *ClassMatrix) calcElementFixedScore(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, element Element, rules []*Rule) Val {
+	return cm.calcElementScore(schedule, taskAllocs, element, rules, "fixed")
 }
 
 // 计算动态约束条件得分
-func (cm *ClassMatrix) calcElementDynamicScore(element ClassUnit, rules []*Rule) Val {
-	return cm.calcElementScore(element, rules, "dynamic")
+func (cm *ClassMatrix) calcElementDynamicScore(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, element Element, rules []*Rule) Val {
+	return cm.calcElementScore(schedule, taskAllocs, element, rules, "dynamic")
 }
 
 // 计算元素的约束条件得分
-func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreType string) Val {
+func (cm *ClassMatrix) calcElementScore(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, element Element, rules []*Rule, scoreType string) Val {
 
 	score := 0
 	penalty := 0
@@ -251,7 +276,7 @@ func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreT
 
 	for _, rule := range rules {
 		if rule.Type == scoreType {
-			if preCheckPassed, result, err := rule.Fn(cm, element); err == nil {
+			if preCheckPassed, result, err := rule.Fn(cm, element, schedule, taskAllocs); err == nil {
 				if preCheckPassed {
 					if result {
 						score += rule.Score * rule.Weight
@@ -293,42 +318,24 @@ func (cm *ClassMatrix) calcElementScore(element ClassUnit, rules []*Rule, scoreT
 }
 
 // 更新课班适应性矩阵中,各个元素的动态约束条件下的得分
-func (cm *ClassMatrix) updateElementDynamicScores(rules []*Rule) error {
+func (cm *ClassMatrix) updateElementDynamicScores(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) error {
 
-	return cm.updateElementScores(cm.calcElementDynamicScore, rules)
+	return cm.updateElementScores(cm.calcElementDynamicScore, schedule, taskAllocs, rules)
 }
 
 // 更新课班适应性矩阵所有元素的得分
-func (cm *ClassMatrix) updateElementScores(calcFunc func(element ClassUnit, rules []*Rule) Val, rules []*Rule) error {
+func (cm *ClassMatrix) updateElementScores(calcFunc func(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, element Element, rules []*Rule) Val, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) error {
 
 	for sn, teacherMap := range cm.Elements {
 		for teacherID, venueMap := range teacherMap {
 			for venueID, timeSlotMap := range venueMap {
 				for timeSlot, element := range timeSlotMap {
-					elementVal := calcFunc(element, rules)
+					elementVal := calcFunc(schedule, taskAllocs, *element, rules)
 					cm.Elements[sn][teacherID][venueID][timeSlot].Val = elementVal
 					element.Val.ScoreInfo.Score = element.Val.ScoreInfo.DynamicScore + element.Val.ScoreInfo.FixedScore
 				}
 			}
 		}
 	}
-	return nil
-}
-
-// 检查 cm.Elements[sn] 是否为空的方法
-func (cm *ClassMatrix) checkClassMatrix(classes []Class) error {
-
-	count := config.NumGrades * config.NumClassesPreGrade * config.NumSubjects
-	if len(classes) != count {
-		return fmt.Errorf("failed to initialize class matrix: expected %d classes based on constants (NUM_GRADES: %d, NUM_CLASSES_PER_GRADE: %d, NUM_SUBJECTS: %d), but got %d classes", count, config.NumGrades, config.NumClassesPreGrade, config.NumSubjects, len(classes))
-	}
-
-	for _, class := range classes {
-		sn := class.SN.Generate()
-		if _, ok := cm.Elements[sn]; !ok {
-			return fmt.Errorf("cm.Elements[%s] is nil", sn)
-		}
-	}
-
 	return nil
 }

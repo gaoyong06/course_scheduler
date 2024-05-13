@@ -2,6 +2,7 @@
 package genetic_algorithm
 
 import (
+	"course_scheduler/internal/models"
 	"fmt"
 	"math/rand"
 )
@@ -12,13 +13,11 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, classHours map[int]int) ([]*Individual, error) {
+func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
 	executed := 0
-
-	// log.Printf("=== Crossover selected %d, crossoverRate: %.02f\n", len(selected), crossoverRate)
 
 	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
@@ -31,28 +30,29 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			parent2 := selected[i+1].Copy()
 
 			// 交叉操作
-			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, classHours)
+			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, schedule)
 			if err != nil {
-				return offspring, err
+				return offspring, prepared, executed, err
 			}
-
-			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
-				return offspring, err
+				return offspring, prepared, executed, err
 			}
 			if isValid {
 
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1 := offspring1.toClassMatrix()
-				offspringClassMatrix2 := offspring2.toClassMatrix()
+				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraints)
+				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraints)
+				if err1 != nil || err2 != nil {
+					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+				}
 
-				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, classHours)
-				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, classHours)
+				fitness1, err1 := offspring1.EvaluateFitness(offspringClassMatrix1, schedule, subjects, teachers, constraints)
+				fitness2, err2 := offspring2.EvaluateFitness(offspringClassMatrix2, schedule, subjects, teachers, constraints)
 
 				if err1 != nil || err2 != nil {
-					return offspring, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
 				}
 
 				offspring1.Fitness = fitness1
@@ -73,20 +73,15 @@ func Crossover(selected []*Individual, crossoverRate float64, classHours map[int
 			}
 
 		}
-
-		// } else {
-		// 	// 复制一份新的个体
-		// 	offspring = append(offspring, selected[i].Copy(), selected[i+1].Copy())
-		// }
 	}
 
-	return offspring, nil
+	return offspring, prepared, executed, nil
 
 }
 
 // 两个个体之间进行交叉操作，生成两个子代个体
 // 返回两个子代个体和错误信息（如果有）
-func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, classHours map[int]int) (*Individual, *Individual, error) {
+func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, schedule *models.Schedule) (*Individual, *Individual, error) {
 
 	// 检查交叉点是否在有效范围内
 	if crossPoint <= 0 || crossPoint >= len(individual1.Chromosomes) {
@@ -119,7 +114,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		} else {
 			source = chromosomes2[i]
 		}
-		// target := offspring1.Chromosomes[i]
 		target := source.Copy()
 		offspring1.Chromosomes[i] = target
 	}
@@ -132,14 +126,13 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		} else {
 			source = chromosomes1[i]
 		}
-		// target := offspring2.Chromosomes[i]
 		target := source.Copy()
 		offspring2.Chromosomes[i] = target
 	}
 
 	// 修复时间段冲突
-	_, _, err1 := offspring1.RepairTimeSlotConflicts()
-	_, _, err2 := offspring2.RepairTimeSlotConflicts()
+	_, _, err1 := offspring1.RepairTimeSlotConflicts(schedule)
+	_, _, err2 := offspring2.RepairTimeSlotConflicts(schedule)
 
 	if err1 == nil && err2 == nil {
 
@@ -152,8 +145,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	}
 
 	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %s, err2: %s", err1.Error(), err2.Error())
-
-	// return nil, nil, fmt.Errorf("invalid crossPoint %d", crossPoint)
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件

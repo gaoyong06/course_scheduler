@@ -4,213 +4,120 @@
 package constraint
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"fmt"
 )
 
-// 1. 一年级(1)班 语文 王老师 第1节 固排
-var CRule1 = &types.Rule{
-	Name:     "CRule1",
-	Type:     "fixed",
-	Fn:       cRule1Fn,
-	Score:    3,
-	Penalty:  0,
-	Weight:   1,
-	Priority: 1,
+// ##### 班级固排禁排
+
+// | 年级   | 班级 | 科目 | 老师   | 时间    | 限制   | 描述 |
+// | ------ | ---- | ---- | ------ | ------- | ------ | ---- |
+// | 一年级 | 1 班 | 语文 | 王老师 | 第 1 节 | 固排   |      |
+// | 三年级 | 1 班 |      |        | 第 7 节 | 禁排   | 班会 |
+// | 三年级 | 2 班 |      |        | 第 8 节 | 禁排   | 班会 |
+// | 四年级 |      |      |        | 第 8 节 | 禁排   | 班会 |
+// | 四年级 | 1 班 | 语文 | 王老师 | 第 1 节 | 禁排   |      |
+// | 五年级 |      | 数学 | 李老师 | 第 2 节 | 固排   |      |
+// | 五年级 |      | 数学 | 李老师 | 第 3 节 | 尽量排 |      |
+// | 五年级 |      | 数学 | 李老师 | 第 5 节 | 固排   |      |
+type Class struct {
+	ID        int    `json:"id" mapstructure:"id"`                                     // 自增ID
+	GradeID   int    `json:"grade_id" mapstructure:"grade_id"`                         // 年级ID
+	ClassID   int    `json:"class_id" mapstructure:"class_id"`                         // 班级ID, 可以为空
+	SubjectID int    `json:"subject_id,omitempty" mapstructure:"subject_id,omitempty"` // 科目ID, 可以为空
+	TeacherID int    `json:"teacher_id,omitempty" mapstructure:"teacher_id,omitempty"` // 老师ID, 可以为空
+	TimeSlot  int    `json:"time_slot" mapstructure:"time_slot"`                       // 时间段与时间点
+	Limit     string `json:"limit" mapstructure:"limit"`                               // 限制: 固定排课: fixed, 尽量排: prefer, 禁止排课: not
+	Desc      string `json:"desc" mapstructure:"desc"`                                 // 描述
 }
 
-// 2. 三年级(1)班 第7节 禁排 班会
-var CRule2 = &types.Rule{
-	Name:     "CRule2",
-	Type:     "fixed",
-	Fn:       cRule2Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// 生成字符串
+func (c *Class) String() string {
+	return fmt.Sprintf("ID: %d, GradeID: %d, ClassID: %d, SubjectID: %d, TeacherID: %d, TimeSlot: %d, Limit: %s, Desc: %s", c.ID,
+		c.GradeID, c.ClassID, c.SubjectID, c.TeacherID, c.TimeSlot, c.Limit, c.Desc)
 }
 
-// 3. 三年级(2)班 第8节 禁排 班会
-var CRule3 = &types.Rule{
-	Name:     "CRule3",
-	Type:     "fixed",
-	Fn:       cRule3Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// 获取班级固排禁排规则
+func GetClassRules(constraints []*Class) []*types.Rule {
+	// constraints := loadClassConstraintsFromDB()
+	var rules []*types.Rule
+	for _, c := range constraints {
+		rule := c.genRule()
+		rules = append(rules, rule)
+	}
+	return rules
 }
 
-// 4. 四年级 第8节 禁排 班会
-var CRule4 = &types.Rule{
-	Name:     "CRule4",
-	Type:     "fixed",
-	Fn:       cRule4Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// 生成规则
+func (c *Class) genRule() *types.Rule {
+	fn := c.genConstraintFn()
+	return &types.Rule{
+		Name:     "class",
+		Type:     "fixed",
+		Fn:       fn,
+		Score:    c.getScore(),
+		Penalty:  c.getPenalty(),
+		Weight:   1,
+		Priority: 1,
+	}
 }
 
-// 5. 四年级(1)班 语文 王老师 第1节 禁排
-var CRule5 = &types.Rule{
-	Name:     "CRule5",
-	Type:     "fixed",
-	Fn:       cRule5Fn,
-	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   1,
-	Priority: 1,
+// 加载班级固排禁排规则
+func loadClassConstraintsFromDB() []*Class {
+	var constraints []*Class
+	return constraints
 }
 
-// 6. 五年级 数学 李老师 第2节 固排
-var CRule6 = &types.Rule{
-	Name:     "CRule6",
-	Type:     "fixed",
-	Fn:       cRule6Fn,
-	Score:    3,
-	Penalty:  0,
-	Weight:   1,
-	Priority: 1,
+// 生成规则校验方法
+func (c *Class) genConstraintFn() types.ConstraintFn {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+
+		SN, err := types.ParseSN(element.ClassSN)
+		if err != nil {
+			return false, false, err
+		}
+
+		preCheckPassed := false
+		isReward := false
+
+		// 固排,优先排是: 排了有奖励,不排有处罚
+		if c.Limit == "fixed" || c.Limit == "prefer" {
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
+			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
+		}
+
+		// 禁排,尽量不排是: 不排没关系, 排了就处罚
+		if c.Limit == "not" || c.Limit == "avoid" {
+
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
+			isReward = false
+		}
+
+		return preCheckPassed, isReward, nil
+	}
 }
 
-// 7. 五年级 数学 李老师 第3节 尽量排
-var CRule7 = &types.Rule{
-	Name:     "CRule7",
-	Type:     "fixed",
-	Fn:       cRule7Fn,
-	Score:    2,
-	Penalty:  0,
-	Weight:   1,
-	Priority: 1,
+// 奖励分
+func (c *Class) getScore() int {
+	score := 0
+	if c.Limit == "fixed" {
+		score = 3
+	} else if c.Limit == "prefer" {
+		score = 2
+	}
+	return score
 }
 
-// 8. 五年级 数学 李老师 第5节 固排
-var CRule8 = &types.Rule{
-	Name:     "CRule8",
-	Type:     "fixed",
-	Fn:       cRule8Fn,
-	Score:    3,
-	Penalty:  0,
-	Weight:   1,
-	Priority: 1,
-}
-
-// 1. 一年级(1)班 语文 王老师 第1节 固排
-func cRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 1 && SN.ClassID == 1 && period == 1
-	isValid := preCheckPassed && SN.SubjectID == 1 && teacherID == 1
-
-	return preCheckPassed, isValid, nil
-}
-
-// 2. 三年级(1)班 第7节 禁排 班会
-func cRule2Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 1 && period == 7
-
-	isValid := !preCheckPassed
-	return preCheckPassed, isValid, nil
-}
-
-// 3. 三年级(2)班 第8节 禁排 班会
-func cRule3Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 3 && SN.ClassID == 2 && period == 8
-
-	isValid := !preCheckPassed
-
-	return preCheckPassed, isValid, nil
-}
-
-// 4. 四年级 第8节 禁排 班会
-func cRule4Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 4 && period == 8
-
-	isValid := !preCheckPassed
-
-	return preCheckPassed, isValid, nil
-}
-
-// 5. 四年级(1)班 语文 王老师 第1节 禁排
-func cRule5Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-
-	preCheckPassed := SN.GradeID == 4 && SN.SubjectID == 1 && period == 1
-
-	shouldPenalize := preCheckPassed && teacherID == 1
-	return preCheckPassed, !shouldPenalize, nil
-}
-
-// 6. 五年级 数学 李老师 第2节 固排
-func cRule6Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 5 && period == 2
-	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 1
-
-	return preCheckPassed, isValid, nil
-}
-
-// 7. 五年级 数学 李老师 第3节 尽量排
-func cRule7Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 5 && period == 3
-	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
-
-	return preCheckPassed, isValid, nil
-}
-
-// 8. 五年级 数学 李老师 第5节 固排
-func cRule8Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
-
-	classSN := element.GetClassSN()
-	teacherID := element.GetTeacherID()
-	timeSlot := element.GetTimeSlot()
-
-	SN, _ := types.ParseSN(classSN)
-	period := timeSlot%config.NumClasses + 1
-	preCheckPassed := SN.GradeID == 5 && period == 5
-	isValid := preCheckPassed && SN.SubjectID == 2 && teacherID == 2
-	return preCheckPassed, isValid, nil
+// 惩罚分
+func (c *Class) getPenalty() int {
+	penalty := 0
+	if c.Limit == "not" {
+		penalty = 3
+	} else if c.Limit == "avoid" {
+		penalty = 2
+	}
+	return penalty
 }

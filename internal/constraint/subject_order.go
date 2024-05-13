@@ -3,43 +3,95 @@
 package constraint
 
 import (
-	"course_scheduler/config"
+	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"fmt"
 	"sort"
 )
 
-var SORule1 = &types.Rule{
-	Name:     "SORule1",
-	Type:     "dynamic",
-	Fn:       soRule1Fn,
-	Score:    0,
-	Penalty:  1,
-	Weight:   1,
-	Priority: 1,
+// ###### 科目顺序限制
+
+// 体育课不排在数学课前
+
+// | 科目 A | 科目 B | 描述 |
+// | ------ | ------ | ---- |
+// | 体育   | 数学   |      |
+
+type SubjectOrder struct {
+	ID         int `json:"id" mapstructure:"id"`                     // 自增ID
+	SubjectAID int `json:"subject_a_id" mapstructure:"subject_a_id"` // 科目A ID
+	SubjectBID int `json:"subject_b_id" mapstructure:"subject_b_id"` // 科目B ID
 }
 
-// 38. 体育 数学
-func soRule1Fn(classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, bool, error) {
+// 生成字符串
+func (s *SubjectOrder) String() string {
+	return fmt.Sprintf("ID: %d, SubjectAID: %d, SubjectBID: %d", s.ID, s.SubjectAID, s.SubjectBID)
+}
 
-	classSN := element.GetClassSN()
-	SN, _ := types.ParseSN(classSN)
-	subjectID := SN.SubjectID
-	preCheckPassed := subjectID == 6 || subjectID == 2
-	shouldPenalize := false
-	if preCheckPassed {
-		ret, err := isSubjectABeforeSubjectB(6, 2, classMatrix, element)
+// 获取班级固排禁排规则
+func GetSubjectOrderRules(constraints []*SubjectOrder) []*types.Rule {
+	// constraints := loadSubjectOrderConstraintsFromDB()
+	var rules []*types.Rule
+	for _, c := range constraints {
+		rule := c.genRule()
+		rules = append(rules, rule)
+	}
+	return rules
+}
+
+// 生成规则
+func (s *SubjectOrder) genRule() *types.Rule {
+	fn := s.genConstraintFn()
+	return &types.Rule{
+		Name:     "subjectOrder",
+		Type:     "dynamic",
+		Fn:       fn,
+		Score:    0,
+		Penalty:  1,
+		Weight:   1,
+		Priority: 1,
+	}
+}
+
+// 加载班级固排禁排规则
+func loadSubjectOrderConstraintsFromDB() []*SubjectOrder {
+	var constraints []*SubjectOrder
+	return constraints
+}
+
+// 生成规则校验方法
+func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
+
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+
+		subjectAID := s.SubjectAID
+		subjectBID := s.SubjectBID
+
+		classSN := element.GetClassSN()
+		SN, err := types.ParseSN(classSN)
 		if err != nil {
 			return false, false, err
 		}
-		shouldPenalize = ret
+
+		subjectID := SN.SubjectID
+		preCheckPassed := subjectID == subjectAID || subjectID == subjectBID
+		shouldPenalize := false
+		if preCheckPassed {
+			ret, err := isSubjectABeforeSubjectB(subjectAID, subjectBID, classMatrix, element, schedule)
+			if err != nil {
+				return false, false, err
+			}
+			shouldPenalize = ret
+		}
+		return preCheckPassed, !shouldPenalize, nil
 	}
-	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 判断体育课后是否就是数学课
 // 判断课程A(体育)是在课程B(数学)之前
-func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.ClassUnit) (bool, error) {
+func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
 	timeSlot := element.GetTimeSlot()
@@ -77,8 +129,8 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 
 			if timeSlotA == timeSlot || timeSlotB == timeSlot {
 
-				dayA := timeSlotA / config.NumClasses
-				dayB := timeSlotB / config.NumClasses
+				dayA := timeSlotA / totalClassesPerDay
+				dayB := timeSlotB / totalClassesPerDay
 
 				if dayA == dayB && timeSlotB == timeSlotA+1 {
 					return true, nil
