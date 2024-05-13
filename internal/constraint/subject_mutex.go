@@ -45,7 +45,7 @@ func (s *SubjectMutex) genRule() *types.Rule {
 		Fn:       fn,
 		Score:    0,
 		Penalty:  config.MaxPenaltyScore,
-		Weight:   1,
+		Weight:   2,
 		Priority: 1,
 	}
 }
