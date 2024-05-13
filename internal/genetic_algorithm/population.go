@@ -235,7 +235,6 @@ func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Sub
 	if err != nil {
 		log.Fatalf("Failed to calculate fixed scores: %v", err)
 	}
-	log.Println("Fixed scores calculated")
 }
 
 // 分配课程矩阵
