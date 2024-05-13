@@ -30,9 +30,6 @@ type Individual struct {
 // key: [9][13][9][40],
 func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) (*Individual, error) {
 
-	// fmt.Println("================ classMatrix =====================")
-	// printClassMatrix(classMatrix)
-
 	// 所有课班选择点位完毕后即可得到一个随机课表，作为种群一个个体
 	individual := &Individual{
 		// 种群的个体中每个课班选择作为一个染色体
@@ -74,8 +71,6 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 				}
 			}
 		}
-
-		// log.Printf("Chromosome for class %s has %d genes\n", sn, numGenesInChromosome)
 
 		// 种群的个体中每个课班选择作为一个染色体
 		individual.Chromosomes = append(individual.Chromosomes, &chromosome)
@@ -213,9 +208,9 @@ func (i *Individual) SortChromosomes() {
 // 给normalizedScore乘以100,目的是为了提升normalizedScore的重要性
 // 给subjectDispersionScore, teacherDispersionScore 乘以10, 目的是把数据归到同一个数量级和提升两者的重要度
 func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *models.Schedule, subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) (int, error) {
+
 	// Calculate the total score of the class matrix
 	totalScore := classMatrix.Score
-	// log.Printf("Total score: %d\n", totalScore)
 
 	minScore := constraint.GetElementsMinScore(schedule, subjects, teachers, constraints)
 	maxScore := constraint.GetElementsMaxScore(schedule, subjects, teachers, constraints)
@@ -308,9 +303,6 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule)
 		unusedTimeSlots = lo.Reject(unusedTimeSlots, func(x int, index int) bool {
 			return usedTimeSlots[x]
 		})
-
-		// log.Printf("=== 有冲突, 开始修复 ============\n")
-		// log.Printf("冲突总数: %d, 冲突时间段与冲突次数 conflictsMap: %#v, 未占用的时间段: unusedTimeSlots: %v\n", conflictCount, conflictsMap, unusedTimeSlots)
 
 		// 遍历冲突 冲突时间段:冲突次数
 		for conflictSlot, conflictNum := range conflictsMap {

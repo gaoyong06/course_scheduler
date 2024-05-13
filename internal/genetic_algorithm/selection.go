@@ -72,13 +72,6 @@ func Selection(population []*Individual, selectionSize int, bestRatio float64) (
 			break
 		}
 	}
-
-	// Validate the selection.
-	// err := validateSelection(population, selected, selectionSize)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	return selected, nil
 }
 

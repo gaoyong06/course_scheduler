@@ -8,26 +8,6 @@ import (
 )
 
 // 所有固定约束条件
-// func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher, classConstraints []*Class, subjectConstraints []*Subject, teacherConstraints []*Teacher) []*types.Rule {
-
-// 	var rules []*types.Rule
-
-// 	// 班级固排禁排
-// 	classRules := GetClassRules(classConstraints)
-// 	rules = append(rules, classRules...)
-
-// 	// 科目优先排禁排
-// 	subjectRules := GetSubjectRules(subjects, subjectConstraints)
-// 	rules = append(rules, subjectRules...)
-
-// 	// 教师固排禁排
-// 	teacherRules := GetTeacherRules(teachers, teacherConstraints)
-// 	rules = append(rules, teacherRules...)
-
-// 	sortRulesByPriority(rules)
-// 	return rules
-// }
-
 func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher, constraints map[string]interface{}) []*types.Rule {
 
 	var rules []*types.Rule
@@ -53,48 +33,6 @@ func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher, const
 	sortRulesByPriority(rules)
 	return rules
 }
-
-// 所有动态约束条件
-// func GetDynamicRules(schedule *models.Schedule, constraints1 []*SubjectMutex, constraints2 []*SubjectOrder, constraints3 []*TeacherMutex, constraints4 []*TeacherNoonBreak, constraints5 []*TeacherPeriodLimit, constraints6 []*TeacherRangeLimit) []*types.Rule {
-
-// 	var rules []*types.Rule
-
-// 	// 连堂课校验(科目课时数大于上课天数时, 禁止同一天排多次课是非连续的, 要排成连堂课)
-// 	rules = append(rules, subjectConnectedRule)
-
-// 	// 科目互斥限制(科目A与科目B不排在同一天)
-// 	subjectMutexRules := GetSubjectMutexRules(constraints1)
-// 	rules = append(rules, subjectMutexRules...)
-
-// 	// 科目顺序限制(体育课不排在数学课前)
-// 	subjectOrderRules := GetSubjectOrderRules(constraints2)
-// 	rules = append(rules, subjectOrderRules...)
-
-// 	// 同一个年级,班级,科目相同节次的排课是否超过数量限制
-// 	rules = append(rules, subjectPeriodLimitRule)
-
-// 	// 科目课时小于天数,禁止同一天排多次相同科目的课
-// 	rules = append(rules, subjectSameDayRule)
-
-// 	// 教师互斥限制
-// 	teacherMutexRules := GetTeacherMutexRules(constraints3)
-// 	rules = append(rules, teacherMutexRules...)
-
-// 	// 教师不跨中午约束
-// 	teacherNoonBreakRules := GetTeacherNoonBreakRules(constraints4)
-// 	rules = append(rules, teacherNoonBreakRules...)
-
-// 	// 教师节数限制
-// 	teacherClassLimitRules := GetTeacherClassLimitRules(constraints5)
-// 	rules = append(rules, teacherClassLimitRules...)
-
-// 	// 教师时间段限制
-// 	teacherRangeLimitRules := GetTeacherRangeLimitRules(constraints6)
-// 	rules = append(rules, teacherRangeLimitRules...)
-
-// 	sortRulesByPriority(rules)
-// 	return rules
-// }
 
 // 所有动态约束条件
 func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface{}) []*types.Rule {

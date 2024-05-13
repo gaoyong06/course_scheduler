@@ -19,8 +19,6 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 	prepared := 0
 	executed := 0
 
-	// log.Printf("=== Crossover selected %d, crossoverRate: %.02f\n", len(selected), crossoverRate)
-
 	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
 
@@ -36,8 +34,6 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			if err != nil {
 				return offspring, prepared, executed, err
 			}
-
-			// log.Printf("=== Crossover selected[i]: %s, selected[i+1]: %s, parent1: %s, parent2: %s, offspring1: %s,  offspring2: %s\n", selected[i].UniqueId(), selected[i+1].UniqueId(), parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
 
 			isValid, err := validateCrossover(offspring1, offspring2)
 			if err != nil {
@@ -77,11 +73,6 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			}
 
 		}
-
-		// } else {
-		// 	// 复制一份新的个体
-		// 	offspring = append(offspring, selected[i].Copy(), selected[i+1].Copy())
-		// }
 	}
 
 	return offspring, prepared, executed, nil
@@ -123,7 +114,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		} else {
 			source = chromosomes2[i]
 		}
-		// target := offspring1.Chromosomes[i]
 		target := source.Copy()
 		offspring1.Chromosomes[i] = target
 	}
@@ -136,7 +126,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		} else {
 			source = chromosomes1[i]
 		}
-		// target := offspring2.Chromosomes[i]
 		target := source.Copy()
 		offspring2.Chromosomes[i] = target
 	}
@@ -156,8 +145,6 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	}
 
 	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %s, err2: %s", err1.Error(), err2.Error())
-
-	// return nil, nil, fmt.Errorf("invalid crossPoint %d", crossPoint)
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件

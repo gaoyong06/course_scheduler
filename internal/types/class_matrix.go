@@ -139,10 +139,6 @@ func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, ta
 				timeTable.Used[timeSlot] = true
 				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
 
-				// if sn == "1_7_1" {
-				// 	log.Printf("class matrix allocate sn: %s, teacherID: %d, venueID: %d, timeSlot: %d, score: %d\n", sn, teacherID, venueID, timeSlot, score)
-				// }
-
 				numAssignedClasses++
 			} else {
 
