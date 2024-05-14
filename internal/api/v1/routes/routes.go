@@ -13,5 +13,8 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		// 示例路由
 		v1.GET("/handler1", middlewares.Middleware1(), handlers.Handler1)
+
+		// 
+
 	}
 }
