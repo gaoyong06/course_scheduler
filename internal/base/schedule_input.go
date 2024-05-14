@@ -1,8 +1,10 @@
+// schedule_input.go
 package base
 
 import (
 	"course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -100,4 +102,22 @@ func LoadTestData() (*ScheduleInput, error) {
 	})
 
 	return &config, nil
+}
+
+// 从 JSON 字符串解析出排课输入数据
+func ParseScheduleInputFromJSON(jsonstr string) (*ScheduleInput, error) {
+	var input ScheduleInput
+
+	// 使用 json.Unmarshal 函数将 JSON 格式的字符串解析为排课输入结构体
+	err := json.Unmarshal([]byte(jsonstr), &input)
+	if err != nil {
+		return nil, fmt.Errorf("fatal error unmarshaling json: %s", err)
+	}
+
+	// 对 Courses 属性的值按照 NumClassesPerWeek 排序
+	sort.Slice(input.TeachTaskAllocations, func(i, j int) bool {
+		return input.TeachTaskAllocations[i].NumClassesPerWeek > input.TeachTaskAllocations[j].NumClassesPerWeek
+	})
+
+	return &input, nil
 }
