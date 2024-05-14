@@ -1,6 +1,6 @@
 // 教师互斥限制
 // teacher_mutual_exclusion.go
-package constraint
+package constraints
 
 import (
 	"course_scheduler/config"

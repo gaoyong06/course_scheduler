@@ -1,5 +1,5 @@
 // 教师节数限制
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

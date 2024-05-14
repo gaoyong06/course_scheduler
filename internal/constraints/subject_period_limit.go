@@ -1,7 +1,7 @@
 // 同一个年级,班级,科目相同节次的排课是否超过数量限制
 // 系统约束
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/config"

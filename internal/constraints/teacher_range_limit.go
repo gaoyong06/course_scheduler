@@ -1,7 +1,7 @@
 // teacher_time_limit.go
 // 教师时间段限制
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

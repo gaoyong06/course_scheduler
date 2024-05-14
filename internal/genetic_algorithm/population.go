@@ -3,7 +3,7 @@ package genetic_algorithm
 
 import (
 	"course_scheduler/config"
-	"course_scheduler/internal/constraint"
+	constraint "course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"log"

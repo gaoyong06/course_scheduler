@@ -1,5 +1,5 @@
 // rule.go
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

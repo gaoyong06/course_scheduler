@@ -1,5 +1,5 @@
 // 科目互斥限制(科目A与科目B不排在同一天)
-package constraint
+package constraints
 
 import (
 	"course_scheduler/config"

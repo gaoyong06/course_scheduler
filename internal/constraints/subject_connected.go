@@ -3,7 +3,7 @@
 // 需要根据当前已排的课程情况来判断是否满足约束。例如，在排课过程中，如果已经排好了周一第1节语文课，那么在继续为周一排课时，就需要考虑到这个约束，避免再为周一排一个非连续的语文课。
 // 因此，这个约束需要在排课过程中动态地检查和更新，因此它是一个动态约束条件
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

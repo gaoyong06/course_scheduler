@@ -1,6 +1,6 @@
 // 科目顺序限制(体育课不排在数学课前)
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

@@ -1,6 +1,6 @@
 // 教师不跨中午(教师排了上午最后一节就不排下午第一节)
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

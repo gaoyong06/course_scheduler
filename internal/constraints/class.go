@@ -1,7 +1,7 @@
 // class.go
 // 班级固排禁排
 
-package constraint
+package constraints
 
 import (
 	"course_scheduler/internal/models"

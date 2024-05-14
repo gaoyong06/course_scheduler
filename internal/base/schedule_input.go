@@ -1,7 +1,7 @@
 package base
 
 import (
-	"course_scheduler/internal/constraint"
+	"course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
 	"fmt"
 	"sort"
@@ -16,17 +16,17 @@ type ScheduleInput struct {
 	Teachers             []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                             // 教师信息
 	Subjects             []*models.Subject             `json:"subjects" mapstructure:"subjects"`                             // 科目信息
 	// Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
-	SubjectVenueMap               map[string][]int                 `json:"subject_venue_map" mapstructure:"subject_venue_map"`                               // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
-	Grades                        []*models.Grade                  `json:"grades"`                                                                           // 年级信息
-	ClassConstraints              []*constraint.Class              `json:"class_constraints" mapstructure:"class_constraints"`                               // 班级固排禁排约束条件
-	SubjectMutexConstraints       []*constraint.SubjectMutex       `json:"subject_mutex_constraints" mapstructure:"subject_mutex_constraints"`               // 科目互斥限制约束条件
-	SubjectOrderConstraints       []*constraint.SubjectOrder       `json:"subject_order_constraints" mapstructure:"subject_order_constraints"`               // 科目顺序限制约束条件
-	SubjectConstraints            []*constraint.Subject            `json:"subject_constraints" mapstructure:"subject_constraints"`                           // 科目优先排禁排约束条件
-	TeacherMutexConstraints       []*constraint.TeacherMutex       `json:"teacher_mutex_constraints" mapstructure:"teacher_mutex_constraints"`               // 教师互斥限制约束条件
-	TeacherNoonBreakConstraints   []*constraint.TeacherNoonBreak   `json:"teacher_noon_break_constraints" mapstructure:"teacher_noon_break_constraints"`     // 教师不跨中午约束条件
-	TeacherPeriodLimitConstraints []*constraint.TeacherPeriodLimit `json:"teacher_period_limit_constraints" mapstructure:"teacher_period_limit_constraints"` // 教师节数限制条件
-	TeacherRangeLimitConstraints  []*constraint.TeacherRangeLimit  `json:"teacher_range_limit_constraints" mapstructure:"teacher_range_limit_constraints"`   // 教师时间段限制条件
-	TeacherConstraints            []*constraint.Teacher            `json:"teacher_constraints" mapstructure:"teacher_constraints"`                           // 教师固排禁排约束条件
+	SubjectVenueMap               map[string][]int                  `json:"subject_venue_map" mapstructure:"subject_venue_map"`                               // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
+	Grades                        []*models.Grade                   `json:"grades"`                                                                           // 年级信息
+	ClassConstraints              []*constraints.Class              `json:"class_constraints" mapstructure:"class_constraints"`                               // 班级固排禁排约束条件
+	SubjectMutexConstraints       []*constraints.SubjectMutex       `json:"subject_mutex_constraints" mapstructure:"subject_mutex_constraints"`               // 科目互斥限制约束条件
+	SubjectOrderConstraints       []*constraints.SubjectOrder       `json:"subject_order_constraints" mapstructure:"subject_order_constraints"`               // 科目顺序限制约束条件
+	SubjectConstraints            []*constraints.Subject            `json:"subject_constraints" mapstructure:"subject_constraints"`                           // 科目优先排禁排约束条件
+	TeacherMutexConstraints       []*constraints.TeacherMutex       `json:"teacher_mutex_constraints" mapstructure:"teacher_mutex_constraints"`               // 教师互斥限制约束条件
+	TeacherNoonBreakConstraints   []*constraints.TeacherNoonBreak   `json:"teacher_noon_break_constraints" mapstructure:"teacher_noon_break_constraints"`     // 教师不跨中午约束条件
+	TeacherPeriodLimitConstraints []*constraints.TeacherPeriodLimit `json:"teacher_period_limit_constraints" mapstructure:"teacher_period_limit_constraints"` // 教师节数限制条件
+	TeacherRangeLimitConstraints  []*constraints.TeacherRangeLimit  `json:"teacher_range_limit_constraints" mapstructure:"teacher_range_limit_constraints"`   // 教师时间段限制条件
+	TeacherConstraints            []*constraints.Teacher            `json:"teacher_constraints" mapstructure:"teacher_constraints"`                           // 教师固排禁排约束条件
 }
 
 // 检查教学计划是否正确
