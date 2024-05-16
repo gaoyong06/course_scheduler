@@ -13,6 +13,7 @@ type Class struct {
 	GradeID   int    // 年级id
 	ClassID   int    // 班级id
 	Name      string // 名称
+	Priority  int    // 排课的优先级, 优先级高的优先排课
 }
 
 func (c *Class) String() string {
@@ -20,7 +21,15 @@ func (c *Class) String() string {
 }
 
 // 初始化课班
-func InitClasses(teachAllocs []*models.TeachTaskAllocation) []Class {
+func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject) ([]Class, error) {
+
+	// 测试
+	// fmt.Println("打印subjects START")
+	// for _, subject := range subjects {
+	// 	spew.Dump(subject)
+	// }
+	// fmt.Println("打印subjects END")
+	// fmt.Println("\n")
 
 	var classes []Class
 
@@ -31,16 +40,23 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation) []Class {
 		gradeID := task.GradeID
 		classID := task.ClassID
 
+		subject, err := models.FindSubjectByID(subjectID, subjects)
+		if err != nil {
+			return nil, fmt.Errorf("error finding subject with ID %d: %v", subjectID, err)
+
+		}
+
 		class := Class{
 			SubjectID: subjectID,
 			GradeID:   gradeID,
 			ClassID:   classID,
 			SN:        SN{SubjectID: subjectID, GradeID: gradeID, ClassID: classID},
 			Name:      fmt.Sprintf("gradeID: %d, classID: %d, subjectID: %d", gradeID, classID, subjectID),
+			Priority:  subject.Priority,
 		}
 		classes = append(classes, class)
 	}
-	return classes
+	return classes, nil
 }
 
 // 时间集合

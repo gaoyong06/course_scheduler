@@ -63,7 +63,7 @@ func ClassTeacherIDs(gradeID, classID, subjectID int, teachers []*Teacher) []int
 	// 根据课班选取老师
 	for _, teacher := range teachers {
 		for _, classSubject := range teacher.ClassSubjects {
-			if classSubject.GradeID == gradeID && classSubject.ClassID == classID && classSubject.SubjectID == subjectID {
+			if classSubject.GradeID == gradeID && classSubject.ClassID == classID && lo.Contains(classSubject.SubjectIDs, subjectID) {
 				teacherIDs = append(teacherIDs, teacher.TeacherID)
 			}
 		}

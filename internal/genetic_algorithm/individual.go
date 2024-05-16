@@ -144,11 +144,14 @@ func (i *Individual) UniqueId() string {
 // 目的是公用课班适应性矩阵的约束计算,以此计算个体的适应度
 func (i *Individual) toClassMatrix(schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*types.ClassMatrix, error) {
 	// 汇总课班集合
-	classes := types.InitClasses(teachAllocs)
+	classes, err := types.InitClasses(teachAllocs, subjects)
+	if err != nil {
+		return nil, err
+	}
 
 	// 初始化课班适应性矩阵
 	classMatrix := types.NewClassMatrix()
-	err := classMatrix.Init(classes, schedule, teachers, subjectVenueMap)
+	err = classMatrix.Init(classes, schedule, teachers, subjectVenueMap)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +549,7 @@ func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models
 	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 	fmt.Println("---+-------------------------------------------")
 	for c := 0; c < totalClassesPerDay; c++ {
-		fmt.Printf("%-2d |", c+1)
+		fmt.Printf("%-2d |", c)
 		for d := 0; d < numWorkdays; d++ {
 			class, ok := scheduleMap[d][c]
 			if !ok {

@@ -42,9 +42,9 @@ func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers
 	if len(teachers) == 0 {
 		return errors.New("teachers cannot be empty")
 	}
-	if len(subjectVenueMap) == 0 {
-		return errors.New("subjectVenueMap cannot be empty")
-	}
+	// if len(subjectVenueMap) == 0 {
+	// 	return errors.New("subjectVenueMap cannot be empty")
+	// }
 
 	for _, class := range classes {
 		subjectID := class.SN.SubjectID
@@ -111,20 +111,22 @@ func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs 
 
 // 根据班级适应性矩阵分配课时
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
-func (cm *ClassMatrix) Allocate(classSNs []string, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) (int, error) {
+func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) (int, error) {
 
 	var numAssignedClasses int
 	timeTable := initTimeTable(schedule)
 
-	for _, sn := range classSNs {
-		SN, err := ParseSN(sn)
-		if err != nil {
-			return numAssignedClasses, err
-		}
+	fmt.Printf("==== 排课顺序 START")
+	fmt.Printf("%#v\n", classes)
+	fmt.Printf("==== 排课顺序 END")
+	fmt.Println("\n")
 
-		gradeID := SN.GradeID
-		classID := SN.ClassID
-		subjectID := SN.SubjectID
+	for _, class := range classes {
+
+		sn := class.SN.Generate()
+		gradeID := class.SN.GradeID
+		classID := class.SN.ClassID
+		subjectID := class.SN.SubjectID
 		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
 		for i := 0; i < numClassesPerWeek; i++ {
@@ -224,6 +226,12 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, i
 	for tid, venueMap := range cm.Elements[sn] {
 		for vid, timeSlotMap := range venueMap {
 			for t, element := range timeSlotMap {
+
+				// 测试
+				// if sn == "8_9_1" && t == 12 {
+				// 	fmt.Printf("timeTable.Used[t]: %v\n", timeTable.Used[t])
+				// }
+
 				if timeTable.Used[t] {
 					continue
 				}

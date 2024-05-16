@@ -1,6 +1,8 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // 教学场地
 type Venue struct {
@@ -15,7 +17,13 @@ type Venue struct {
 func ClassVenueIDs(gradeID, classID, subjectID int, subjectVenueMap map[string][]int) []int {
 
 	sn := fmt.Sprintf("%d_%d_%d", subjectID, gradeID, classID)
-	venueIDs := subjectVenueMap[sn]
+	venueIDs, ok := subjectVenueMap[sn]
+
+	// 如果为设置教学场地,则每个班级默认指定一个
+	if !ok || len(venueIDs) == 0 {
+		defaultVenueID := gradeID*100 + classID
+		venueIDs = []int{defaultVenueID}
+	}
 	return venueIDs
 }
 

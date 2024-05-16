@@ -7,6 +7,7 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
+	"math"
 )
 
 // ##### 班级固排禁排
@@ -96,6 +97,12 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 			isReward = false
 		}
 
+		// 测试
+		// if element.ClassSN == "8_9_1" && c.GradeID == 9 && c.ClassID == 1 && c.SubjectID == 8 && element.TimeSlot == 12 && c.TimeSlot == 12 {
+		// 	// fmt.Printf("SN: %+v\n element: %+v\n c: %+v\n", SN, element, c)
+		// 	fmt.Printf("=== sn: %s, timeSlot: %d, limit: %s,  preCheckPassed: %v, isReward: %v\n", element.ClassSN, element.TimeSlot, c.Limit, preCheckPassed, isReward)
+		// }
+
 		return preCheckPassed, isReward, nil
 	}
 }
@@ -104,7 +111,7 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 func (c *Class) getScore() int {
 	score := 0
 	if c.Limit == "fixed" {
-		score = 3
+		score = math.MaxInt32
 	} else if c.Limit == "prefer" {
 		score = 2
 	}
@@ -115,7 +122,7 @@ func (c *Class) getScore() int {
 func (c *Class) getPenalty() int {
 	penalty := 0
 	if c.Limit == "not" {
-		penalty = 3
+		penalty = math.MaxInt32
 	} else if c.Limit == "avoid" {
 		penalty = 2
 	}

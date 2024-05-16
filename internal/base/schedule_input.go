@@ -33,26 +33,29 @@ type ScheduleInput struct {
 
 // 检查教学计划是否正确
 func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
-
 	// 1. 检查每周总课时数是否超过总课时数
 	totalClassesPerWeek := s.Schedule.GetTotalClassesPerDay() * s.Schedule.NumWorkdays
-	count := 0
-	// key: 科目ID, value: 每周上课总次数
-	subjectClasses := make(map[int]int)
+	// 按照年级和班级统计课程数量
+	classCount := make(map[string]int)
+	// 按照年级、班级和科目统计上课次数
+	subjectCount := make(map[string]int)
 	for _, task := range s.TeachTaskAllocations {
-		count += task.NumClassesPerWeek
-		// 上课次数 = 科目每周课时 - 每周连堂课课时
-		subjectClasses[task.SubjectID] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek
+		classKey := fmt.Sprintf("%d_%d", task.GradeID, task.ClassID)
+		classSubjectKey := fmt.Sprintf("%d_%d_%d", task.GradeID, task.ClassID, task.SubjectID)
+		classCount[classKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek*2
+		subjectCount[classSubjectKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek*2
 	}
-	if count > totalClassesPerWeek {
-		return false, fmt.Errorf("total course Classes %d exceed maximum weekly Classes %d", count, totalClassesPerWeek)
+	for key, count := range classCount {
+		if count > totalClassesPerWeek {
+			return false, fmt.Errorf("%s total course Classes %d exceed maximum weekly Classes %d", key, count, totalClassesPerWeek)
+		}
 	}
 
 	// 2. 检查每个科目每周上课总次数是否正确
 	// 每周工作5天,所以最多上5次课
-	for subjectID, time := range subjectClasses {
+	for key, time := range subjectCount {
 		if time > s.Schedule.NumWorkdays {
-			return false, fmt.Errorf("subject %d has invalid weekly Classes count", subjectID)
+			return false, fmt.Errorf("subject %s has invalid weekly Classes count", key)
 		}
 	}
 	return true, nil
@@ -80,7 +83,8 @@ func LoadTestData() (*ScheduleInput, error) {
 
 	// 设置配置文件名和类型
 	viper.SetConfigType("yaml")
-	viper.SetConfigName("testdata")
+	// viper.SetConfigName("testdata")
+	viper.SetConfigName("linyi_shangcheng_experimental_school")
 
 	// 添加配置文件搜索路径
 	viper.AddConfigPath("../../testdata")
