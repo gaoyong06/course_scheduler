@@ -13,7 +13,7 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, int, int, error) {
+func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -30,7 +30,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			parent2 := selected[i+1].Copy()
 
 			// 交叉操作
-			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, schedule)
+			offspring1, offspring2, err := crossoverIndividuals(parent1, parent2, crossPoint, schedule, grades)
 			if err != nil {
 				return offspring, prepared, executed, err
 			}
@@ -81,7 +81,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 
 // 两个个体之间进行交叉操作，生成两个子代个体
 // 返回两个子代个体和错误信息（如果有）
-func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, schedule *models.Schedule) (*Individual, *Individual, error) {
+func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, schedule *models.Schedule, grades []*models.Grade) (*Individual, *Individual, error) {
 
 	// 检查交叉点是否在有效范围内
 	if crossPoint <= 0 || crossPoint >= len(individual1.Chromosomes) {
@@ -131,8 +131,8 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 	}
 
 	// 修复时间段冲突
-	_, _, err1 := offspring1.RepairTimeSlotConflicts(schedule)
-	_, _, err2 := offspring2.RepairTimeSlotConflicts(schedule)
+	_, _, err1 := offspring1.RepairTimeSlotConflicts(schedule, grades)
+	_, _, err2 := offspring2.RepairTimeSlotConflicts(schedule, grades)
 
 	if err1 == nil && err2 == nil {
 
@@ -144,7 +144,7 @@ func crossoverIndividuals(individual1, individual2 *Individual, crossPoint int, 
 		return offspring1, offspring2, nil
 	}
 
-	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %s, err2: %s", err1.Error(), err2.Error())
+	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %v, err2: %v", err1, err2)
 }
 
 // validateCrossover 可换算法验证 验证染色体上的基因在进行基因互换杂交时是否符合基因的约束条件

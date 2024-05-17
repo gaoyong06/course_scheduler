@@ -113,13 +113,14 @@ func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs 
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
 func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) (int, error) {
 
+	// 已分配的课时数量
 	var numAssignedClasses int
-	timeTable := initTimeTable(schedule)
 
-	fmt.Printf("==== 排课顺序 START")
-	fmt.Printf("%#v\n", classes)
-	fmt.Printf("==== 排课顺序 END")
-	fmt.Println("\n")
+	// 班级课时占用标记表
+	classTimeTableMap := make(map[string]*TimeTable)
+
+	// 教师课时占用标记标
+	teacherTimeTableMap := make(map[int]*TimeTable)
 
 	for _, class := range classes {
 
@@ -128,17 +129,32 @@ func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, task
 		classID := class.SN.ClassID
 		subjectID := class.SN.SubjectID
 		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+		teacherIDs := models.GetTeacherIDs(gradeID, classID, subjectID, taskAllocs)
+
+		// 初始化班级课时占用标记表
+		key := fmt.Sprintf("%d_%d", gradeID, classID)
+		if _, ok := classTimeTableMap[key]; !ok {
+			classTimeTableMap[key] = initTimeTable(schedule)
+		}
+
+		// 初始化教师课时占用标记表
+		for _, id := range teacherIDs {
+			if _, ok := teacherTimeTableMap[id]; !ok {
+				teacherTimeTableMap[id] = initTimeTable(schedule)
+			}
+		}
 
 		for i := 0; i < numClassesPerWeek; i++ {
 
-			teacherID, venueID, timeSlot, score := cm.findBestTimeSlot(sn, timeTable)
+			teacherID, venueID, timeSlot, score := cm.findBestTimeSlot(sn, classTimeTableMap, teacherTimeTableMap)
 			if teacherID > 0 && venueID > 0 && timeSlot >= 0 {
 
 				temp := cm.Elements[sn][teacherID][venueID][timeSlot].Val
 				temp.Used = 1
 				cm.Elements[sn][teacherID][venueID][timeSlot].Val = temp
 
-				timeTable.Used[timeSlot] = true
+				classTimeTableMap[key].Used[timeSlot] = true
+				teacherTimeTableMap[teacherID].Used[timeSlot] = true
 				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
 
 				numAssignedClasses++
@@ -218,21 +234,27 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 
 // 查找当前课程的最佳可用时间段
 // 返回值: teacherID, venueID, timeSlot, score
-func (cm *ClassMatrix) findBestTimeSlot(sn string, timeTable *TimeTable) (int, int, int, int) {
+func (cm *ClassMatrix) findBestTimeSlot(sn string, classTimeTableMap map[string]*TimeTable, teacherTimeTableMap map[int]*TimeTable) (int, int, int, int) {
 
 	maxScore := math.MinInt32
 	teacherID, venueID, timeSlot := -1, -1, -1
+
+	SN, _ := ParseSN(sn)
+	key := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
 
 	for tid, venueMap := range cm.Elements[sn] {
 		for vid, timeSlotMap := range venueMap {
 			for t, element := range timeSlotMap {
 
 				// 测试
-				// if sn == "8_9_1" && t == 12 {
-				// 	fmt.Printf("timeTable.Used[t]: %v\n", timeTable.Used[t])
+				// if t == 2 {
+				// 	fmt.Printf("====cm: %p, sn: %s, tid: %d, classTimeTableMap[key].Used[t]: %v, teacherTimeTable.Used[t]: %v, t: %d\n", cm, sn, tid, classTimeTableMap[key].Used[t], teacherTimeTableMap[tid].Used[t], t)
 				// }
 
-				if timeTable.Used[t] {
+				fmt.Printf("classTimeTableMap[key].Used[t] : %v\n", classTimeTableMap[key].Used[t])
+				fmt.Printf("teacherTimeTableMap[tid].Used[t] : %v\n", teacherTimeTableMap[tid].Used[t])
+
+				if classTimeTableMap[key].Used[t] || teacherTimeTableMap[tid].Used[t] {
 					continue
 				}
 				valScore := element.Val.ScoreInfo.Score

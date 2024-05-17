@@ -5,9 +5,9 @@ import "time"
 
 // 遗传算法常量
 const (
-	// PopSize       = 100               // 种群规模 20-100
-	// SelectionSize = 10                // 选择操作 个体数量
-	// MaxGen        = 500               // 遗传代数 100-500
+	// PopSize       = 100 // 种群规模 20-100
+	// SelectionSize = 10  // 选择操作 个体数量
+	// MaxGen        = 500 // 遗传代数 100-500
 	PopSize       = 10                // 种群规模 20-100
 	SelectionSize = 5                 // 选择操作 个体数量
 	MaxGen        = 5                 // 遗传代数 100-500

@@ -33,18 +33,22 @@ type ScheduleInput struct {
 
 // 检查教学计划是否正确
 func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
+
 	// 1. 检查每周总课时数是否超过总课时数
 	totalClassesPerWeek := s.Schedule.GetTotalClassesPerDay() * s.Schedule.NumWorkdays
+
 	// 按照年级和班级统计课程数量
 	classCount := make(map[string]int)
+
 	// 按照年级、班级和科目统计上课次数
 	subjectCount := make(map[string]int)
 	for _, task := range s.TeachTaskAllocations {
 		classKey := fmt.Sprintf("%d_%d", task.GradeID, task.ClassID)
 		classSubjectKey := fmt.Sprintf("%d_%d_%d", task.GradeID, task.ClassID, task.SubjectID)
-		classCount[classKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek*2
-		subjectCount[classSubjectKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek*2
+		classCount[classKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek
+		subjectCount[classSubjectKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek
 	}
+
 	for key, count := range classCount {
 		if count > totalClassesPerWeek {
 			return false, fmt.Errorf("%s total course Classes %d exceed maximum weekly Classes %d", key, count, totalClassesPerWeek)
@@ -84,7 +88,8 @@ func LoadTestData() (*ScheduleInput, error) {
 	// 设置配置文件名和类型
 	viper.SetConfigType("yaml")
 	// viper.SetConfigName("testdata")
-	viper.SetConfigName("linyi_shangcheng_experimental_school")
+	// viper.SetConfigName("linyi_shangcheng_experimental_school")
+	viper.SetConfigName("wen_dao")
 
 	// 添加配置文件搜索路径
 	viper.AddConfigPath("../../testdata")

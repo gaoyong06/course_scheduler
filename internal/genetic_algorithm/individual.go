@@ -250,16 +250,26 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 	var conflicts []int
 
 	// 创建一个用于记录已使用时间段的 map
-	// key: timeSlot, val: bool
-	usedTimeSlots := make(map[int]bool)
+	// key: gradeID_classID_timeSlot, val: bool
+	usedTimeSlots := make(map[string]bool)
 
 	// 检查每个基因的时间段是否有冲突
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
-			if usedTimeSlots[gene.TimeSlot] {
+
+			sn := gene.ClassSN
+			SN, _ := types.ParseSN(sn)
+
+			// 年级
+			gradeID := SN.GradeID
+			classID := SN.ClassID
+
+			// 构造 key
+			key := fmt.Sprintf("%d_%d_%d", gradeID, classID, gene.TimeSlot)
+			if usedTimeSlots[key] {
 				conflicts = append(conflicts, gene.TimeSlot)
 			} else {
-				usedTimeSlots[gene.TimeSlot] = true
+				usedTimeSlots[key] = true
 			}
 		}
 	}
@@ -272,29 +282,58 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 	}
 }
 
-// 修复时间段冲突总数, 修复是否段明细, 错误信息
-func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule) (int, [][]int, error) {
+// 修复时间段冲突总数, 修复时间段明细, 错误信息
+func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule, grades []*models.Grade) (int, [][]int, error) {
+
+	// 找出已经占用的时间段和未占用的时间段
+	totalClassesPerWeek := schedule.TotalClassesPerWeek()
+
 	// 记录冲突的总数
 	var conflictCount int
 	// 修复的时间段对[[a,b],[c,d]], a修复为b, c修复为d
 	var repairs [][]int
-
-	// 找出已经占用的时间段和未占用的时间段
-	totalClassesPerWeek := schedule.TotalClassesPerWeek()
-	usedTimeSlots := make(map[int]bool)
-	unusedTimeSlots := lo.Range(totalClassesPerWeek)
-
-	// 冲突时间段:冲突次数
-	conflictsMap := make(map[int]int)
+	// 班级:冲突时间段:冲突次数
+	conflictsMap := make(map[string]map[int]int)
+	// 占用时间段标记
+	usedTimeSlots := make(map[string]map[int]bool)
+	// 未占用时间段记录
+	unusedTimeSlots := make(map[string][]int)
+	for _, grade := range grades {
+		for _, class := range grade.Classes {
+			gradeID := grade.GradeID
+			classID := class.ClassID
+			key := fmt.Sprintf("%d_%d", gradeID, classID)
+			usedTimeSlots[key] = make(map[int]bool)
+			unusedTimeSlots[key] = lo.Range(totalClassesPerWeek)
+			conflictsMap[key] = make(map[int]int)
+		}
+	}
 
 	// 标记所有已占用的时间段
 	for _, chromosome := range individual.Chromosomes {
+
+		// SN, _ := types.ParseSN(chromosome.ClassSN)
+		// gradeID := SN.GradeID
+		// classID := SN.ClassID
+		// key := fmt.Sprintf("%d_%d", gradeID, classID)
+
 		for _, gene := range chromosome.Genes {
-			if usedTimeSlots[gene.TimeSlot] {
-				conflictsMap[gene.TimeSlot]++
+
+			SN, _ := types.ParseSN(gene.ClassSN)
+			gradeID := SN.GradeID
+			classID := SN.ClassID
+			key := fmt.Sprintf("%d_%d", gradeID, classID)
+
+			if usedTimeSlots[key][gene.TimeSlot] {
+				conflictsMap[key][gene.TimeSlot]++
 				conflictCount++
 			} else {
-				usedTimeSlots[gene.TimeSlot] = true
+
+				usedTimeSlots[key][gene.TimeSlot] = true
+				// 从未占用时间段中移除
+				unusedTimeSlots[key] = lo.Reject(unusedTimeSlots[key], func(x int, _ int) bool {
+					return x == gene.TimeSlot
+				})
 			}
 		}
 	}
@@ -302,33 +341,40 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule)
 	// 有冲突, 开始修复
 	if conflictCount > 0 {
 
-		// 生成未占用的时间段
-		unusedTimeSlots = lo.Reject(unusedTimeSlots, func(x int, index int) bool {
-			return usedTimeSlots[x]
-		})
-
 		// 遍历冲突 冲突时间段:冲突次数
-		for conflictSlot, conflictNum := range conflictsMap {
-			for i := 0; i < conflictNum; i++ {
+		for conflictKey, conflicts := range conflictsMap {
+			for conflictSlot, conflictNum := range conflicts {
 
-				// 在修复冲突时，可能会存在多个基因占用同一个时间段，导致修复时重复计算冲突数量
-				repaired := false
-				for _, chromosome := range individual.Chromosomes {
-					for j := 0; j < len(chromosome.Genes); j++ {
-						if conflictSlot == chromosome.Genes[j].TimeSlot && !repaired {
-							// 从未占用的时间段中随机选择一个时间段
-							newTimeSlot := lo.Sample(unusedTimeSlots)
-							if !usedTimeSlots[newTimeSlot] {
-								// 将其中一个基因的时间段调整到新选择的时间段
-								chromosome.Genes[j].TimeSlot = newTimeSlot
-								usedTimeSlots[newTimeSlot] = true
-								unusedTimeSlots = lo.Filter(unusedTimeSlots, func(x int, index int) bool {
-									return x != newTimeSlot
-								})
-								repairs = append(repairs, []int{conflictSlot, newTimeSlot})
-								// 修复了一个冲突，冲突次数减一
-								conflictsMap[conflictSlot]--
-								repaired = true
+				for i := 0; i < conflictNum; i++ {
+
+					// 在修复冲突时，可能会存在多个基因占用同一个时间段，导致修复时重复计算冲突数量
+					repaired := false
+					for _, chromosome := range individual.Chromosomes {
+
+						for j := 0; j < len(chromosome.Genes); j++ {
+
+							SN, _ := types.ParseSN(chromosome.Genes[j].ClassSN)
+							gradeID := SN.GradeID
+							classID := SN.ClassID
+							key := fmt.Sprintf("%d_%d", gradeID, classID)
+
+							// 班级相同, 时间段相同, 且未修复
+							if conflictKey == key && conflictSlot == chromosome.Genes[j].TimeSlot && !repaired {
+								// 从未占用的时间段中随机选择一个时间段
+								newTimeSlot := lo.Sample(unusedTimeSlots[key])
+								if !usedTimeSlots[key][newTimeSlot] {
+									// 将其中一个基因的时间段调整到新选择的时间段
+									chromosome.Genes[j].TimeSlot = newTimeSlot
+									usedTimeSlots[key][newTimeSlot] = true
+									// 从未占用时间段中移除
+									unusedTimeSlots[key] = lo.Reject(unusedTimeSlots[key], func(x int, _ int) bool {
+										return x == newTimeSlot
+									})
+									repairs = append(repairs, []int{conflictSlot, newTimeSlot})
+									// 修复了一个冲突，冲突次数减一
+									conflictsMap[conflictKey][conflictSlot]--
+									repaired = true
+								}
 							}
 						}
 					}
@@ -338,16 +384,19 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule)
 	}
 
 	// 检查是否所有冲突都已修复
-	for conflictSlot, conflictNum := range conflictsMap {
-		if conflictNum > 0 {
+	for _, conflicts := range conflictsMap {
+		for conflictSlot, conflictNum := range conflicts {
+			if conflictNum > 0 {
 
-			log.Printf("unusedTimeSlots: %#v\n", unusedTimeSlots)
-			return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", conflictSlot, conflictNum)
+				log.Printf("unusedTimeSlots: %#v", unusedTimeSlots)
+				return conflictCount, repairs, fmt.Errorf("still have conflicts: timeslot %d has %d conflicts remaining", conflictSlot, conflictNum)
+			}
 		}
 	}
 
 	// 返回冲突总数、修复情况、是否已修复的标记
 	return conflictCount, repairs, nil
+
 }
 
 // 计算各个课程班级的分散度
@@ -499,14 +548,14 @@ func (i *Individual) calcTeacherDispersionScore(schedule *models.Schedule) float
 	return dispersionScore
 }
 
-//
-
 // 打印课程表
 func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models.Subject) {
 
-	// schedule[周][节次]=科目
-	scheduleMap := make(map[int]map[int]string)
-	count := 0
+	// schedule[年级班级][周][节次]=科目
+	scheduleMap := make(map[string]map[int]map[int]string) // 使用字符串键来表示年级和班级
+
+	// 课节数
+	countMap := make(map[string]int)
 
 	// 一周总课时
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
@@ -515,50 +564,64 @@ func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models
 
 	// Fill the schedule map with the class information for each gene
 	for _, chromosome := range i.Chromosomes {
+		classSN := chromosome.ClassSN
+		SN, err := types.ParseSN(classSN)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		gradeAndClass := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
+
+		if _, ok := scheduleMap[gradeAndClass]; !ok {
+			scheduleMap[gradeAndClass] = make(map[int]map[int]string)
+			countMap[gradeAndClass] = 0
+		}
+
 		for _, gene := range chromosome.Genes {
-			count++
+			countMap[gradeAndClass]++
 			day := gene.TimeSlot / totalClassesPerDay
 			period := gene.TimeSlot % totalClassesPerDay
-			classSN := gene.ClassSN
-			SN, err := types.ParseSN(classSN)
-			if err != nil {
-				fmt.Println(err)
-			}
 
 			subject, err := models.FindSubjectByID(SN.SubjectID, subjects)
 			if err != nil {
 				log.Printf("Error finding subject with ID %d: %v", SN.SubjectID, err)
 				continue
 			}
-			if _, ok := scheduleMap[day]; !ok {
-				scheduleMap[day] = make(map[int]string)
+
+			if _, ok := scheduleMap[gradeAndClass][day]; !ok {
+				scheduleMap[gradeAndClass][day] = make(map[int]string)
 			}
 
-			if scheduleMap[day][period] != "" {
+			// 如果不为空, 则说明之前赋值过,这里会出现覆盖,这是因为同一个时间段有多个排课
+			if scheduleMap[gradeAndClass][day][period] != "" {
 				log.Printf("CONFLICT! timeSlot: %d,  day: %d, period: %d\n", gene.TimeSlot, day, period)
 			}
-			scheduleMap[day][period] = fmt.Sprintf("%s(%d)", subject.Name, gene.TimeSlot)
+			scheduleMap[gradeAndClass][day][period] = fmt.Sprintf("%s(%d)", subject.Name, gene.TimeSlot)
 		}
 	}
 
 	log.Println("========= schedule =======")
 	// log.Printf("%#v\n", schedule)
 
-	// Print the schedule
-	log.Printf("课程表: 共%d节课\n", count)
-	fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
-	fmt.Println("---+-------------------------------------------")
-	for c := 0; c < totalClassesPerDay; c++ {
-		fmt.Printf("%-2d |", c)
-		for d := 0; d < numWorkdays; d++ {
-			class, ok := scheduleMap[d][c]
-			if !ok {
-				class = ""
+	// 按照年级和班级打印课程表
+	for gradeAndClass := range scheduleMap {
+		log.Printf("课程表(%s): 共%d节课\n", gradeAndClass, countMap[gradeAndClass])
+		fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
+		fmt.Println("---+-------------------------------------------")
+		for c := 0; c < totalClassesPerDay; c++ {
+			fmt.Printf("%-2d |", c)
+			for d := 0; d < numWorkdays; d++ {
+				class, ok := scheduleMap[gradeAndClass][d][c]
+				if !ok {
+					class = ""
+				}
+				fmt.Printf(" %-16s |", class)
 			}
-			fmt.Printf(" %-16s |", class)
+			fmt.Println()
+			fmt.Println("---+-------------------------------------------")
 		}
 		fmt.Println()
-		fmt.Println("---+-------------------------------------------")
 	}
 }
 

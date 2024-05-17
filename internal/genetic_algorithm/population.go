@@ -6,7 +6,6 @@ import (
 	constraint "course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -199,8 +198,8 @@ func createIndividual(classes []types.Class, schedule *models.Schedule, taskAllo
 	copy(classesCopy, classes)
 	shuffleClassOrder(classesCopy)
 
-	fmt.Println("========== shuffleClassOrder(classesCopy) ==========")
-	fmt.Printf("%v\n", classesCopy)
+	// fmt.Println("========== shuffleClassOrder(classesCopy) ==========")
+	// fmt.Printf("%v\n", classesCopy)
 
 	// 初始化课程矩阵
 	err := classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
