@@ -136,7 +136,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
 					return bestIndividual, bestGen, err
 				}
@@ -144,7 +144,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
 					return bestIndividual, bestGen, err
 				}
