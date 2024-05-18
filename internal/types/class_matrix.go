@@ -42,28 +42,26 @@ func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, teachers
 	if len(teachers) == 0 {
 		return errors.New("teachers cannot be empty")
 	}
-	// if len(subjectVenueMap) == 0 {
-	// 	return errors.New("subjectVenueMap cannot be empty")
-	// }
 
 	for _, class := range classes {
+
 		subjectID := class.SN.SubjectID
 		gradeID := class.SN.GradeID
 		classID := class.SN.ClassID
 
 		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
 		if len(teacherIDs) == 0 {
-			return fmt.Errorf("no teacher available for class %d_%d_%d", subjectID, gradeID, classID)
+			return fmt.Errorf("no teacher available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
 		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, subjectVenueMap)
 		if len(venueIDs) == 0 {
-			return fmt.Errorf("no venue available for class %d_%d_%d", subjectID, gradeID, classID)
+			return fmt.Errorf("no venue available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
 		timeSlots := ClassTimeSlots(schedule, teacherIDs, venueIDs)
 		if len(timeSlots) == 0 {
-			return fmt.Errorf("no time slot available for class %d_%d_%d", subjectID, gradeID, classID)
+			return fmt.Errorf("no time slot available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
 		sn := class.SN.Generate()
