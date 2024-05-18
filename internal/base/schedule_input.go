@@ -57,11 +57,12 @@ func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 
 	// 2. 检查每个科目每周上课总次数是否正确
 	// 每周工作5天,所以最多上5次课
-	for key, time := range subjectCount {
-		if time > s.Schedule.NumWorkdays {
-			return false, fmt.Errorf("subject %s has invalid weekly Classes count", key)
-		}
-	}
+	// 会出现,有一天两节课，不需要连堂, 所以去掉下面的判断
+	// for key, time := range subjectCount {
+	// 	if time > s.Schedule.NumWorkdays {
+	// 		return false, fmt.Errorf("subject %s has invalid weekly Classes count", key)
+	// 	}
+	// }
 	return true, nil
 }
 
@@ -88,8 +89,8 @@ func LoadTestData() (*ScheduleInput, error) {
 	// 设置配置文件名和类型
 	viper.SetConfigType("yaml")
 	// viper.SetConfigName("testdata")
-	// viper.SetConfigName("linyi_shangcheng_experimental_school")
-	viper.SetConfigName("wen_dao")
+	viper.SetConfigName("linyi_shangcheng_experimental_school_v3")
+	// viper.SetConfigName("wen_dao")
 
 	// 添加配置文件搜索路径
 	viper.AddConfigPath("../../testdata")

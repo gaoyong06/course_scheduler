@@ -251,8 +251,8 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, classTimeTableMap map[string]
 				// 	fmt.Printf("====cm: %p, sn: %s, tid: %d, classTimeTableMap[key].Used[t]: %v, teacherTimeTable.Used[t]: %v, t: %d\n", cm, sn, tid, classTimeTableMap[key].Used[t], teacherTimeTableMap[tid].Used[t], t)
 				// }
 
-				fmt.Printf("classTimeTableMap[key].Used[t] : %v\n", classTimeTableMap[key].Used[t])
-				fmt.Printf("teacherTimeTableMap[tid].Used[t] : %v\n", teacherTimeTableMap[tid].Used[t])
+				// fmt.Printf("classTimeTableMap[key].Used[t] : %v\n", classTimeTableMap[key].Used[t])
+				// fmt.Printf("teacherTimeTableMap[tid].Used[t] : %v\n", teacherTimeTableMap[tid].Used[t])
 
 				if classTimeTableMap[key].Used[t] || teacherTimeTableMap[tid].Used[t] {
 					continue

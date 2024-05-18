@@ -46,8 +46,11 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 	// 同一个年级,班级,科目相同节次的排课是否超过数量限制
 	rules = append(rules, subjectPeriodLimitRule)
 
+	// 同一个年级,班级,科目,在同一天的排课是否超过数量限制
+	rules = append(rules, subjectDayLimitRule)
+
 	// 科目课时小于天数,禁止同一天排多次相同科目的课
-	rules = append(rules, subjectSameDayRule)
+	// rules = append(rules, subjectSameDayRule)
 
 	for constraintType, constraintValue := range constraints {
 		switch constraintType {

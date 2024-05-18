@@ -8,6 +8,8 @@ import (
 	"course_scheduler/internal/types"
 	"fmt"
 	"math"
+
+	"github.com/samber/lo"
 )
 
 // ##### 班级固排禁排
@@ -28,7 +30,7 @@ type Class struct {
 	ClassID   int    `json:"class_id" mapstructure:"class_id"`                         // 班级ID, 可以为空
 	SubjectID int    `json:"subject_id,omitempty" mapstructure:"subject_id,omitempty"` // 科目ID, 可以为空
 	TeacherID int    `json:"teacher_id,omitempty" mapstructure:"teacher_id,omitempty"` // 老师ID, 可以为空
-	TimeSlot  int    `json:"time_slot" mapstructure:"time_slot"`                       // 时间段与时间点
+	TimeSlots []int  `json:"time_slots" mapstructure:"time_slots"`                     // 时间段与时间点
 	Limit     string `json:"limit" mapstructure:"limit"`                               // 限制: 固定排课: fixed, 尽量排: prefer, 禁止排课: not
 	Desc      string `json:"desc" mapstructure:"desc"`                                 // 描述
 }
@@ -36,7 +38,7 @@ type Class struct {
 // 生成字符串
 func (c *Class) String() string {
 	return fmt.Sprintf("ID: %d, GradeID: %d, ClassID: %d, SubjectID: %d, TeacherID: %d, TimeSlot: %d, Limit: %s, Desc: %s", c.ID,
-		c.GradeID, c.ClassID, c.SubjectID, c.TeacherID, c.TimeSlot, c.Limit, c.Desc)
+		c.GradeID, c.ClassID, c.SubjectID, c.TeacherID, c.TimeSlots, c.Limit, c.Desc)
 }
 
 // 获取班级固排禁排规则
@@ -84,7 +86,7 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if c.Limit == "fixed" || c.Limit == "prefer" {
-			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && lo.Contains(c.TimeSlots, element.TimeSlot)
 			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 		}
@@ -92,7 +94,7 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if c.Limit == "not" || c.Limit == "avoid" {
 
-			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && c.TimeSlot == element.TimeSlot && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && lo.Contains(c.TimeSlots, element.TimeSlot) && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 			isReward = false
 		}

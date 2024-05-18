@@ -6,6 +6,8 @@ import (
 	"course_scheduler/internal/types"
 	"log"
 	"math/rand"
+
+	"github.com/samber/lo"
 )
 
 // 变异
@@ -33,7 +35,7 @@ func Mutation(selected []*Individual, mutationRate float64, schedule *models.Sch
 			gene := chromosome.Genes[geneIndex]
 
 			// 找到给定课班的可用参数信息
-			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(chromosome, schedule, teachers, venueMap)
+			unusedTeacherID, unusedVenueID, unusedTimeSlot, err := findUnusedTCt(selected[i], chromosome, schedule, teachers, venueMap)
 			// fmt.Printf("Mutation unusedTeacherID: %d, unusedVenueID: %d, unusedTimeSlot: %d\n", unusedTeacherID, unusedVenueID, unusedTimeSlot)
 			if err != nil {
 				return nil, prepared, executed, err
@@ -114,7 +116,7 @@ func validateMutation(individual *Individual, chromosomeIndex, geneIndex, unused
 }
 
 // findUnusedTCt 查找基因中未使用的教师,教室,时间段
-func findUnusedTCt(chromosome *Chromosome, schedule *models.Schedule, teachers []*models.Teacher, venueMap map[string][]int) (int, int, int, error) {
+func findUnusedTCt(individual *Individual, chromosome *Chromosome, schedule *models.Schedule, teachers []*models.Teacher, venueMap map[string][]int) (int, int, int, error) {
 
 	SN, err := types.ParseSN(chromosome.ClassSN)
 	if err != nil {
@@ -131,7 +133,9 @@ func findUnusedTCt(chromosome *Chromosome, schedule *models.Schedule, teachers [
 
 	unusedTeacherIDs := make([]int, 0)
 	unusedVenueIDs := make([]int, 0)
-	unusedTimeSlots := make([]int, 0)
+	unusedGeneTimeSlots := make([]int, 0)
+	unusedTeacherTimeSlots := make([]int, 0)
+	// unusedVenueTimeSlots := make([]int, 0)
 
 	// 找到闲置的老师、教室和时间段
 	for _, teacherID := range teacherIDs {
@@ -160,7 +164,7 @@ func findUnusedTCt(chromosome *Chromosome, schedule *models.Schedule, teachers [
 		}
 	}
 
-	// 时间集合
+	// 基因未使用的时间集合
 	timeSlots := types.ClassTimeSlots(schedule, unusedTeacherIDs, unusedVenueIDs)
 	for _, timeSlot := range timeSlots {
 		timeSlotUsed := false
@@ -171,14 +175,49 @@ func findUnusedTCt(chromosome *Chromosome, schedule *models.Schedule, teachers [
 			}
 		}
 		if !timeSlotUsed {
-			unusedTimeSlots = append(unusedTimeSlots, timeSlot)
+			unusedGeneTimeSlots = append(unusedGeneTimeSlots, timeSlot)
 		}
 	}
 
+	// 空闲时间段,是依赖教师和教室的
 	// fmt.Printf("unusedTeacherIDs: %#v, unusedVenueIDs: %#v, unusedTimeSlots: %#v\n", unusedTeacherIDs, unusedVenueIDs, unusedTimeSlots)
+	unusedTeacherID := -1
+	unusedVenueID := -1
+	unusedTimeSlot := -1
+
+	if len(unusedTeacherIDs) > 0 {
+		unusedTeacherID = getRandomUnused(unusedTeacherIDs)
+		for _, timeSlot := range timeSlots {
+			timeSlotUsed := false
+			// 确定该教师的空闲时间段
+			for _, chromosome := range individual.Chromosomes {
+				for _, gene := range chromosome.Genes {
+					if gene.TimeSlot == timeSlot && gene.TeacherID == unusedTeacherID {
+						timeSlotUsed = true
+						break
+					}
+				}
+			}
+			if !timeSlotUsed {
+				unusedTeacherTimeSlots = append(unusedTeacherTimeSlots, timeSlot)
+			}
+		}
+	}
+
+	// TODO: 如果这里的教室,是专用教学场所, 则这里还需要将专用教学场地的时间纳入参与计算
+	unusedVenueID = getRandomUnused(unusedVenueIDs)
+
+	unusedTimeSlots := make([]int, 0)
+	if len(unusedGeneTimeSlots) > 0 && len(unusedTeacherTimeSlots) > 0 {
+		unusedTimeSlots = lo.Intersect(unusedGeneTimeSlots, unusedTeacherTimeSlots)
+	} else {
+		unusedTimeSlots = unusedGeneTimeSlots
+	}
+
+	unusedTimeSlot = getRandomUnused(unusedTimeSlots)
 
 	// 返回一个随机的未使用的老师、教室和时间段(如果有的话)
-	return getRandomUnused(unusedTeacherIDs), getRandomUnused(unusedVenueIDs), getRandomUnused(unusedTimeSlots), nil
+	return unusedTeacherID, unusedVenueID, unusedTimeSlot, nil
 }
 
 // getRandomUnused returns a random unused value from the given slice, or an empty string if the slice is empty

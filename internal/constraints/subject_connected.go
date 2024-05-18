@@ -8,6 +8,7 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"math"
 	"sort"
 )
 
@@ -16,7 +17,7 @@ var subjectConnectedRule = &types.Rule{
 	Type:     "dynamic",
 	Fn:       scRuleFn,
 	Score:    0,
-	Penalty:  3,
+	Penalty:  math.MaxInt32,
 	Weight:   1,
 	Priority: 1,
 }

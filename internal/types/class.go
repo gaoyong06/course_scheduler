@@ -60,7 +60,7 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 }
 
 // 时间集合
-// 基于教师集合和教师集合确定时间集合
+// 基于教师集合和教室集合确定时间集合
 // TODO: 如果教师有禁止时间,教室有禁止时间,这里是否需要处理? 如何处理?
 // 每周5天上学,每天8节课, 一周40节课, {0, 1, 2, ... 39}
 //

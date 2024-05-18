@@ -6,9 +6,9 @@
 package constraints
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"math"
 )
 
 var subjectSameDayRule = &types.Rule{
@@ -16,8 +16,8 @@ var subjectSameDayRule = &types.Rule{
 	Type:     "dynamic",
 	Fn:       ssdRuleFn,
 	Score:    0,
-	Penalty:  config.MaxPenaltyScore,
-	Weight:   2,
+	Penalty:  math.MaxInt32,
+	Weight:   1,
 	Priority: 1,
 }
 

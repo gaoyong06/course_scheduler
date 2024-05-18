@@ -225,7 +225,7 @@ func (i *Individual) EvaluateFitness(classMatrix *types.ClassMatrix, schedule *m
 	// log.Printf("Normalized score: %f\n", normalizedScore)
 
 	// Calculate the subject dispersion score
-	subjectDispersionScore, err := i.calcSubjectDispersionScore(schedule, true, config.PeriodThreshold)
+	subjectDispersionScore, err := i.calcSubjectDispersionScore(schedule, true, config.SubjectPeriodLimitThreshold)
 	if err != nil {
 		return 0, err
 	}
@@ -312,17 +312,27 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule,
 	// 标记所有已占用的时间段
 	for _, chromosome := range individual.Chromosomes {
 
-		// SN, _ := types.ParseSN(chromosome.ClassSN)
-		// gradeID := SN.GradeID
-		// classID := SN.ClassID
-		// key := fmt.Sprintf("%d_%d", gradeID, classID)
-
 		for _, gene := range chromosome.Genes {
 
 			SN, _ := types.ParseSN(gene.ClassSN)
 			gradeID := SN.GradeID
 			classID := SN.ClassID
 			key := fmt.Sprintf("%d_%d", gradeID, classID)
+
+			// 初始化
+			if _, ok := usedTimeSlots[key]; !ok {
+				usedTimeSlots[key] = make(map[int]bool)
+			}
+			if _, ok := usedTimeSlots[key][gene.TimeSlot]; !ok {
+				usedTimeSlots[key][gene.TimeSlot] = false
+			}
+
+			if _, ok := conflictsMap[key]; !ok {
+				conflictsMap[key] = make(map[int]int)
+			}
+			if _, ok := conflictsMap[key][gene.TimeSlot]; !ok {
+				conflictsMap[key][gene.TimeSlot] = 0
+			}
 
 			if usedTimeSlots[key][gene.TimeSlot] {
 				conflictsMap[key][gene.TimeSlot]++
@@ -396,7 +406,6 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule,
 
 	// 返回冲突总数、修复情况、是否已修复的标记
 	return conflictCount, repairs, nil
-
 }
 
 // 计算各个课程班级的分散度

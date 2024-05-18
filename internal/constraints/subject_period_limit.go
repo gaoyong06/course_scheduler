@@ -42,7 +42,7 @@ func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	if preCheckPassed {
 
 		// 检查相同节次的排课是否超过数量限制
-		shouldPenalize = count > config.PeriodThreshold
+		shouldPenalize = count > config.SubjectPeriodLimitThreshold
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }
