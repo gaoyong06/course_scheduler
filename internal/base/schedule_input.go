@@ -23,6 +23,7 @@ type ScheduleInput struct {
 	ClassConstraints              []*constraints.Class              `json:"class_constraints" mapstructure:"class_constraints"`                               // 班级固排禁排约束条件
 	SubjectMutexConstraints       []*constraints.SubjectMutex       `json:"subject_mutex_constraints" mapstructure:"subject_mutex_constraints"`               // 科目互斥限制约束条件
 	SubjectOrderConstraints       []*constraints.SubjectOrder       `json:"subject_order_constraints" mapstructure:"subject_order_constraints"`               // 科目顺序限制约束条件
+	SubjectDayLimitConstraints    []*constraints.SubjectDayLimit    `json:"subject_day_limit_constraints" mapstructure:"subject_day_limit_constraints"`       // 科目顺序限制约束条件
 	SubjectConstraints            []*constraints.Subject            `json:"subject_constraints" mapstructure:"subject_constraints"`                           // 科目优先排禁排约束条件
 	TeacherMutexConstraints       []*constraints.TeacherMutex       `json:"teacher_mutex_constraints" mapstructure:"teacher_mutex_constraints"`               // 教师互斥限制约束条件
 	TeacherNoonBreakConstraints   []*constraints.TeacherNoonBreak   `json:"teacher_noon_break_constraints" mapstructure:"teacher_noon_break_constraints"`     // 教师不跨中午约束条件
@@ -74,6 +75,7 @@ func (s *ScheduleInput) ConvertConstraints() map[string]interface{} {
 	constraints["Teacher"] = s.TeacherConstraints
 	constraints["SubjectMutex"] = s.SubjectMutexConstraints
 	constraints["SubjectOrder"] = s.SubjectOrderConstraints
+	constraints["SubjectDayLimit"] = s.SubjectDayLimitConstraints
 	constraints["TeacherMutex"] = s.TeacherMutexConstraints
 	constraints["TeacherNoonBreak"] = s.TeacherNoonBreakConstraints
 	constraints["TeacherPeriodLimit"] = s.TeacherPeriodLimitConstraints

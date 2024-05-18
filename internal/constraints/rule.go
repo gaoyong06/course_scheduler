@@ -47,7 +47,7 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 	rules = append(rules, subjectPeriodLimitRule)
 
 	// 同一个年级,班级,科目,在同一天的排课是否超过数量限制
-	rules = append(rules, subjectDayLimitRule)
+	// rules = append(rules, subjectDayLimitRule)
 
 	// 科目课时小于天数,禁止同一天排多次相同科目的课
 	// rules = append(rules, subjectSameDayRule)
@@ -65,6 +65,12 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			// 科目顺序限制(体育课不排在数学课前)
 			subjectOrderConstraints := constraintValue.([]*SubjectOrder)
 			rules = append(rules, GetSubjectOrderRules(subjectOrderConstraints)...)
+
+		case "SubjectDayLimit":
+
+			// 每天限制(科目,教师每天的排课数量限制)
+			subjectDayLimitConstraints := constraintValue.([]*SubjectDayLimit)
+			rules = append(rules, GetSubjectDayLimitRules(subjectDayLimitConstraints)...)
 
 		case "TeacherMutex":
 
