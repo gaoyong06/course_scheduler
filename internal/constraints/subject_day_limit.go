@@ -20,6 +20,8 @@ import (
 
 type SubjectDayLimit struct {
 	ID        int    `json:"id" mapstructure:"id"`                 // 自增ID
+	GradeID   int    `json:"grade_id" mapstructure:"grade_id"`     // 年级ID
+	ClassID   int    `json:"class_id" mapstructure:"class_id"`     // 班级ID, 可以为空
 	Object    string `json:"object"  mapstructure:"object"`        // 对象，可选项为"科目"、"教师"
 	SubjectID int    `json:"subject_id" mapstructure:"subject_id"` // 科目ID
 	TeacherID int    `json:"teacher_id" mapstructure:"teacher_id"` // 教师ID
@@ -67,6 +69,8 @@ func (s *SubjectDayLimit) genConstraintFn() types.ConstraintFn {
 		classSN := element.GetClassSN()
 		teacherID := element.GetTeacherID()
 		venueID := element.GetVenueID()
+		gradeID := element.GradeID
+		classID := element.ClassID
 		subjectID := element.SubjectID
 		timeSlots := element.GetTimeSlots()
 
@@ -80,7 +84,7 @@ func (s *SubjectDayLimit) genConstraintFn() types.ConstraintFn {
 		weekday := timeSlots[0]/totalClassesPerDay + 1
 		count = weekdayCountMap[weekday]
 
-		if (s.Weekday == weekday || s.Weekday == 0) && (s.TeacherID == teacherID || s.SubjectID == subjectID) {
+		if gradeID == s.GradeID && (classID == s.ClassID || s.ClassID == 0) && (s.Weekday == weekday || s.Weekday == 0) && (s.TeacherID == teacherID || s.SubjectID == subjectID) {
 			preCheckPassed = true
 		}
 

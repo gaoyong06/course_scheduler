@@ -91,7 +91,7 @@ func LoadTestData() (*ScheduleInput, error) {
 	// 设置配置文件名和类型
 	viper.SetConfigType("yaml")
 	// viper.SetConfigName("testdata")
-	viper.SetConfigName("linyi_shangcheng_experimental_school_v3")
+	viper.SetConfigName("test1")
 	// viper.SetConfigName("wen_dao")
 
 	// 添加配置文件搜索路径
