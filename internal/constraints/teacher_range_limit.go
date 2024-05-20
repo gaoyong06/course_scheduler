@@ -6,6 +6,7 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -74,13 +75,20 @@ func (t *TeacherRangeLimit) genConstraintFn() types.ConstraintFn {
 
 		// 将range转为时间段的起止时间段
 		startPeriod, endPeriod := schedule.GetPeriodWithRange(t.Range)
-
-		currTeacherID := element.GetTeacherID()
-		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % totalClassesPerDay
 		count := countTeacherClassesInRange(teacherID, startPeriod, endPeriod, classMatrix, schedule)
+		currTeacherID := element.GetTeacherID()
 
-		preCheckPassed := currTeacherID == teacherID && currPeriod >= startPeriod && currPeriod <= endPeriod
+		isValidPeriod := false
+		currTimeSlots := element.GetTimeSlots()
+		for _, currTimeSlot := range currTimeSlots {
+			currPeriod := currTimeSlot % totalClassesPerDay
+			if currPeriod >= startPeriod && currPeriod <= endPeriod {
+				isValidPeriod = true
+				break
+			}
+		}
+
+		preCheckPassed := currTeacherID == teacherID && isValidPeriod
 		shouldPenalize := preCheckPassed && count > maxClasses
 
 		return preCheckPassed, !shouldPenalize, nil
@@ -98,12 +106,14 @@ func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, class
 		for _, teacherMap := range classMap {
 			for id, venueMap := range teacherMap {
 				if teacherID == id {
-					for timeSlot, element := range venueMap {
+					for timeSlotStr, element := range venueMap {
 
-						period := timeSlot % totalClassesPerDay
-
-						if element.Val.Used == 1 && period >= startPeriod && period <= endPeriod {
-							count++
+						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, timeSlot := range timeSlots {
+							period := timeSlot % totalClassesPerDay
+							if element.Val.Used == 1 && period >= startPeriod && period <= endPeriod {
+								count++
+							}
 						}
 					}
 				}

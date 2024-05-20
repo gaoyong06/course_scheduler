@@ -2,7 +2,10 @@ package types
 
 import (
 	"course_scheduler/internal/models"
+	"course_scheduler/internal/utils"
 	"fmt"
+
+	"github.com/spf13/cast"
 )
 
 // 课班
@@ -67,18 +70,45 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func ClassTimeSlots(schedule *models.Schedule, teacherIDs []int, venueIDs []int) []int {
+//
+// 2024.5.20 将一周的课时，根据教学安排,分成多个组,每个组内的普通课课时和连堂课课时和教学计划相同,最后不足以分成一个组的,都按照普通课处理
+func ClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) ([]string, error) {
 
-	// var timeSlots []int
-	// totalClassesPerDay := schedule.GetTotalClassesPerDay()
-
-	// for i := 0; i < schedule.NumWorkdays; i++ {
-	// 	for j := 0; j < totalClassesPerDay; j++ {
-	// 		timeSlot := i*totalClassesPerDay + j
-	// 		timeSlots = append(timeSlots, timeSlot)
-	// 	}
-	// }
-	// return timeSlots
+	var timeSlotStrs []string
 	timeSlots := schedule.GenWeekTimeSlots()
-	return timeSlots
+
+	// 周课时
+	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+
+	// 周连堂课次数
+	numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+
+	// 将时间段,根据连堂课的要求,将时间段分割为一个一组,或者两个一组,然后拼接为字符串
+	// 按照连堂课的次数,和普通课的次数将可用时间段分成多个组,每个组内有都有按照教学计划的连堂课次数,和普通课次数
+	// 因为单次课会多余连堂课, 不够分组的,多出的时间段都按照普通课处理
+	groups := utils.SplitSlice(timeSlots, numClassesPerWeek)
+	for _, group := range groups {
+
+		if len(group) == numClassesPerWeek {
+			pairs, err := utils.GroupByPairs(group, numConnectedClassesPerWeek)
+			if err != nil {
+				return nil, err
+			}
+
+			pairStrs, err := utils.GroupedIntsToString(pairs)
+			if err != nil {
+				return nil, err
+			}
+			timeSlotStrs = append(timeSlotStrs, pairStrs...)
+
+		} else {
+
+			for i := 0; i < len(group); i++ {
+				groupStr := cast.ToString(group[i])
+				timeSlotStrs = append(timeSlotStrs, groupStr)
+			}
+		}
+	}
+
+	return timeSlotStrs, nil
 }

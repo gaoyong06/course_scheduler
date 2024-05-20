@@ -84,9 +84,18 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 		preCheckPassed := false
 		isReward := false
 
+		// 当前时间段,是否包含在约束时间段内
+		intersect := lo.Intersect(c.TimeSlots, element.TimeSlots)
+		isContain := len(intersect) > 0
+
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if c.Limit == "fixed" || c.Limit == "prefer" {
-			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && lo.Contains(c.TimeSlots, element.TimeSlot)
+
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && isContain
+			for _, t := range element.TimeSlots {
+				preCheckPassed = preCheckPassed && lo.Contains(c.TimeSlots, t)
+			}
+
 			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 		}
@@ -94,7 +103,7 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if c.Limit == "not" || c.Limit == "avoid" {
 
-			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && lo.Contains(c.TimeSlots, element.TimeSlot) && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
+			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && isContain && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 			isReward = false
 		}

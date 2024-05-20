@@ -4,6 +4,7 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -11,7 +12,7 @@ import (
 // 格式：对象+时间段+形式+次数
 // 其中对象可选项为【科目，教师】，时间段可选项为【每天、星期一、星期二、星期三、星期四、星期五】，限制类型可选项为【固定、最少、最多】，次数为【0、1、2、···】；（+10）
 
-// | 对象 | 时间段 | 限制类型 | 次数 |
+// | 对象 | 时间段 | 限制类型 | 课节数 |
 // | ---- | ------ | ---- | ---- |
 // | 科目 | 每天   | 最多 | 4    |
 // | 教师 | 星期一 | 固定 | 5    |
@@ -24,7 +25,7 @@ type SubjectDayLimit struct {
 	TeacherID int    `json:"teacher_id" mapstructure:"teacher_id"` // 教师ID
 	Weekday   int    `json:"weekday" mapstructure:"weekday"`       // 周几，可选项为"0: 每天"、"1: 星期一"、"2: 星期二"、"3: 星期三"、"4: 星期四"、"5: 星期五"
 	Type      string `json:"type"  mapstructure:"type"`            // 限制类型，可选项为"fixed: 固定"、"min: 最少"、"max: 最多"
-	Count     int    `json:"count"  mapstructure:"count"`          // 次数，可选项为0、1、2、···
+	Count     int    `json:"count"  mapstructure:"count"`          // 课节数，可选项为0、1、2、···
 }
 
 // 生成字符串
@@ -67,14 +68,16 @@ func (s *SubjectDayLimit) genConstraintFn() types.ConstraintFn {
 		teacherID := element.GetTeacherID()
 		venueID := element.GetVenueID()
 		subjectID := element.SubjectID
-		timeSlot := element.GetTimeSlot()
+		timeSlots := element.GetTimeSlots()
 
 		preCheckPassed := false
 		isReward := false
 		count := 0
 
 		weekdayCountMap := countDayClasses(classMatrix, classSN, teacherID, venueID, schedule)
-		weekday := timeSlot/totalClassesPerDay + 1
+
+		// 这里使用第1个时间段
+		weekday := timeSlots[0]/totalClassesPerDay + 1
 		count = weekdayCountMap[weekday]
 
 		if (s.Weekday == weekday || s.Weekday == 0) && (s.TeacherID == teacherID || s.SubjectID == subjectID) {
@@ -124,13 +127,16 @@ func countDayClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venue
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// key: 星期几, val: 数量
 	weekdayCountMap := make(map[int]int)
-	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {
-		if element.Val.Used == 1 {
-			weekday := timeSlot/totalClassesPerDay + 1
-			// 星期几
-			weekdayCountMap[weekday]++
+	for timeSlotStr, element := range classMatrix.Elements[sn][teacherID][venueID] {
+
+		timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+		for _, timeSlot := range timeSlots {
+			if element.Val.Used == 1 {
+				weekday := timeSlot/totalClassesPerDay + 1
+				// 星期几
+				weekdayCountMap[weekday]++
+			}
 		}
 	}
-
 	return weekdayCountMap
 }

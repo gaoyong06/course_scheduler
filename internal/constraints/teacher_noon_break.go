@@ -5,6 +5,7 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 
 	"github.com/samber/lo"
@@ -27,7 +28,7 @@ func (t *TeacherNoonBreak) String() string {
 	return fmt.Sprintf("TeacherID: %d", t.TeacherID)
 }
 
-// 获取班级固排禁排规则
+// 获取规则
 func GetTeacherNoonBreakRules(constraints []*TeacherNoonBreak) []*types.Rule {
 	// constraints := loadTeacherNoonBreakConstraintsFromDB()
 	var rules []*types.Rule
@@ -52,7 +53,7 @@ func (t *TeacherNoonBreak) genRule() *types.Rule {
 	}
 }
 
-// 加载班级固排禁排规则
+// 加载规则
 func loadTeacherNoonBreakConstraintsFromDB() []*TeacherNoonBreak {
 	var constraints []*TeacherNoonBreak
 	return constraints
@@ -67,14 +68,23 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 
 		teacherID := t.TeacherID
 		currTeacherID := element.TeacherID
-		currTimeSlot := element.TimeSlot
-		currPeriod := currTimeSlot % totalClassesPerDay
+		currTimeSlots := element.TimeSlots
+
+		var currPeriods []int
+		for _, currTimeSlot := range currTimeSlots {
+			currPeriod := currTimeSlot % totalClassesPerDay
+			currPeriods = append(currPeriods, currPeriod)
+		}
 
 		// 上午
 		_, forenoonEndPeriod := schedule.GetPeriodWithRange("forenoon")
 		// 下午
 		afternoonStartPeriod, _ := schedule.GetPeriodWithRange("afternoon")
-		preCheckPassed := currTeacherID == teacherID && (currPeriod == forenoonEndPeriod || currPeriod == afternoonStartPeriod)
+
+		periods := []int{forenoonEndPeriod, afternoonStartPeriod}
+		intersect := lo.Intersect(currPeriods, periods)
+
+		preCheckPassed := currTeacherID == teacherID && len(intersect) > 0
 		isReward := false
 		if preCheckPassed {
 			isReward = !isTeacherInBothPeriods(element, teacherID, forenoonEndPeriod, afternoonStartPeriod, classMatrix, schedule)
@@ -88,7 +98,7 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 func isTeacherInBothPeriods(element types.Element, teacherID int, period1, period2 int, classMatrix *types.ClassMatrix, schedule *models.Schedule) bool {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	elementDay := element.TimeSlot / totalClassesPerDay
+	elementDay := element.TimeSlots[0] / totalClassesPerDay
 	dayPeriodCount := calcTeacherDayClasses(classMatrix, teacherID, schedule)
 
 	if periods, ok := dayPeriodCount[elementDay]; ok {
@@ -111,11 +121,15 @@ func calcTeacherDayClasses(classMatrix *types.ClassMatrix, teacherID int, schedu
 		for id, venueMap := range teacherMap {
 			if teacherID == id {
 				for _, timeSlotMap := range venueMap {
-					for timeSlot, element := range timeSlotMap {
-						if element.Val.Used == 1 {
-							period := timeSlot % totalClassesPerDay
-							day := timeSlot / totalClassesPerDay
-							dayPeriodCount[day] = append(dayPeriodCount[day], period)
+					for timeSlotStr, element := range timeSlotMap {
+
+						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, timeSlot := range timeSlots {
+							if element.Val.Used == 1 {
+								period := timeSlot % totalClassesPerDay
+								day := timeSlot / totalClassesPerDay
+								dayPeriodCount[day] = append(dayPeriodCount[day], period)
+							}
 						}
 					}
 				}

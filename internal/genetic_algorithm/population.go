@@ -202,7 +202,7 @@ func createIndividual(classes []types.Class, schedule *models.Schedule, taskAllo
 	// fmt.Printf("%v\n", classesCopy)
 
 	// 初始化课程矩阵
-	err := classMatrix.Init(classesCopy, schedule, teachers, subjectVenueMap)
+	err := classMatrix.Init(classesCopy, schedule, taskAllocs, teachers, subjectVenueMap)
 	if err != nil {
 		return nil, err
 	}

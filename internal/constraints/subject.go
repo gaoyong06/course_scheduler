@@ -74,7 +74,7 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		subjectID := element.SubjectID
-		timeSlot := element.TimeSlot
+		timeSlots := element.TimeSlots
 
 		subject, err := models.FindSubjectByID(subjectID, subjects)
 		if err != nil {
@@ -86,13 +86,13 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if s.Limit == "fixed" || s.Limit == "prefer" {
-			preCheckPassed = timeSlot == s.TimeSlot
+			preCheckPassed = lo.Contains(timeSlots, s.TimeSlot)
 			isReward = preCheckPassed && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
 		}
 
 		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if s.Limit == "not" || s.Limit == "avoid" {
-			preCheckPassed = timeSlot == s.TimeSlot && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
+			preCheckPassed = lo.Contains(timeSlots, s.TimeSlot) && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
 			isReward = false
 		}
 

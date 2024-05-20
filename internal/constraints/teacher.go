@@ -78,7 +78,7 @@ func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn
 		timeSlot := t.TimeSlot
 
 		currTeacherID := element.GetTeacherID()
-		currTimeSlot := element.GetTimeSlot()
+		currTimeSlots := element.GetTimeSlots()
 
 		currTeacher, err := models.FindTeacherByID(currTeacherID, teachers)
 		if err != nil {
@@ -90,13 +90,13 @@ func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if t.Limit == "fixed" || t.Limit == "prefer" {
-			preCheckPassed = currTimeSlot == timeSlot
+			preCheckPassed = lo.Contains(currTimeSlots, timeSlot)
 			isReward = preCheckPassed && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
 		}
 
 		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if t.Limit == "not" || t.Limit == "avoid" {
-			preCheckPassed = currTimeSlot == timeSlot && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
+			preCheckPassed = lo.Contains(currTimeSlots, timeSlot) && (teacherGroupID == 0 || lo.Contains(currTeacher.TeacherGroupIDs, teacherGroupID)) && (teacherID == 0 || teacherID == currTeacherID)
 			isReward = false
 		}
 		return preCheckPassed, isReward, nil

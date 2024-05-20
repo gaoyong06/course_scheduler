@@ -8,7 +8,9 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"math"
+	"course_scheduler/internal/utils"
+
+	"github.com/samber/lo"
 )
 
 var subjectSameDayRule = &types.Rule{
@@ -16,7 +18,7 @@ var subjectSameDayRule = &types.Rule{
 	Type:     "dynamic",
 	Fn:       ssdRuleFn,
 	Score:    0,
-	Penalty:  math.MaxInt32,
+	Penalty:  2,
 	Weight:   1,
 	Priority: 1,
 }
@@ -25,7 +27,7 @@ var subjectSameDayRule = &types.Rule{
 func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
-	timeSlot := element.GetTimeSlot()
+	timeSlots := element.GetTimeSlots()
 	numWorkdays := schedule.NumWorkdays
 
 	SN, _ := types.ParseSN(classSN)
@@ -43,25 +45,28 @@ func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	if preCheckPassed {
 
 		// 检查同一天是否安排科目的排课
-		ret := isSubjectSameDay(classMatrix, classSN, timeSlot, schedule)
+		ret := isSubjectSameDay(classMatrix, classSN, timeSlots, schedule)
 		shouldPenalize = ret
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }
 
 // 检查同一科目是否在同一天已经排课
-func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlot int, schedule *models.Schedule) bool {
+func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlots []int, schedule *models.Schedule) bool {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	count := 0
-	day := timeSlot / totalClassesPerDay
+	day := timeSlots[0] / totalClassesPerDay
 
 	for _, teacherMap := range classMatrix.Elements[sn] {
 		for _, venueMap := range teacherMap {
-			for timeSlot1, element := range venueMap {
+			for timeSlotStr, element := range venueMap {
 
-				if element.Val.Used == 1 && timeSlot != timeSlot1 {
-					day1 := timeSlot1 / totalClassesPerDay
+				timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
+				intersect := lo.Intersect(timeSlots, timeSlots1)
+
+				if element.Val.Used == 1 && len(intersect) == 0 {
+					day1 := timeSlots1[0] / totalClassesPerDay
 					if day == day1 {
 						count++
 					}

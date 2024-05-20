@@ -5,6 +5,7 @@ import (
 	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -87,9 +88,11 @@ func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 
 func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
-	timeSlot := element.GetTimeSlot()
+	timeSlots := element.GetTimeSlots()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	elementDay := timeSlot / totalClassesPerDay
+
+	// 这里使用第一个时间段
+	elementDay := timeSlots[0] / totalClassesPerDay
 
 	// key: day, val:bool
 	subjectADays := make(map[int]bool)
@@ -108,14 +111,17 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for ts, e := range venueMap {
+				for timeSlotStr, e := range venueMap {
 					if e.Val.Used == 1 {
-						if SN.SubjectID == subjectAID {
-							subjectADays[ts/totalClassesPerDay] = true // 将时间段转换为天数
-							subjectATimeSlots[ts] = ts / totalClassesPerDay
-						} else if SN.SubjectID == subjectBID {
-							subjectBDays[ts/totalClassesPerDay] = true // 将时间段转换为天数
-							subjectBTimeSlots[ts] = ts / totalClassesPerDay
+						ts := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, t := range ts {
+							if SN.SubjectID == subjectAID {
+								subjectADays[t/totalClassesPerDay] = true // 将时间段转换为天数
+								subjectATimeSlots[t] = t / totalClassesPerDay
+							} else if SN.SubjectID == subjectBID {
+								subjectBDays[t/totalClassesPerDay] = true // 将时间段转换为天数
+								subjectBTimeSlots[t] = t / totalClassesPerDay
+							}
 						}
 					}
 				}

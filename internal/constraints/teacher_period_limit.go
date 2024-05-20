@@ -4,7 +4,10 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // ###### 教师节数限制
@@ -68,9 +71,16 @@ func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 		maxClassesCount := t.MaxClassesCount
 
 		currTeacherID := element.GetTeacherID()
-		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % totalClassesPerDay
-		preCheckPassed := teacherID == currTeacherID && period == currPeriod
+
+		var currPeriods []int
+		currTimeSlots := element.GetTimeSlots()
+		for _, currTimeSlot := range currTimeSlots {
+
+			currPeriod := currTimeSlot % totalClassesPerDay
+			currPeriods = append(currPeriods, currPeriod)
+		}
+
+		preCheckPassed := teacherID == currTeacherID && lo.Contains(currPeriods, period)
 
 		shouldPenalize := false
 		if preCheckPassed {
@@ -93,11 +103,15 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 		for id, venueMap := range teacherMap {
 			if teacherID == id {
 				for _, timeSlotMap := range venueMap {
-					for timeSlot, element := range timeSlotMap {
+					for timeSlotStr, element := range timeSlotMap {
+
 						if element.Val.Used == 1 {
-							elementPeriod := timeSlot % totalClassesPerDay
-							if elementPeriod == period {
-								count++
+							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							for _, timeSlot := range timeSlots {
+								elementPeriod := timeSlot % totalClassesPerDay
+								if elementPeriod == period {
+									count++
+								}
 							}
 						}
 					}

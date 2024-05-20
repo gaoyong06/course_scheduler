@@ -6,6 +6,7 @@ import (
 	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -83,28 +84,37 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 
 	teacher1Days := make(map[int]bool)
 	teacher2Days := make(map[int]bool)
-	timeSlot := element.GetTimeSlot()
+	timeSlots := element.GetTimeSlots()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
-	elementDay := timeSlot / totalClassesPerDay
+	elementDay := timeSlots[0] / totalClassesPerDay
 
 	for _, classMap := range classMatrix.Elements {
 		for id, teacherMap := range classMap {
 			if id == teacherAID {
 				for _, timeSlotMap := range teacherMap {
-					for timeSlot, element := range timeSlotMap {
+					for timeSlotStr, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / totalClassesPerDay
-							teacher1Days[day] = true // 将时间段转换为天数
+
+							timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
+							for _, timeSlot := range timeSlots1 {
+								day := timeSlot / totalClassesPerDay
+								teacher1Days[day] = true // 将时间段转换为天数
+							}
+
 						}
 					}
 				}
 			} else if id == teacherBID {
 				for _, timeSlotMap := range teacherMap {
-					for timeSlot, element := range timeSlotMap {
+					for timeSlotStr, element := range timeSlotMap {
 						if element.Val.Used == 1 {
-							day := timeSlot / totalClassesPerDay
-							teacher2Days[day] = true // 将时间段转换为天数
+
+							timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
+							for _, timeSlot := range timeSlots1 {
+								day := timeSlot / totalClassesPerDay
+								teacher2Days[day] = true // 将时间段转换为天数
+							}
 						}
 					}
 				}
