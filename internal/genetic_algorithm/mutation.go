@@ -179,7 +179,7 @@ func findUnusedTCt(individual *Individual, chromosome *Chromosome, gene *Gene, s
 	}
 
 	// 基因未使用的时间集合
-	timeSlotStrs, err := types.ClassTimeSlots(schedule, teachAllocs, gradeID, classID, subjectID, unusedTeacherIDs, unusedVenueIDs)
+	timeSlotStrs, err := types.SubjectClassTimeSlots(schedule, teachAllocs, gradeID, classID, subjectID, unusedTeacherIDs, unusedVenueIDs)
 	if err != nil {
 		return -1, -1, "", err
 	}

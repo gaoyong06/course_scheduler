@@ -3,7 +3,6 @@ package genetic_algorithm
 import (
 	"course_scheduler/config"
 	"course_scheduler/internal/base"
-	"course_scheduler/internal/types"
 	"log"
 	"math"
 	"time"
@@ -55,15 +54,9 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 	return nil, err
 	// }
 
-	// 课班初始化
-	classes, err := types.InitClasses(input.TeachTaskAllocations, input.Subjects)
-	if err != nil {
-		return bestIndividual, bestGen, err
-	}
-
 	// 初始化当前种群
-	constraints := input.ConvertConstraints()
-	currentPopulation, err := InitPopulation(classes, popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+	constraints := input.ConstraintToMap()
+	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
 		return bestIndividual, bestGen, err
 	}

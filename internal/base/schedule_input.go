@@ -5,6 +5,7 @@ import (
 	"course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -32,8 +33,30 @@ type ScheduleInput struct {
 	TeacherConstraints            []*constraints.Teacher            `json:"teacher_constraints" mapstructure:"teacher_constraints"`                           // 教师固排禁排约束条件
 }
 
+// 输入检查
 // 检查教学计划是否正确
-func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
+func (s *ScheduleInput) Check() error {
+
+	err := s.Schedule.Check()
+	if err != nil {
+		return err
+	}
+
+	if len(s.TeachTaskAllocations) == 0 {
+		return errors.New("classes cannot be empty")
+	}
+
+	if len(s.Teachers) == 0 {
+		return errors.New("teachers cannot be empty")
+	}
+
+	if len(s.Subjects) == 0 {
+		return errors.New("subjects cannot be empty")
+	}
+
+	if len(s.Grades) == 0 {
+		return errors.New("grades cannot be empty")
+	}
 
 	// 1. 检查每周总课时数是否超过总课时数
 	totalClassesPerWeek := s.Schedule.GetTotalClassesPerDay() * s.Schedule.NumWorkdays
@@ -52,7 +75,7 @@ func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 
 	for key, count := range classCount {
 		if count > totalClassesPerWeek {
-			return false, fmt.Errorf("%s total course Classes %d exceed maximum weekly Classes %d", key, count, totalClassesPerWeek)
+			return fmt.Errorf("%s total course Classes %d exceed maximum weekly Classes %d", key, count, totalClassesPerWeek)
 		}
 	}
 
@@ -64,10 +87,10 @@ func (s *ScheduleInput) CheckTeachTaskAllocation() (bool, error) {
 	// 		return false, fmt.Errorf("subject %s has invalid weekly Classes count", key)
 	// 	}
 	// }
-	return true, nil
+	return nil
 }
 
-func (s *ScheduleInput) ConvertConstraints() map[string]interface{} {
+func (s *ScheduleInput) ConstraintToMap() map[string]interface{} {
 
 	constraints := make(map[string]interface{})
 	constraints["Class"] = s.ClassConstraints

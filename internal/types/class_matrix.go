@@ -4,7 +4,6 @@ package types
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/utils"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -12,6 +11,26 @@ import (
 
 // 课班适应性矩阵
 type ClassMatrix struct {
+
+	// 课表方案
+	Schedule *models.Schedule
+
+	// 教学计划
+	TaskAllocs []*models.TeachTaskAllocation
+
+	// 汇总课班集合
+	// 课班(科目+班级), 根据taskAllocs生成
+	SubjectClasses []SubjectClass
+
+	// 科目
+	Subjects []*models.Subject
+
+	// 教师
+	Teachers []*models.Teacher
+
+	// 教学场地
+	SubjectVenueMap map[string][]int
+
 	// key: [课班(科目_年级_班级)][教师][教室][时间段1_时间段2], value: Element
 	Elements map[string]map[int]map[int]map[string]*Element
 
@@ -20,10 +39,23 @@ type ClassMatrix struct {
 }
 
 // 新建课班适应性矩阵
-func NewClassMatrix() *ClassMatrix {
-	return &ClassMatrix{
-		Elements: make(map[string]map[int]map[int]map[string]*Element),
+func NewClassMatrix(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int) (*ClassMatrix, error) {
+
+	subjectClasses, err := InitSubjectClasses(taskAllocs, subjects)
+	if err != nil {
+		return nil, err
 	}
+
+	return &ClassMatrix{
+
+		Schedule:        schedule,
+		TaskAllocs:      taskAllocs,
+		SubjectClasses:  subjectClasses,
+		Subjects:        subjects,
+		Teachers:        teachers,
+		SubjectVenueMap: subjectVenueMap,
+		Elements:        make(map[string]map[int]map[int]map[string]*Element),
+	}, nil
 }
 
 // 课班适应性矩阵
@@ -32,35 +64,25 @@ func NewClassMatrix() *ClassMatrix {
 // 课班适应性矩阵
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 // key: [9][13][9][40]
-func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, teachers []*models.Teacher, subjectVenueMap map[string][]int) error {
+func (cm *ClassMatrix) Init() error {
 
-	if len(classes) == 0 {
-		return errors.New("classes cannot be empty")
-	}
-	if schedule == nil {
-		return errors.New("schedule cannot be nil")
-	}
-	if len(teachers) == 0 {
-		return errors.New("teachers cannot be empty")
-	}
+	for _, subjectClass := range cm.SubjectClasses {
 
-	for _, class := range classes {
+		subjectID := subjectClass.SN.SubjectID
+		gradeID := subjectClass.SN.GradeID
+		classID := subjectClass.SN.ClassID
 
-		subjectID := class.SN.SubjectID
-		gradeID := class.SN.GradeID
-		classID := class.SN.ClassID
-
-		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
+		teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, cm.Teachers)
 		if len(teacherIDs) == 0 {
 			return fmt.Errorf("no teacher available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
-		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, subjectVenueMap)
+		venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, cm.SubjectVenueMap)
 		if len(venueIDs) == 0 {
 			return fmt.Errorf("no venue available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
-		timeSlotStrs, err := ClassTimeSlots(schedule, taskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
+		timeSlotStrs, err := SubjectClassTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
 		if err != nil {
 			return err
 		}
@@ -69,7 +91,7 @@ func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, taskAllo
 			return fmt.Errorf("no time slot available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
-		sn := class.SN.Generate()
+		sn := subjectClass.SN.Generate()
 
 		cm.Elements[sn] = make(map[int]map[int]map[string]*Element)
 		for _, teacherID := range teacherIDs {
@@ -80,7 +102,7 @@ func (cm *ClassMatrix) Init(classes []Class, schedule *models.Schedule, taskAllo
 				for _, timeSlotStr := range timeSlotStrs {
 
 					timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-					element := NewElement(sn, class.SubjectID, class.GradeID, class.ClassID, teacherID, venueID, timeSlots)
+					element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlots)
 					cm.Elements[sn][teacherID][venueID][timeSlotStr] = element
 				}
 			}
@@ -117,7 +139,7 @@ func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs 
 
 // 根据班级适应性矩阵分配课时
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
-func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, rules []*Rule) (int, error) {
+func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 
 	// 已分配的课时数量
 	var numAssignedClasses int
@@ -128,26 +150,26 @@ func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, task
 	// 教师课时占用标记标
 	teacherTimeTableMap := make(map[int]*TimeTable)
 
-	for _, class := range classes {
+	for _, subjectClasses := range cm.SubjectClasses {
 
-		sn := class.SN.Generate()
-		gradeID := class.SN.GradeID
-		classID := class.SN.ClassID
-		subjectID := class.SN.SubjectID
-		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-		teacherIDs := models.GetTeacherIDs(gradeID, classID, subjectID, taskAllocs)
+		sn := subjectClasses.SN.Generate()
+		gradeID := subjectClasses.SN.GradeID
+		classID := subjectClasses.SN.ClassID
+		subjectID := subjectClasses.SN.SubjectID
+		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
+		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
+		teacherIDs := models.GetTeacherIDs(gradeID, classID, subjectID, cm.TaskAllocs)
 
 		// 初始化班级课时占用标记表
-		key := fmt.Sprintf("%d_%d", gradeID, classID)
-		if _, ok := classTimeTableMap[key]; !ok {
-			classTimeTableMap[key] = initTimeTable(schedule)
+		gradeAndClass := fmt.Sprintf("%d_%d", gradeID, classID)
+		if _, ok := classTimeTableMap[gradeAndClass]; !ok {
+			classTimeTableMap[gradeAndClass] = initTimeTable(cm.Schedule)
 		}
 
 		// 初始化教师课时占用标记表
 		for _, id := range teacherIDs {
 			if _, ok := teacherTimeTableMap[id]; !ok {
-				teacherTimeTableMap[id] = initTimeTable(schedule)
+				teacherTimeTableMap[id] = initTimeTable(cm.Schedule)
 			}
 		}
 
@@ -166,10 +188,10 @@ func (cm *ClassMatrix) Allocate(classes []Class, schedule *models.Schedule, task
 
 				timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 				for _, timeSlot := range timeSlots {
-					classTimeTableMap[key].Used[timeSlot] = true
+					classTimeTableMap[gradeAndClass].Used[timeSlot] = true
 					teacherTimeTableMap[teacherID].Used[timeSlot] = true
 				}
-				cm.updateElementDynamicScores(schedule, taskAllocs, rules)
+				cm.updateElementDynamicScores(cm.Schedule, cm.TaskAllocs, rules)
 				connectedCount--
 				numAssignedClasses++
 			} else {

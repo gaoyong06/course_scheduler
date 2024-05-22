@@ -34,7 +34,8 @@ func ExecuteTask(taskID uint64, taskData string) ([]*models.ScheduleResult, int,
 	}
 
 	// 检查输入数据
-	if isValid, err := scheduleInput.CheckTeachTaskAllocation(); !isValid {
+	err = scheduleInput.Check()
+	if err != nil {
 		return nil, 0, fmt.Errorf("check teach task allocation failed. %s", err)
 	}
 

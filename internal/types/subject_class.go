@@ -4,13 +4,16 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/utils"
 	"fmt"
+	"log"
+	"math/rand"
+	"sort"
 
 	"github.com/spf13/cast"
 )
 
 // 课班
 // 表示科目班级如:美术一班, 如果增加年级如: 美术三年级一班
-type Class struct {
+type SubjectClass struct {
 	SN        SN     // 序列号
 	SubjectID int    // 科目id
 	GradeID   int    // 年级id
@@ -19,12 +22,12 @@ type Class struct {
 	Priority  int    // 排课的优先级, 优先级高的优先排课
 }
 
-func (c *Class) String() string {
+func (c *SubjectClass) String() string {
 	return fmt.Sprintf("%s (%d-%d-%d)", c.Name, c.SubjectID, c.GradeID, c.ClassID)
 }
 
 // 初始化课班
-func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject) ([]Class, error) {
+func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject) ([]SubjectClass, error) {
 
 	// 测试
 	// fmt.Println("打印subjects START")
@@ -34,7 +37,7 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 	// fmt.Println("打印subjects END")
 	// fmt.Println("\n")
 
-	var classes []Class
+	var subjectClasses []SubjectClass
 
 	// 这里根据年级,班级,科目生成课班
 	for _, task := range teachAllocs {
@@ -49,7 +52,7 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 
 		}
 
-		class := Class{
+		class := SubjectClass{
 			SubjectID: subjectID,
 			GradeID:   gradeID,
 			ClassID:   classID,
@@ -57,9 +60,12 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 			Name:      fmt.Sprintf("gradeID: %d, classID: %d, subjectID: %d", gradeID, classID, subjectID),
 			Priority:  subject.Priority,
 		}
-		classes = append(classes, class)
+		subjectClasses = append(subjectClasses, class)
 	}
-	return classes, nil
+
+	shuffleSubjectClassesOrder(subjectClasses)
+
+	return subjectClasses, nil
 }
 
 // 时间集合
@@ -72,7 +78,7 @@ func InitClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.S
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
 //
 // 2024.5.20 将一周的课时，根据教学安排,分成多个组,每个组内的普通课课时和连堂课课时和教学计划相同,最后不足以分成一个组的,都按照普通课处理
-func ClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) ([]string, error) {
+func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) ([]string, error) {
 
 	var timeSlotStrs []string
 	timeSlots := schedule.GenWeekTimeSlots()
@@ -111,4 +117,20 @@ func ClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAll
 	}
 
 	return timeSlotStrs, nil
+}
+
+// 先按照优先级排序，再随机打乱课程顺序
+func shuffleSubjectClassesOrder(subjectClasses []SubjectClass) {
+
+	sort.Slice(subjectClasses, func(i, j int) bool {
+		return subjectClasses[i].Priority > subjectClasses[j].Priority
+	})
+	for i := len(subjectClasses) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		// 只有当优先级相同时，才随机打乱顺序
+		if subjectClasses[i].Priority == subjectClasses[j].Priority {
+			subjectClasses[i], subjectClasses[j] = subjectClasses[j], subjectClasses[i]
+		}
+	}
+	log.Println("Class order shuffled")
 }

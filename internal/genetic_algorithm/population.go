@@ -7,26 +7,20 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"log"
-	"math/rand"
 	"sort"
 )
 
 // 初始化种群
-func InitPopulation(classes []types.Class, populationSize int, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, error) {
+func InitPopulation(populationSize int, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) ([]*Individual, error) {
 
 	population := make([]*Individual, populationSize)
 	errChan := make(chan error, populationSize)
-
-	// classSNs := make([]string, len(classes))
-	// for i, class := range classes {
-	// 	classSNs[i] = class.SN.Generate()
-	// }
 
 	for i := 0; i < populationSize; i++ {
 		go func(i int) {
 			log.Printf("Initializing individual %d\n", i+1)
 
-			individual, err := createIndividual(classes, schedule, taskAllocs, subjects, teachers, subjectVenueMap, constraints)
+			individual, err := createIndividual(schedule, taskAllocs, subjects, teachers, subjectVenueMap, constraints)
 			if err != nil {
 				errChan <- err
 				return
@@ -189,60 +183,33 @@ func CheckConflicts(population []*Individual) bool {
 // ============================================
 
 // 创建个体
-func createIndividual(classes []types.Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
+func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
 
-	classMatrix := types.NewClassMatrix()
-
-	// 避免所有的 goroutine 对同一个 classes slice 进行操作，导致数据竞争 (data race) 的问题
-	classesCopy := make([]types.Class, len(classes))
-	copy(classesCopy, classes)
-	shuffleClassOrder(classesCopy)
-
-	// fmt.Println("========== shuffleClassOrder(classesCopy) ==========")
-	// fmt.Printf("%v\n", classesCopy)
-
-	// 初始化课程矩阵
-	err := classMatrix.Init(classesCopy, schedule, taskAllocs, teachers, subjectVenueMap)
+	classMatrix, err := types.NewClassMatrix(schedule, taskAllocs, subjects, teachers, subjectVenueMap)
 	if err != nil {
 		return nil, err
 	}
+
+	// 初始化课程矩阵
+	err = classMatrix.Init()
+	if err != nil {
+		return nil, err
+	}
+
 	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
 
 	// 打印课班适应性矩阵信息
 	// classMatrix.PrintKeysAndLength()
 
 	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
-	_, err = allocateClassMatrix(classMatrix, classesCopy, schedule, taskAllocs, constraints)
+	allocateCount, err := allocateClassMatrix(classMatrix, schedule, constraints)
 
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Class matrix %p allocate count  %d\n", classMatrix, allocateCount)
 
 	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
-}
-
-// 打乱课程顺序
-// func shuffleClassOrder(classes []types.Class) {
-// 	for i := len(classes) - 1; i > 0; i-- {
-// 		j := rand.Intn(i + 1)
-// 		classes[i], classes[j] = classes[j], classes[i]
-// 	}
-// 	log.Println("Class order shuffled")
-// }
-
-// 先按照优先级排序，再随机打乱课程顺序
-func shuffleClassOrder(classes []types.Class) {
-	sort.Slice(classes, func(i, j int) bool {
-		return classes[i].Priority > classes[j].Priority
-	})
-	for i := len(classes) - 1; i > 0; i-- {
-		j := rand.Intn(i + 1)
-		// 只有当优先级相同时，才随机打乱顺序
-		if classes[i].Priority == classes[j].Priority {
-			classes[i], classes[j] = classes[j], classes[i]
-		}
-	}
-	log.Println("Class order shuffled")
 }
 
 // 计算固定得分
@@ -256,9 +223,9 @@ func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Sub
 }
 
 // 分配课程矩阵
-func allocateClassMatrix(classMatrix *types.ClassMatrix, classes []types.Class, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) (int, error) {
+func allocateClassMatrix(classMatrix *types.ClassMatrix, schedule *models.Schedule, constraints map[string]interface{}) (int, error) {
 	dynamicRules := constraint.GetDynamicRules(schedule, constraints)
-	return classMatrix.Allocate(classes, schedule, taskAllocs, dynamicRules)
+	return classMatrix.Allocate(dynamicRules)
 }
 
 // checkDuplicates 种群中重复个体的映射，以其唯一ID为键

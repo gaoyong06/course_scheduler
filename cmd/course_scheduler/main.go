@@ -5,8 +5,11 @@ import (
 	"course_scheduler/internal/base"
 	"course_scheduler/internal/genetic_algorithm"
 	"course_scheduler/internal/utils"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 func main() {
@@ -25,9 +28,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("load test data failed. %s", err)
 	}
+	fmt.Printf("scheduleInput")
+
+	fmt.Println("======== scheduleInput.TeachTaskAllocations =======")
+	for _, task := range scheduleInput.TeachTaskAllocations {
+		spew.Dump(task)
+	}
 
 	// 检查输入数据
-	if isValid, err := scheduleInput.CheckTeachTaskAllocation(); !isValid {
+	if err := scheduleInput.Check(); err != nil {
 
 		log.Fatalf("check teach task allocation failed. %s", err)
 	}
