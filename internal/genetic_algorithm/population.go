@@ -209,6 +209,9 @@ func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskA
 	}
 	log.Printf("Class matrix %p allocate count  %d\n", classMatrix, allocateCount)
 
+	// 打印矩阵
+	// classMatrix.PrintConstraintElement()
+
 	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }
 

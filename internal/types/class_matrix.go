@@ -5,6 +5,7 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/utils"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 )
@@ -142,7 +143,7 @@ func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs 
 func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 
 	// 已分配的课时数量
-	var numAssignedClasses int
+	allocateCount := 0
 
 	// 班级课时占用标记表
 	classTimeTableMap := make(map[string]*TimeTable)
@@ -173,37 +174,51 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 			}
 		}
 
-		// 普通课,连堂课分配
+		// 分配课时
 		count := numClassesPerWeek - numConnectedClassesPerWeek
 		connectedCount := numConnectedClassesPerWeek
-		isConnected := false
 		for i := 0; i < count; i++ {
-			isConnected = connectedCount > 0
-			teacherID, venueID, timeSlotStr, score := cm.findBestTimeSlot(sn, isConnected, classTimeTableMap, teacherTimeTableMap)
-			if teacherID > 0 && venueID > 0 && len(timeSlotStr) > 0 {
-
-				temp := cm.Elements[sn][teacherID][venueID][timeSlotStr].Val
-				temp.Used = 1
-				cm.Elements[sn][teacherID][venueID][timeSlotStr].Val = temp
-
-				timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-				for _, timeSlot := range timeSlots {
-					classTimeTableMap[gradeAndClass].Used[timeSlot] = true
-					teacherTimeTableMap[teacherID].Used[timeSlot] = true
-				}
-				cm.updateElementDynamicScores(cm.Schedule, cm.TaskAllocs, rules)
-				connectedCount--
-				numAssignedClasses++
-			} else {
-
-				return numAssignedClasses, fmt.Errorf("class matrix allocate failed, sn: %s, current class hour: %d, subject num classes per week: %d, teacher ID: %d, venue ID: %d, time slot str: %s, score: %d", sn, i+1, numClassesPerWeek, teacherID, venueID, timeSlotStr, score)
+			isConnected := connectedCount > 0
+			if err := cm.allocateClass(sn, isConnected, classTimeTableMap, teacherTimeTableMap, rules); err != nil {
+				return allocateCount, err
 			}
+			connectedCount--
+			allocateCount++
 		}
 	}
 
 	// 对已占用的矩阵元素的求和
 	cm.Score = cm.SumUsedElementsScore()
-	return numAssignedClasses, nil
+	return allocateCount, nil
+}
+
+func (cm *ClassMatrix) allocateClass(sn string, isConnected bool, classTimeTableMap map[string]*TimeTable, teacherTimeTableMap map[int]*TimeTable, rules []*Rule) error {
+
+	SN, err := ParseSN(sn)
+	if err != nil {
+		return err
+	}
+	gradeAndClass := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
+
+	teacherID, venueID, timeSlotStr, score := cm.findBestTimeSlot(sn, isConnected, classTimeTableMap, teacherTimeTableMap)
+
+	if teacherID <= 0 || venueID <= 0 || len(timeSlotStr) == 0 {
+		return fmt.Errorf("class matrix allocate failed, sn: %s, teacher ID: %d, venue ID: %d, time slot str: %s, score: %d", sn, teacherID, venueID, timeSlotStr, score)
+	}
+
+	temp := cm.Elements[sn][teacherID][venueID][timeSlotStr].Val
+	temp.Used = 1
+	cm.Elements[sn][teacherID][venueID][timeSlotStr].Val = temp
+
+	timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+	for _, timeSlot := range timeSlots {
+		classTimeTableMap[gradeAndClass].Used[timeSlot] = true
+		teacherTimeTableMap[teacherID].Used[timeSlot] = true
+	}
+	cm.updateElementDynamicScores(cm.Schedule, cm.TaskAllocs, rules)
+
+	log.Printf("allocate class, class matrix: %p, sn: %s, isConnected: %v, teacherID: %d, venueID: %d, timeSlotStr: %s, score: %d, ", cm, sn, isConnected, teacherID, venueID, timeSlotStr, score)
+	return nil
 }
 
 // 对已占用的矩阵元素的求和
@@ -236,21 +251,22 @@ func (cm *ClassMatrix) PrintConstraintElement() {
 
 	for sn, teacherMap := range cm.Elements {
 
-		// if sn == "6_1_1" {
-		for teacherID, venueMap := range teacherMap {
-			for venueID, timeSlotMap := range venueMap {
-				for timeSlot, element := range timeSlotMap {
+		if sn == "1_9_1" {
+			for teacherID, venueMap := range teacherMap {
+				for venueID, timeSlotMap := range venueMap {
+					for timeSlotStr, element := range timeSlotMap {
 
-					if element.Val.Used == 1 && (len(element.Val.ScoreInfo.FixedFailed) > 0 || len(element.Val.ScoreInfo.DynamicFailed) > 0) {
-						fixedStr := strings.Join(element.Val.ScoreInfo.FixedFailed, ",")
-						dynamicStr := strings.Join(element.Val.ScoreInfo.DynamicFailed, ",")
-						fmt.Printf("%p sn: %s, teacherID: %d, venueID: %d, timeSlot: %d failed rules: %s, %s, score: %d\n", cm, sn, teacherID, venueID, timeSlot, fixedStr, dynamicStr, element.Val.ScoreInfo.Score)
+						// if element.Val.Used == 1 && (len(element.Val.ScoreInfo.FixedFailed) > 0 || len(element.Val.ScoreInfo.DynamicFailed) > 0) {
+						if element.Val.Used == 1 {
+							fixedStr := strings.Join(element.Val.ScoreInfo.FixedFailed, ",")
+							dynamicStr := strings.Join(element.Val.ScoreInfo.DynamicFailed, ",")
+							log.Printf("class matrix %p sn: %s, teacherID: %d, venueID: %d, timeSlotStr: %s, failed rules: %s, %s, score: %d\n", cm, sn, teacherID, venueID, timeSlotStr, fixedStr, dynamicStr, element.Val.ScoreInfo.Score)
+						}
 					}
 				}
 			}
 		}
 	}
-	// }
 }
 
 // 打印cm的所以key，和val的长度
@@ -277,7 +293,7 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool, classTimeTa
 	timeSlotStr := ""
 
 	SN, _ := ParseSN(sn)
-	key := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
+	gradeAndClass := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
 
 	for tid, venueMap := range cm.Elements[sn] {
 		for vid, timeSlotMap := range venueMap {
@@ -288,11 +304,16 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool, classTimeTa
 					continue
 				}
 
+				// 检查时间段中的所有时间单元是否都已经被使用
+				isUsed := true
 				for _, timeSlot := range timeSlots {
-
-					if classTimeTableMap[key].Used[timeSlot] || teacherTimeTableMap[tid].Used[timeSlot] {
-						continue
+					if !classTimeTableMap[gradeAndClass].Used[timeSlot] && !teacherTimeTableMap[tid].Used[timeSlot] {
+						isUsed = false
+						break
 					}
+				}
+				if isUsed {
+					continue
 				}
 
 				valScore := element.Val.ScoreInfo.Score
