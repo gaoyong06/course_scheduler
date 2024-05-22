@@ -5,12 +5,12 @@ import "time"
 
 // 遗传算法常量
 const (
-	// PopSize       = 100 // 种群规模 20-100
-	// SelectionSize = 10  // 选择操作 个体数量
-	// MaxGen        = 500 // 遗传代数 100-500
-	PopSize       = 1                 // 种群规模 20-100
-	SelectionSize = 1                 // 选择操作 个体数量
-	MaxGen        = 1                 // 遗传代数 100-500
+	PopSize       = 100 // 种群规模 20-100
+	SelectionSize = 10  // 选择操作 个体数量
+	MaxGen        = 500 // 遗传代数 100-500
+	// PopSize       = 1                 // 种群规模 20-100
+	// SelectionSize = 1                 // 选择操作 个体数量
+	// MaxGen        = 1                 // 遗传代数 100-500
 	MaxStagnGen   = 100               // 停滞代数 连续n代没有改进, 当达到这个停滞代数时算法会停止运行
 	MutationRate  = 0.2               // 变异率 0.001-0.05
 	CrossoverRate = 0.9               // 交叉率 0.4~0.9

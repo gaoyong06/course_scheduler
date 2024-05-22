@@ -92,7 +92,7 @@ teach_task_allocations:
   # - {id: 14, grade_id: 9, class_id: 14, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
 
   # 数学  
-  # - {id: 15, grade_id: 9, class_id: 1, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 15, grade_id: 9, class_id: 1, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
   # - {id: 16, grade_id: 9, class_id: 2, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
   # - {id: 17, grade_id: 9, class_id: 3, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
   # - {id: 18, grade_id: 9, class_id: 4, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}

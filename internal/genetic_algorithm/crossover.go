@@ -23,7 +23,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 		if rand.Float64() < crossoverRate {
 
 			prepared++
-			crossPoint := rand.Intn(len(selected[i].Chromosomes)-1) + 1
+			crossPoint := rand.Intn(len(selected[i].Chromosomes))
 
 			// 复制一份新的个体
 			parent1 := selected[i].Copy()
@@ -76,7 +76,6 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 	}
 
 	return offspring, prepared, executed, nil
-
 }
 
 // 两个个体之间进行交叉操作，生成两个子代个体

@@ -252,7 +252,11 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 
 	// 创建一个用于记录已使用时间段的 map
 	// key: gradeID_classID_timeSlot, val: bool
-	usedTimeSlots := make(map[string]bool)
+	usedClassTimeSlots := make(map[string]bool)
+
+	// 创建一个用于记录教师已使用时间段的 map
+	// key: teacherID_timeSlot, val: bool
+	usedTeacherTimeSlots := make(map[string]bool)
 
 	// 检查每个基因的时间段是否有冲突
 	for _, chromosome := range i.Chromosomes {
@@ -265,13 +269,18 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 			gradeID := SN.GradeID
 			classID := SN.ClassID
 
+			// 教师
+			teacherID := gene.TeacherID
+
 			for _, timeSlot := range gene.TimeSlots {
 				// 构造 key
 				key := fmt.Sprintf("%d_%d_%d", gradeID, classID, timeSlot)
-				if usedTimeSlots[key] {
+				teacherKey := fmt.Sprintf("%d_%d", teacherID, timeSlot)
+				if usedClassTimeSlots[key] || usedTeacherTimeSlots[teacherKey] {
 					conflicts = append(conflicts, timeSlot)
 				} else {
-					usedTimeSlots[key] = true
+					usedClassTimeSlots[key] = true
+					usedTeacherTimeSlots[teacherKey] = true
 				}
 			}
 		}
@@ -302,16 +311,7 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule,
 	usedTimeSlots := make(map[string]map[int]bool)
 	// 未占用时间段记录
 	unusedTimeSlots := make(map[string][]int)
-	// for _, grade := range grades {
-	// 	for _, class := range grade.Classes {
-	// 		gradeID := grade.GradeID
-	// 		classID := class.ClassID
-	// 		gradeAndClass := fmt.Sprintf("%d_%d", gradeID, classID)
-	// 		unusedTimeSlots[gradeAndClass] = lo.Range(totalClassesPerWeek)
-	// 		usedTimeSlots[gradeAndClass] = make(map[int]bool)
-	// 		conflictCountMap[gradeAndClass] = make(map[int]int)
-	// 	}
-	// }
+
 	for _, grade := range grades {
 		for _, class := range grade.Classes {
 			gradeID := grade.GradeID
@@ -343,21 +343,6 @@ func (individual *Individual) RepairTimeSlotConflicts(schedule *models.Schedule,
 			gradeID := SN.GradeID
 			classID := SN.ClassID
 			gradeAndClass := fmt.Sprintf("%d_%d", gradeID, classID)
-
-			// 初始化
-			// if _, ok := usedTimeSlots[gradeAndClass]; !ok {
-			// 	usedTimeSlots[gradeAndClass] = make(map[int]bool)
-			// }
-			// if _, ok := usedTimeSlots[gradeAndClass][gene.TimeSlot]; !ok {
-			// 	usedTimeSlots[gradeAndClass][gene.TimeSlot] = false // 这里应该是true
-			// }
-
-			// if _, ok := conflictCountMap[gradeAndClass]; !ok {
-			// 	conflictCountMap[gradeAndClass] = make(map[int]int)
-			// }
-			// if _, ok := conflictCountMap[gradeAndClass][gene.TimeSlot]; !ok {
-			// 	conflictCountMap[gradeAndClass][gene.TimeSlot] = 0
-			// }
 
 			for _, timeSlot := range gene.TimeSlots {
 
