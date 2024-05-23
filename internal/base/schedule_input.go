@@ -118,7 +118,8 @@ func LoadTestData() (*ScheduleInput, error) {
 	// viper.SetConfigName("wen_dao")
 
 	// 添加配置文件搜索路径
-	viper.AddConfigPath("../../testdata")
+	// viper.AddConfigPath("../../testdata")
+	viper.AddConfigPath("/Users/gaoyong/Documents/work/course_scheduler/testdata")
 
 	// 为 viper 添加自定义解析函数
 	viper.SetConfigType("yaml")

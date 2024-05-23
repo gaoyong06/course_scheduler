@@ -2,13 +2,12 @@ package types
 
 import (
 	"course_scheduler/internal/models"
-	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
 	"math/rand"
 	"sort"
 
-	"github.com/spf13/cast"
+	"github.com/samber/lo"
 )
 
 // 课班
@@ -82,6 +81,8 @@ func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 
 	var timeSlotStrs []string
 	timeSlots := schedule.GenWeekTimeSlots()
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	waitAllocCount := len(timeSlots)
 
 	// 周课时
 	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
@@ -89,29 +90,77 @@ func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 	// 周连堂课次数
 	numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-	// 将时间段,根据连堂课的要求,将时间段分割为一个一组,或者两个一组,然后拼接为字符串
-	// 按照连堂课的次数,和普通课的次数将可用时间段分成多个组,每个组内有都有按照教学计划的连堂课次数,和普通课次数
-	// 因为单次课会多余连堂课, 不够分组的,多出的时间段都按照普通课处理
-	groups := utils.SplitSlice(timeSlots, numClassesPerWeek)
-	for _, group := range groups {
+	// 连堂课次数
+	waitAllocConnectedCount := numConnectedClassesPerWeek
 
-		if len(group) == numClassesPerWeek {
-			pairs, err := utils.GroupByPairs(group, numConnectedClassesPerWeek)
-			if err != nil {
-				return nil, err
-			}
+	// 普通课次数
+	waitAllocNormalCount := numClassesPerWeek - (numConnectedClassesPerWeek * 2)
 
-			pairStrs, err := utils.GroupedIntsToString(pairs)
-			if err != nil {
-				return nil, err
-			}
-			timeSlotStrs = append(timeSlotStrs, pairStrs...)
+	// 将timeSlots随机打乱
+	timeSlots = lo.Shuffle(timeSlots)
+	timeSlotsMap := make(map[int]bool)
 
-		} else {
+	// 将时间段数组中的各个项作为键，值都为 false 地添加到 timeSlotsMap 中
+	for _, timeSlot := range timeSlots {
+		timeSlotsMap[timeSlot] = false
+	}
 
-			for i := 0; i < len(group); i++ {
-				groupStr := cast.ToString(group[i])
-				timeSlotStrs = append(timeSlotStrs, groupStr)
+	for waitAllocCount > 0 {
+
+		// 按照普通课和连堂课的排课数量要求, 将timeSlots分成多个组, 有的组内有1个元素表示普通课, 有的组内有2个元素表示连堂课
+		for timeSlot, used := range timeSlotsMap {
+
+			if !used {
+				// 检查连堂课是否排完
+				// 如果连堂课未排完, 检查timeSlot+1是否是false, 检查timeSlot, 和timeSlot+1, 是否在同一天, 并且都同在上午, 或者同在下午
+				if waitAllocConnectedCount > 0 && !timeSlotsMap[timeSlot+1] {
+
+					day1 := timeSlot / totalClassesPerDay
+					day2 := (timeSlot + 1) / totalClassesPerDay
+
+					period1 := timeSlot % totalClassesPerDay
+					period2 := (timeSlot + 1) % totalClassesPerDay
+
+					// 上午
+					amStartPeriod, amEndPeriod := schedule.GetPeriodWithRange("forenoon")
+					// 下午
+					pmStartPeriod, pmEndPeriod := schedule.GetPeriodWithRange("afternoon")
+
+					if day1 == day2 && ((period1 >= amStartPeriod && period1 <= amEndPeriod && period2 >= amStartPeriod && period2 <= amEndPeriod) ||
+						(period1 >= pmStartPeriod && period1 <= pmEndPeriod && period2 >= pmStartPeriod && period2 <= pmEndPeriod)) {
+
+						// 如果是, 则排一次连堂课
+						timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d_%d", timeSlot, timeSlot+1))
+						timeSlotsMap[timeSlot] = true
+						timeSlotsMap[timeSlot+1] = true
+						waitAllocConnectedCount--
+						waitAllocCount -= 2
+						continue
+					}
+				}
+
+				// 如果不是, 则检查普通课，是否排完
+				if waitAllocNormalCount > 0 || (waitAllocNormalCount == 0 && waitAllocConnectedCount > 0) {
+
+					// 如果普通课未排完, 则排一次普通课
+					timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d", timeSlot))
+					timeSlotsMap[timeSlot] = true
+					if waitAllocNormalCount > 0 {
+						waitAllocNormalCount--
+					}
+					waitAllocCount--
+					continue
+				}
+
+				// 如果普通课已经排完,则继续检查下一个timeSlot
+				// 直至连堂课和普通课都排完, 则继续进入下一次迭代
+				if waitAllocNormalCount == 0 && waitAllocConnectedCount == 0 {
+					// 恢复连堂课和普通课的排课数量
+					waitAllocConnectedCount = numConnectedClassesPerWeek
+					waitAllocNormalCount = numClassesPerWeek - (numConnectedClassesPerWeek * 2)
+				}
+
+				// 如果最后,出现普通课未排完, 或者连课堂未排完,但是还有timeSlotsMap[timeSlot]是false,则将该timeSlotsMap[timeSlot]排为普通课
 			}
 		}
 	}
