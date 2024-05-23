@@ -17,11 +17,6 @@ func TestTimeSoltHelper(t *testing.T) {
 		log.Fatalf("load test data failed. %s", err)
 	}
 	schedule := input.Schedule
-	taskAllocs := input.TeachTaskAllocations
-
-	gradeID := 9
-	classID := 1
-	subjectID := 1
 
 	// 测试ParseTimeSlotStr
 	timeSlotStr1 := "2_3"
@@ -32,17 +27,10 @@ func TestTimeSoltHelper(t *testing.T) {
 	timeSlotStr2 := utils.TimeSlotsToStr(timeSlots1)
 	fmt.Printf("utils.TimeSlotsToStr timeSlotStr2: %#v\n", timeSlotStr2)
 
-	// 测试SplitSlice
-	timeSlots3 := schedule.GenWeekTimeSlots()
-
-	// 周课时
-	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-
-	// 周连堂课次数
-	// numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-	groups := utils.SplitSlice(timeSlots3, numClassesPerWeek)
-	fmt.Printf("utils.SplitSlice groups: %#v\n", groups)
-
+	// 从availableSlots获取一个可用的连堂课时间
+	availableSlots := []int{0, 3, 4}
+	timeSlots4, timeSlots5 := utils.GetConnectedTimeSlots(schedule, availableSlots)
+	fmt.Printf("utils.GetConnectedTimeSlots timeSlots4: %d, timeSlots5: %d\n", timeSlots4, timeSlots5)
 }
 
 func TestSubjectClassTimeSlots(t *testing.T) {
