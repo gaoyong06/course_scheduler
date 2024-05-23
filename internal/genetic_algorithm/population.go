@@ -173,7 +173,7 @@ func CheckConflicts(population []*Individual) bool {
 	for i, item := range population {
 		hasTimeSlotConflicts, conflicts := item.HasTimeSlotConflicts()
 		if hasTimeSlotConflicts {
-			log.Printf("The %dth individual has time conflicts, conflict info: %v\n", i, conflicts)
+			log.Printf("check conflicts failed. The %dth individual has time conflicts, conflict info: %v\n", i, conflicts)
 			return true
 		}
 	}

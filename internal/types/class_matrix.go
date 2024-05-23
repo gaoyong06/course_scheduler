@@ -8,6 +8,8 @@ import (
 	"log"
 	"math"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 // 课班适应性矩阵
@@ -145,12 +147,6 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 	// 已分配的课时数量
 	allocateCount := 0
 
-	// 班级课时占用标记表
-	classTimeTableMap := make(map[string]*TimeTable)
-
-	// 教师课时占用标记标
-	teacherTimeTableMap := make(map[int]*TimeTable)
-
 	for _, subjectClasses := range cm.SubjectClasses {
 
 		sn := subjectClasses.SN.Generate()
@@ -159,27 +155,13 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 		subjectID := subjectClasses.SN.SubjectID
 		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
-		teacherIDs := models.GetTeacherIDs(gradeID, classID, subjectID, cm.TaskAllocs)
-
-		// 初始化班级课时占用标记表
-		gradeAndClass := fmt.Sprintf("%d_%d", gradeID, classID)
-		if _, ok := classTimeTableMap[gradeAndClass]; !ok {
-			classTimeTableMap[gradeAndClass] = initTimeTable(cm.Schedule)
-		}
-
-		// 初始化教师课时占用标记表
-		for _, id := range teacherIDs {
-			if _, ok := teacherTimeTableMap[id]; !ok {
-				teacherTimeTableMap[id] = initTimeTable(cm.Schedule)
-			}
-		}
 
 		// 分配课时
 		count := numClassesPerWeek - numConnectedClassesPerWeek
 		connectedCount := numConnectedClassesPerWeek
 		for i := 0; i < count; i++ {
 			isConnected := connectedCount > 0
-			if err := cm.allocateClass(sn, isConnected, classTimeTableMap, teacherTimeTableMap, rules); err != nil {
+			if err := cm.allocateClass(sn, isConnected, rules); err != nil {
 				return allocateCount, err
 			}
 			connectedCount--
@@ -192,15 +174,9 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 	return allocateCount, nil
 }
 
-func (cm *ClassMatrix) allocateClass(sn string, isConnected bool, classTimeTableMap map[string]*TimeTable, teacherTimeTableMap map[int]*TimeTable, rules []*Rule) error {
+func (cm *ClassMatrix) allocateClass(sn string, isConnected bool, rules []*Rule) error {
 
-	SN, err := ParseSN(sn)
-	if err != nil {
-		return err
-	}
-	gradeAndClass := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
-
-	teacherID, venueID, timeSlotStr, score := cm.findBestTimeSlot(sn, isConnected, classTimeTableMap, teacherTimeTableMap)
+	teacherID, venueID, timeSlotStr, score := cm.findBestTimeSlot(sn, isConnected)
 
 	if teacherID <= 0 || venueID <= 0 || len(timeSlotStr) == 0 {
 		return fmt.Errorf("class matrix allocate failed, sn: %s, teacher ID: %d, venue ID: %d, time slot str: %s, score: %d", sn, teacherID, venueID, timeSlotStr, score)
@@ -209,12 +185,6 @@ func (cm *ClassMatrix) allocateClass(sn string, isConnected bool, classTimeTable
 	temp := cm.Elements[sn][teacherID][venueID][timeSlotStr].Val
 	temp.Used = 1
 	cm.Elements[sn][teacherID][venueID][timeSlotStr].Val = temp
-
-	timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-	for _, timeSlot := range timeSlots {
-		classTimeTableMap[gradeAndClass].Used[timeSlot] = true
-		teacherTimeTableMap[teacherID].Used[timeSlot] = true
-	}
 	cm.updateElementDynamicScores(cm.Schedule, cm.TaskAllocs, rules)
 
 	log.Printf("allocate class, class matrix: %p, sn: %s, isConnected: %v, teacherID: %d, venueID: %d, timeSlotStr: %s, score: %d, ", cm, sn, isConnected, teacherID, venueID, timeSlotStr, score)
@@ -286,48 +256,78 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 
 // 查找当前课程的最佳可用时间段
 // 返回值: teacherID, venueID, timeSlot, score
-func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool, classTimeTableMap map[string]*TimeTable, teacherTimeTableMap map[int]*TimeTable) (int, int, string, int) {
+func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, string, int) {
 
 	maxScore := math.MinInt32
 	teacherID, venueID := -1, -1
 	timeSlotStr := ""
 
 	SN, _ := ParseSN(sn)
-	gradeAndClass := fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
+	gradeID := SN.GradeID
+	classID := SN.ClassID
 
-	for tid, venueMap := range cm.Elements[sn] {
-		for vid, timeSlotMap := range venueMap {
-			for t, element := range timeSlotMap {
+	for snKey, teacherMap := range cm.Elements {
 
-				timeSlots := utils.ParseTimeSlotStr(t)
-				if (isConnected && len(timeSlots) != 2) || (!isConnected && len(timeSlots) != 1) {
-					continue
-				}
+		if snKey != sn {
+			continue
+		}
 
-				// 检查时间段中的所有时间单元是否都已经被使用
-				isUsed := true
-				for _, timeSlot := range timeSlots {
-					if !classTimeTableMap[gradeAndClass].Used[timeSlot] && !teacherTimeTableMap[tid].Used[timeSlot] {
-						isUsed = false
-						break
+		for teacherIDKey, venueMap := range teacherMap {
+			for venueIDKey, timeSlotMap := range venueMap {
+				for timeSlotStrKey, element := range timeSlotMap {
+
+					// 检查当前时间段是否已经被使用
+					if element.Val.Used == 1 {
+						continue
+					}
+
+					// 检查该时间段段,是否被同年级同班级, 或者相同教师, 占用
+					otherElementUsed := cm.isTimeSlotUsed(gradeID, classID, element.TeacherID, element.TimeSlots)
+					if otherElementUsed {
+						continue
+					}
+
+					// 连堂课,普通课判断
+					timeSlots := utils.ParseTimeSlotStr(timeSlotStrKey)
+					if (isConnected && len(timeSlots) != 2) || (!isConnected && len(timeSlots) != 1) {
+						continue
+					}
+
+					valScore := element.Val.ScoreInfo.Score
+					if valScore > maxScore {
+						maxScore = valScore
+						teacherID = teacherIDKey
+						venueID = venueIDKey
+						timeSlotStr = timeSlotStrKey
 					}
 				}
-				if isUsed {
-					continue
-				}
+			}
+		}
 
-				valScore := element.Val.ScoreInfo.Score
-				if valScore > maxScore {
-					maxScore = valScore
-					teacherID = tid
-					venueID = vid
-					timeSlotStr = t
+	}
+	return teacherID, venueID, timeSlotStr, maxScore
+}
+
+// 辅助函数：检查时间段是否已被使用
+func (cm *ClassMatrix) isTimeSlotUsed(gradeID int, classID int, teacherID int, timeSlots []int) bool {
+
+	for sn, teacherMap := range cm.Elements {
+		SN, _ := ParseSN(sn)
+		for teacherIDKey, venueMap := range teacherMap {
+			for _, timeSlotMap := range venueMap {
+				for _, element := range timeSlotMap {
+
+					intersect := lo.Intersect(element.TimeSlots, timeSlots)
+					isContain := len(intersect) > 0
+
+					if (SN.GradeID == gradeID && SN.ClassID == classID || teacherIDKey == teacherID) && element.Val.Used == 1 && isContain {
+						return true
+					}
 				}
 			}
 		}
 	}
-
-	return teacherID, venueID, timeSlotStr, maxScore
+	return false
 }
 
 // 计算固定约束条件得分

@@ -83,7 +83,7 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 	// 检查个体是否有时间段冲突
 	conflictExists, conflictDetails := individual.HasTimeSlotConflicts()
 	if conflictExists {
-		return nil, fmt.Errorf("individual has time slot conflicts: %v", conflictDetails)
+		return nil, fmt.Errorf("new individual failed. individual has time slot conflicts: %v", conflictDetails)
 	}
 
 	// 设置适应度
@@ -277,6 +277,7 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []int) {
 				key := fmt.Sprintf("%d_%d_%d", gradeID, classID, timeSlot)
 				teacherKey := fmt.Sprintf("%d_%d", teacherID, timeSlot)
 				if usedClassTimeSlots[key] || usedTeacherTimeSlots[teacherKey] {
+
 					conflicts = append(conflicts, timeSlot)
 				} else {
 					usedClassTimeSlots[key] = true
