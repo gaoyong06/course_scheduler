@@ -300,10 +300,19 @@ class_constraints:
   # - {grade_id: 9, class_id: 2, subject_id: 6, teacher_id: 28, time_slots: [16,17,18,19,20,21,22,23], limit: "not", desc: ""}
     
 
-subject_day_limit:
-  # 九年级(1)班 语文 周二 连堂
-  # 九年级(1)班 语文 周四 连堂
-  - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 2, type: "fixed", count: 2}
-  - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 4, type: "fixed", count: 2}
+subject_connected_day_constraints:
+  # 九年级 语文 周二 连堂 1次
+  # 九年级 语文 周四 连堂 1次
+  - {id: 1, grade_id: 9, class_id: 0, subject_id: 1, teacher_id: 0, weekday: 2, count: 1}
+  - {id: 1, grade_id: 9, class_id: 0, subject_id: 1, teacher_id: 0, weekday: 4, count: 1}
+    
+  # 九年级 数学 周三 连堂 1次
+  - {id: 1, grade_id: 9, class_id: 0, subject_id: 2, teacher_id: 0, weekday: 3, count: 1}
+
+  # 九年级 英语 周三 连堂 1次
+  # 九年级 英语 周五 连堂 1次
+  - {id: 1, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 3, count: 1}
+  - {id: 1, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 5, count: 1}
+
 
   

@@ -72,6 +72,11 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			subjectDayLimitConstraints := constraintValue.([]*SubjectDayLimit)
 			rules = append(rules, GetSubjectDayLimitRules(subjectDayLimitConstraints)...)
 
+		case "SubjectConnectedDay":
+			// 连堂课每天限制
+			subjectConnectedDayConstraints := constraintValue.([]*SubjectConnectedDay)
+			rules = append(rules, GetSubjectConnectedDayRules(subjectConnectedDayConstraints)...)
+
 		case "TeacherMutex":
 
 			// 教师互斥限制
