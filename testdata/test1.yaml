@@ -303,7 +303,7 @@ class_constraints:
 subject_day_limit:
   # 九年级(1)班 语文 周二 连堂
   # 九年级(1)班 语文 周四 连堂
-  # - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 2, type: "fixed", count: 2}
-  # - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 4, type: "fixed", count: 2}
+  - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 2, type: "fixed", count: 2}
+  - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 1, teacher_id: 1, weekday: 4, type: "fixed", count: 2}
 
   

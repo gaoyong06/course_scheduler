@@ -655,7 +655,13 @@ func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models
 				if scheduleMap[gradeAndClass][day][period] != "" {
 					log.Printf("CONFLICT! timeSlot: %d,  day: %d, period: %d\n", timeSlot, day, period)
 				}
-				scheduleMap[gradeAndClass][day][period] = fmt.Sprintf("%s(%d)", subject.Name, timeSlot)
+
+				// 连堂课后面多一个+号
+				if gene.IsConnected {
+					scheduleMap[gradeAndClass][day][period] = fmt.Sprintf("%s(%d)+", subject.Name, timeSlot)
+				} else {
+					scheduleMap[gradeAndClass][day][period] = fmt.Sprintf("%s(%d)", subject.Name, timeSlot)
+				}
 
 			}
 		}
