@@ -5,6 +5,7 @@ import (
 	"course_scheduler/internal/types"
 	"course_scheduler/internal/utils"
 	"fmt"
+	"log"
 )
 
 // 连堂课各天次数限制
@@ -39,7 +40,7 @@ func (s *SubjectConnectedDay) genRule() *types.Rule {
 	fn := s.genConstraintFn()
 	return &types.Rule{
 		Name:     "subjectConnectedDay",
-		Type:     "dynamic",
+		Type:     "fixed",
 		Fn:       fn,
 		Score:    s.getPoints(),
 		Penalty:  s.getPoints(),
@@ -80,13 +81,13 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		}
 
 		// 固定次数
-		if preCheckPassed && count == s.Count {
+		if preCheckPassed && count < s.Count {
 			isReward = true
 		}
 
-		// if element.IsConnected {
-		// 	fmt.Printf("SubjectConnectedDay sn: %s, element.TimeSlots: %#v, (gradeID: %d, s.GradeID: %d), (classID: %d, s.ClassID: %d), (weekday: %d, s.Weekday: %d),(teacherID: %d, s.TeacherID: %d), (subjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", classSN, element.TimeSlots, gradeID, s.GradeID, classID, s.ClassID, weekday, s.Weekday, teacherID, s.TeacherID, subjectID, s.SubjectID, count, preCheckPassed, isReward)
-		// }
+		if element.IsConnected {
+			log.Printf("subject connected day constraint, sn: %s, element.TimeSlots: %#v, (gradeID: %d, s.GradeID: %d), (classID: %d, s.ClassID: %d), (weekday: %d, s.Weekday: %d),(teacherID: %d, s.TeacherID: %d), (subjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", classSN, element.TimeSlots, gradeID, s.GradeID, classID, s.ClassID, weekday, s.Weekday, teacherID, s.TeacherID, subjectID, s.SubjectID, count, preCheckPassed, isReward)
+		}
 		return preCheckPassed, isReward, nil
 	}
 }
@@ -94,7 +95,7 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 // 奖励分,惩罚分
 func (s *SubjectConnectedDay) getPoints() int {
 
-	return 3
+	return 6
 }
 
 // countDayClasses 计算每天的科目数量

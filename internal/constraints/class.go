@@ -7,7 +7,6 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
-	"math"
 
 	"github.com/samber/lo"
 )
@@ -31,13 +30,13 @@ type Class struct {
 	SubjectID int    `json:"subject_id,omitempty" mapstructure:"subject_id,omitempty"` // 科目ID, 可以为空
 	TeacherID int    `json:"teacher_id,omitempty" mapstructure:"teacher_id,omitempty"` // 老师ID, 可以为空
 	TimeSlots []int  `json:"time_slots" mapstructure:"time_slots"`                     // 时间段与时间点
-	Limit     string `json:"limit" mapstructure:"limit"`                               // 限制: 固定排课: fixed, 尽量排: prefer, 禁止排课: not
+	Limit     string `json:"limit" mapstructure:"limit"`                               // 限制: 固定排课: fixed, 尽量排: prefer, 尽量不排课: avoid, 禁止排课: not
 	Desc      string `json:"desc" mapstructure:"desc"`                                 // 描述
 }
 
 // 生成字符串
 func (c *Class) String() string {
-	return fmt.Sprintf("ID: %d, GradeID: %d, ClassID: %d, SubjectID: %d, TeacherID: %d, TimeSlot: %d, Limit: %s, Desc: %s", c.ID,
+	return fmt.Sprintf("ID: %d, GradeID: %d, ClassID: %d, SubjectID: %d, TeacherID: %d, TimeSlots: %v, Limit: %s, Desc: %s", c.ID,
 		c.GradeID, c.ClassID, c.SubjectID, c.TeacherID, c.TimeSlots, c.Limit, c.Desc)
 }
 
@@ -92,10 +91,6 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 		if c.Limit == "fixed" || c.Limit == "prefer" {
 
 			preCheckPassed = c.GradeID == SN.GradeID && (c.ClassID == 0 || c.ClassID == SN.ClassID) && isContain
-			for _, t := range element.TimeSlots {
-				preCheckPassed = preCheckPassed && lo.Contains(c.TimeSlots, t)
-			}
-
 			isReward = preCheckPassed && (c.SubjectID == 0 || c.SubjectID == element.SubjectID) &&
 				(c.TeacherID == 0 || c.TeacherID == element.TeacherID)
 		}
@@ -108,10 +103,8 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 			isReward = false
 		}
 
-		// 测试
-		// if element.ClassSN == "8_9_1" && c.GradeID == 9 && c.ClassID == 1 && c.SubjectID == 8 && element.TimeSlot == 12 && c.TimeSlot == 12 {
-		// 	// fmt.Printf("SN: %+v\n element: %+v\n c: %+v\n", SN, element, c)
-		// 	fmt.Printf("=== sn: %s, timeSlot: %d, limit: %s,  preCheckPassed: %v, isReward: %v\n", element.ClassSN, element.TimeSlot, c.Limit, preCheckPassed, isReward)
+		// if element.ClassSN == "1_9_1" && c.GradeID == 9 && c.ClassID == 1 && c.SubjectID == 1 {
+		// 	fmt.Printf("class constraint, sn: %s, timeSlots: %v, limit: %s,  preCheckPassed: %v, isReward: %v\n", element.ClassSN, element.TimeSlots, c.Limit, preCheckPassed, isReward)
 		// }
 
 		return preCheckPassed, isReward, nil
@@ -122,9 +115,9 @@ func (c *Class) genConstraintFn() types.ConstraintFn {
 func (c *Class) getScore() int {
 	score := 0
 	if c.Limit == "fixed" {
-		score = math.MaxInt32
+		score = 6
 	} else if c.Limit == "prefer" {
-		score = 2
+		score = 4
 	}
 	return score
 }
@@ -133,9 +126,9 @@ func (c *Class) getScore() int {
 func (c *Class) getPenalty() int {
 	penalty := 0
 	if c.Limit == "not" {
-		penalty = math.MaxInt32
+		penalty = 6
 	} else if c.Limit == "avoid" {
-		penalty = 2
+		penalty = 4
 	}
 	return penalty
 }
