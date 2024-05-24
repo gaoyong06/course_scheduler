@@ -27,15 +27,15 @@ type Subject struct {
 	ID             int    `json:"id" mapstructure:"id"`                             // 自增ID
 	SubjectGroupID int    `json:"subject_group_id" mapstructure:"subject_group_id"` // 科目分组id
 	SubjectID      int    `json:"subject_id" mapstructure:"subject_id"`             // 科目id
-	TimeSlot       int    `json:"time_slot" mapstructure:"time_slot"`               // 时间段
+	TimeSlots      []int  `json:"time_slots" mapstructure:"time_slots"`             // 时间段集合
 	Limit          string `json:"limit" mapstructure:"limit"`                       // 限制 固定排: fixed, 优先排: prefer, 禁排: not, 尽量不排: avoid
 	Desc           string `json:"desc" mapstructure:"desc"`                         // 描述
 }
 
 // 生成字符串
 func (s *Subject) String() string {
-	return fmt.Sprintf("ID: %d, SubjectGroupID: %d, SubjectID: %d, TimeSlot: %d, Limit: %s, Desc: %s", s.ID,
-		s.SubjectGroupID, s.SubjectID, s.TimeSlot, s.Limit, s.Desc)
+	return fmt.Sprintf("ID: %d, SubjectGroupID: %d, SubjectID: %d, TimeSlots: %v, Limit: %s, Desc: %s", s.ID,
+		s.SubjectGroupID, s.SubjectID, s.TimeSlots, s.Limit, s.Desc)
 }
 
 // 获取科目优先排禁排规则
@@ -74,8 +74,6 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		subjectID := element.SubjectID
-		timeSlots := element.TimeSlots
-
 		subject, err := models.FindSubjectByID(subjectID, subjects)
 		if err != nil {
 			return false, false, err
@@ -84,17 +82,25 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 		preCheckPassed := false
 		isReward := false
 
+		// 当前时间段,是否包含在约束时间段内
+		intersect := lo.Intersect(s.TimeSlots, element.TimeSlots)
+		isContain := len(intersect) > 0
+
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if s.Limit == "fixed" || s.Limit == "prefer" {
-			preCheckPassed = lo.Contains(timeSlots, s.TimeSlot)
+			preCheckPassed = isContain
 			isReward = preCheckPassed && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
 		}
 
 		// 禁排,尽量不排是: 不排没关系, 排了就处罚
 		if s.Limit == "not" || s.Limit == "avoid" {
-			preCheckPassed = lo.Contains(timeSlots, s.TimeSlot) && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
+			preCheckPassed = isContain && (s.SubjectGroupID == 0 || lo.Contains(subject.SubjectGroupIDs, s.SubjectGroupID)) && (s.SubjectID == 0 || s.SubjectID == subjectID)
 			isReward = false
 		}
+
+		// if element.ClassSN == "1_9_1" && s.SubjectID == 1 {
+		// 	log.Printf("subject constraint, sn: %s, timeSlots: %v, limit: %s,  preCheckPassed: %v, isReward: %v\n", element.ClassSN, element.TimeSlots, s.Limit, preCheckPassed, isReward)
+		// }
 
 		return preCheckPassed, isReward, nil
 	}
@@ -104,9 +110,9 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 func (s *Subject) getScore() int {
 	score := 0
 	if s.Limit == "fixed" {
-		score = 3
+		score = 6
 	} else if s.Limit == "prefer" {
-		score = 2
+		score = 4
 	}
 	return score
 }
@@ -115,9 +121,9 @@ func (s *Subject) getScore() int {
 func (s *Subject) getPenalty() int {
 	penalty := 0
 	if s.Limit == "not" {
-		penalty = 3
+		penalty = 6
 	} else if s.Limit == "avoid" {
-		penalty = 2
+		penalty = 4
 	}
 	return penalty
 }
