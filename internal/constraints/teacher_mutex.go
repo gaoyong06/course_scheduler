@@ -3,7 +3,6 @@
 package constraints
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"course_scheduler/internal/utils"
@@ -45,8 +44,8 @@ func (t *TeacherMutex) genRule() *types.Rule {
 		Name:     "teacherMutex",
 		Type:     "dynamic",
 		Fn:       fn,
-		Score:    0,
-		Penalty:  config.MaxPenaltyScore,
+		Score:    4,
+		Penalty:  6,
 		Weight:   1,
 		Priority: 1,
 	}
@@ -72,7 +71,7 @@ func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 
 		shouldPenalize := false
 		if preCheckPassed {
-			shouldPenalize = isTeacherSameDay(teacherAID, teacherBID, classMatrix, element, schedule)
+			shouldPenalize = isElementTeacherOnSameDay(teacherAID, teacherBID, classMatrix, element, schedule)
 		}
 
 		return preCheckPassed, !shouldPenalize, nil
@@ -80,10 +79,13 @@ func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 }
 
 // 判断教师A,教师B是否同一天都有课
-func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) bool {
+func isElementTeacherOnSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) bool {
 
-	teacher1Days := make(map[int]bool)
-	teacher2Days := make(map[int]bool)
+	teacherADays := make(map[int]bool)
+	teacherBDays := make(map[int]bool)
+
+	onSameDay := false
+
 	timeSlots := element.GetTimeSlots()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
@@ -99,7 +101,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 							timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
 							for _, timeSlot := range timeSlots1 {
 								day := timeSlot / totalClassesPerDay
-								teacher1Days[day] = true // 将时间段转换为天数
+								teacherADays[day] = true // 将时间段转换为天数
 							}
 
 						}
@@ -113,7 +115,7 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 							timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
 							for _, timeSlot := range timeSlots1 {
 								day := timeSlot / totalClassesPerDay
-								teacher2Days[day] = true // 将时间段转换为天数
+								teacherBDays[day] = true // 将时间段转换为天数
 							}
 						}
 					}
@@ -122,8 +124,15 @@ func isTeacherSameDay(teacherAID, teacherBID int, classMatrix *types.ClassMatrix
 		}
 	}
 
-	if teacher1Days[elementDay] && teacher2Days[elementDay] {
-		return true
+	if element.TeacherID == teacherAID {
+		onSameDay = teacherBDays[elementDay]
 	}
-	return false
+
+	if element.TeacherID == teacherBID {
+		onSameDay = teacherADays[elementDay]
+	}
+
+	// log.Printf("teacher mutex, element.timeSlots: %v, element.TeacherID: %d, teacherAID: %d, teacherBID: %d, elementDay: %d, onSameDay: %v\n", element.TimeSlots, element.TeacherID, teacherAID, teacherBID, elementDay, onSameDay)
+
+	return onSameDay
 }
