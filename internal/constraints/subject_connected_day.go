@@ -5,7 +5,6 @@ import (
 	"course_scheduler/internal/types"
 	"course_scheduler/internal/utils"
 	"fmt"
-	"log"
 )
 
 // 连堂课各天次数限制
@@ -55,9 +54,7 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		totalClassesPerDay := schedule.GetTotalClassesPerDay()
-		classSN := element.GetClassSN()
 		teacherID := element.GetTeacherID()
-		venueID := element.GetVenueID()
 		gradeID := element.GradeID
 		classID := element.ClassID
 		subjectID := element.SubjectID
@@ -70,24 +67,35 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 
 		// 这里使用第1个时间段
 		weekday := timeSlots[0]/totalClassesPerDay + 1
-		// count = weekdayConnectedCountMap[weekday]
 
-		if element.IsConnected && gradeID == s.GradeID && (classID == s.ClassID || s.ClassID == 0) && (weekday == s.Weekday || s.Weekday == 0) && (teacherID == s.TeacherID || subjectID == s.SubjectID) {
+		// 如果年级(班级)科目不为空,则计算年级(班级)科目的连堂课数量
+		if element.IsConnected && gradeID == s.GradeID && (classID == s.ClassID || s.ClassID == 0) && (weekday == s.Weekday || s.Weekday == 0) && subjectID == s.SubjectID {
 
 			preCheckPassed = true
+			weekdayConnectedCountMap, err := s.countSubjectDayConnectedClasses(classMatrix, element, schedule)
+			if err != nil {
+				return false, false, err
+			}
+			count = weekdayConnectedCountMap[weekday]
+		}
 
-			weekdayConnectedCountMap = countDayConnectedClasses(classMatrix, classSN, teacherID, venueID, schedule)
+		// 如果年级(班级)科目为空 且教师ID不为空,则计算教师的连堂课数量
+		if element.IsConnected && s.GradeID == 0 && s.ClassID == 0 && (weekday == s.Weekday || s.Weekday == 0) && teacherID == s.TeacherID {
+
+			preCheckPassed = true
+			weekdayConnectedCountMap = s.countTeacherDayConnectedClasses(classMatrix, element, schedule)
 			count = weekdayConnectedCountMap[weekday]
 		}
 
 		// 固定次数
-		if preCheckPassed && count < s.Count {
+		count++
+		if preCheckPassed && count == s.Count {
 			isReward = true
 		}
 
-		if element.IsConnected {
-			log.Printf("subject connected day constraint, sn: %s, element.TimeSlots: %#v, (gradeID: %d, s.GradeID: %d), (classID: %d, s.ClassID: %d), (weekday: %d, s.Weekday: %d),(teacherID: %d, s.TeacherID: %d), (subjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", classSN, element.TimeSlots, gradeID, s.GradeID, classID, s.ClassID, weekday, s.Weekday, teacherID, s.TeacherID, subjectID, s.SubjectID, count, preCheckPassed, isReward)
-		}
+		// if element.IsConnected {
+		// 	log.Printf("subject connected day constraint, sn: %s, element.TimeSlots: %#v, (gradeID: %d, s.GradeID: %d), (classID: %d, s.ClassID: %d), (weekday: %d, s.Weekday: %d),(teacherID: %d, s.TeacherID: %d), (subjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", classSN, element.TimeSlots, gradeID, s.GradeID, classID, s.ClassID, weekday, s.Weekday, teacherID, s.TeacherID, subjectID, s.SubjectID, count, preCheckPassed, isReward)
+		// }
 		return preCheckPassed, isReward, nil
 	}
 }
@@ -98,21 +106,82 @@ func (s *SubjectConnectedDay) getPoints() int {
 	return 6
 }
 
-// countDayClasses 计算每天的科目数量
-func countDayConnectedClasses(classMatrix *types.ClassMatrix, sn string, teacherID, venueID int, schedule *models.Schedule) map[int]int {
+// 计算特定年级(班级)科目的每天的连堂课数量
+func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (map[int]int, error) {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// key: 星期几, val: 连堂课数量
 	weekdayConnectedCountMap := make(map[int]int)
-	for timeSlotStr, element := range classMatrix.Elements[sn][teacherID][venueID] {
 
-		timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-		if element.Val.Used == 1 && element.IsConnected {
-			weekday := timeSlots[0]/totalClassesPerDay + 1
-			// 星期几
-			weekdayConnectedCountMap[weekday]++
+	gradeID := element.GradeID
+	classID := element.ClassID
+	subjectID := element.SubjectID
+
+	for sn, classMap := range classMatrix.Elements {
+
+		SN, err := types.ParseSN(sn)
+		if err != nil {
+			return nil, err
 		}
 
+		isValid := false
+		// 年级,科目信息一致
+		if SN.GradeID == gradeID && SN.GradeID == s.GradeID && SN.SubjectID == subjectID && SN.SubjectID == s.SubjectID {
+
+			// 班级信息一致
+			if s.ClassID != 0 {
+				if SN.ClassID == classID && SN.ClassID == s.ClassID {
+					isValid = true
+				}
+			} else {
+				isValid = true
+			}
+		}
+
+		// 符合条件
+		if isValid {
+			for _, teacherMap := range classMap {
+				for _, venueMap := range teacherMap {
+					for timeSlotStr, element := range venueMap {
+						if element.Val.Used == 1 && element.IsConnected {
+							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							weekday := timeSlots[0]/totalClassesPerDay + 1
+							// 星期几
+							weekdayConnectedCountMap[weekday]++
+						}
+					}
+				}
+			}
+		}
 	}
+
+	return weekdayConnectedCountMap, nil
+}
+
+// 计算特定教师的每天的连堂课数量
+func (s *SubjectConnectedDay) countTeacherDayConnectedClasses(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) map[int]int {
+
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	// key: 星期几, val: 连堂课数量
+	weekdayConnectedCountMap := make(map[int]int)
+
+	for _, classMap := range classMatrix.Elements {
+		for id, teacherMap := range classMap {
+			if id == element.TeacherID && id == s.TeacherID {
+				for _, venueMap := range teacherMap {
+					for timeSlotStr, element := range venueMap {
+
+						if element.Val.Used == 1 && element.IsConnected {
+							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							weekday := timeSlots[0]/totalClassesPerDay + 1
+							// 星期几
+							weekdayConnectedCountMap[weekday]++
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return weekdayConnectedCountMap
 }
