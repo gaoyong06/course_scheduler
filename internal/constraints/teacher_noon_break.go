@@ -67,7 +67,7 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 
 		teacherID := t.TeacherID
 		currTeacherID := element.TeacherID
-		elementPeriods := getElementPeriods(element, schedule)
+		elementPeriods := types.GetElementPeriods(element, schedule)
 
 		// 上午
 		_, forenoonEndPeriod := schedule.GetPeriodWithRange("forenoon")
@@ -99,7 +99,7 @@ func isTeacherInBothPeriods(element types.Element, teacherID int, forenoonEndPer
 	if periods, ok := dayPeriodCount[elementDay]; ok {
 
 		// 当前元素排课的节次
-		elementPeriods := getElementPeriods(element, schedule)
+		elementPeriods := types.GetElementPeriods(element, schedule)
 
 		// 判断当前元素的节次是上午最后一节,还是下午第一节
 		// 如果是上午最后一节,则判断下午第一节,是否已经有排课
@@ -143,20 +143,4 @@ func calcTeacherDayClasses(classMatrix *types.ClassMatrix, teacherID int, schedu
 		}
 	}
 	return dayPeriodCount
-}
-
-// 当前元素排课信息的节次
-func getElementPeriods(element types.Element, schedule *models.Schedule) []int {
-
-	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	currTimeSlots := element.TimeSlots
-
-	// 当前元素,课程所在的节次
-	var currPeriods []int
-	for _, currTimeSlot := range currTimeSlots {
-		currPeriod := currTimeSlot % totalClassesPerDay
-		currPeriods = append(currPeriods, currPeriod)
-	}
-
-	return currPeriods
 }
