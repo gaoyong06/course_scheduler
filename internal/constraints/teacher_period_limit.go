@@ -76,7 +76,7 @@ func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 		// 当前元素排课的节次
 		elementPeriods := types.GetElementPeriods(element, schedule)
 
-		preCheckPassed := teacherID == currTeacherID && lo.Contains(elementPeriods, period) && element.Val.Used == 0
+		preCheckPassed := teacherID == currTeacherID && lo.Contains(elementPeriods, period)
 
 		shouldPenalize := false
 		if preCheckPassed {
