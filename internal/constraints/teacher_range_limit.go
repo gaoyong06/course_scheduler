@@ -117,8 +117,8 @@ func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, class
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, element := range venueMap {
-					if element.Val.Used == 1 && element.TeacherID == teacherID {
+				for timeSlotStr, e := range venueMap {
+					if e.Val.Used == 1 && e.TeacherID == teacherID {
 
 						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 						for _, timeSlot := range timeSlots {

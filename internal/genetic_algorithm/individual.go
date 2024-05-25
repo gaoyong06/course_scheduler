@@ -49,8 +49,8 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 		numGenesInChromosome := 0
 		for teacherID, teacherMap := range classMap {
 			for venueID, venueMap := range teacherMap {
-				for timeSlotStr, element := range venueMap {
-					if element.Val.Used == 1 {
+				for timeSlotStr, e := range venueMap {
+					if e.Val.Used == 1 {
 						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 
 						// 将每个课班的时间、教室、老师作为染色体上的基因
@@ -60,9 +60,9 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 							VenueID:            venueID,
 							TimeSlots:          timeSlots,
 							IsConnected:        len(timeSlots) == 2,
-							PassedConstraints:  element.GetPassedConstraints(),
-							FailedConstraints:  element.GetFailedConstraints(),
-							SkippedConstraints: element.GetSkippedConstraints(),
+							PassedConstraints:  e.GetPassedConstraints(),
+							FailedConstraints:  e.GetFailedConstraints(),
+							SkippedConstraints: e.GetSkippedConstraints(),
 						}
 						chromosome.Genes = append(chromosome.Genes, gene)
 						numGenesInChromosome++

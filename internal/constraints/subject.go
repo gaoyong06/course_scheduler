@@ -154,8 +154,8 @@ func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, gradeID, classID, s
 			if SN.SubjectID == subjectID {
 				for _, teacherMap := range classMap {
 					for _, venueMap := range teacherMap {
-						for _, element := range venueMap {
-							if element.Val.Used == 1 {
+						for _, e := range venueMap {
+							if e.Val.Used == 1 {
 								totalScheduledHours++
 							}
 						}

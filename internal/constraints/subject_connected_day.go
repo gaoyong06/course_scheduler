@@ -38,7 +38,8 @@ func GetSubjectConnectedDayRules(constraints []*SubjectConnectedDay) []*types.Ru
 func (s *SubjectConnectedDay) genRule() *types.Rule {
 	fn := s.genConstraintFn()
 	return &types.Rule{
-		Name:     "subjectConnectedDay",
+		Name: "subjectConnectedDay",
+		// Type:     "dynamic",
 		Type:     "fixed",
 		Fn:       fn,
 		Score:    s.getPoints(),
@@ -54,11 +55,12 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 		totalClassesPerDay := schedule.GetTotalClassesPerDay()
-		teacherID := element.GetTeacherID()
-		gradeID := element.GradeID
-		classID := element.ClassID
-		subjectID := element.SubjectID
-		timeSlots := element.GetTimeSlots()
+		eleTeacherID := element.GetTeacherID()
+		eleGradeID := element.GradeID
+		eleClassID := element.ClassID
+		eleSubjectID := element.SubjectID
+		eleTimeSlots := element.GetTimeSlots()
+		eleIsConnected := element.IsConnected
 
 		preCheckPassed := false
 		isReward := false
@@ -66,35 +68,36 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		var weekdayConnectedCountMap map[int]int
 
 		// 这里使用第1个时间段
-		weekday := timeSlots[0]/totalClassesPerDay + 1
+		eleWeekday := eleTimeSlots[0]/totalClassesPerDay + 1
 
 		// 如果年级(班级)科目不为空,则计算年级(班级)科目的连堂课数量
-		if element.IsConnected && gradeID == s.GradeID && (classID == s.ClassID || s.ClassID == 0) && (weekday == s.Weekday || s.Weekday == 0) && subjectID == s.SubjectID {
+		if eleIsConnected && eleGradeID == s.GradeID && (eleClassID == s.ClassID || s.ClassID == 0) && eleSubjectID == s.SubjectID && (eleWeekday == s.Weekday || s.Weekday == 0) {
 
 			preCheckPassed = true
 			weekdayConnectedCountMap, err := s.countSubjectDayConnectedClasses(classMatrix, element, schedule)
 			if err != nil {
 				return false, false, err
 			}
-			count = weekdayConnectedCountMap[weekday]
+			count = weekdayConnectedCountMap[eleWeekday]
 		}
 
 		// 如果年级(班级)科目为空 且教师ID不为空,则计算教师的连堂课数量
-		if element.IsConnected && s.GradeID == 0 && s.ClassID == 0 && (weekday == s.Weekday || s.Weekday == 0) && teacherID == s.TeacherID {
+		if eleIsConnected && s.GradeID == 0 && s.ClassID == 0 && eleTeacherID == s.TeacherID && (eleWeekday == s.Weekday || s.Weekday == 0) {
 
 			preCheckPassed = true
 			weekdayConnectedCountMap = s.countTeacherDayConnectedClasses(classMatrix, element, schedule)
-			count = weekdayConnectedCountMap[weekday]
+			count = weekdayConnectedCountMap[eleWeekday]
 		}
 
 		// 固定次数
 		count++
 		if preCheckPassed && count == s.Count {
+
 			isReward = true
 		}
 
-		// if element.IsConnected {
-		// 	log.Printf("subject connected day constraint, sn: %s, element.TimeSlots: %#v, (gradeID: %d, s.GradeID: %d), (classID: %d, s.ClassID: %d), (weekday: %d, s.Weekday: %d),(teacherID: %d, s.TeacherID: %d), (subjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", classSN, element.TimeSlots, gradeID, s.GradeID, classID, s.ClassID, weekday, s.Weekday, teacherID, s.TeacherID, subjectID, s.SubjectID, count, preCheckPassed, isReward)
+		// if preCheckPassed && isReward {
+		// 	log.Printf("SubjectConnectedDay, sn: %s, ele.TimeSlots: %#v, (eleGradeID: %d, s.GradeID: %d), (eleClassID: %d, s.ClassID: %d), (eleWeekday: %d, s.Weekday: %d),(eleTeacherID: %d, s.TeacherID: %d), (eleSubjectID: %d, s.SubjectID: %d), count: %d, preCheckPassed: %#v, isReward: %#v \n", element.ClassSN, element.TimeSlots, eleGradeID, s.GradeID, eleClassID, s.ClassID, eleWeekday, s.Weekday, eleTeacherID, s.TeacherID, eleSubjectID, s.SubjectID, count, preCheckPassed, isReward)
 		// }
 		return preCheckPassed, isReward, nil
 	}
@@ -102,7 +105,6 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 
 // 奖励分,惩罚分
 func (s *SubjectConnectedDay) getPoints() int {
-
 	return 6
 }
 
@@ -142,8 +144,8 @@ func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types
 		if isValid {
 			for _, teacherMap := range classMap {
 				for _, venueMap := range teacherMap {
-					for timeSlotStr, element := range venueMap {
-						if element.Val.Used == 1 && element.IsConnected {
+					for timeSlotStr, e := range venueMap {
+						if e.Val.Used == 1 && e.IsConnected {
 							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 							weekday := timeSlots[0]/totalClassesPerDay + 1
 							// 星期几
@@ -155,6 +157,7 @@ func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types
 		}
 	}
 
+	// log.Printf("countSubjectDayConnectedClasses, element.TimeSlots: %v, element.GradeID: %d, element.ClassID: %d, element.SubjectID: %d, weekdayConnectedCountMap: %v\n", element.TimeSlots, element.GradeID, element.ClassID, element.SubjectID, weekdayConnectedCountMap)
 	return weekdayConnectedCountMap, nil
 }
 
@@ -169,9 +172,9 @@ func (s *SubjectConnectedDay) countTeacherDayConnectedClasses(classMatrix *types
 		for id, teacherMap := range classMap {
 			if id == element.TeacherID && id == s.TeacherID {
 				for _, venueMap := range teacherMap {
-					for timeSlotStr, element := range venueMap {
+					for timeSlotStr, e := range venueMap {
 
-						if element.Val.Used == 1 && element.IsConnected {
+						if e.Val.Used == 1 && e.IsConnected {
 							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 							weekday := timeSlots[0]/totalClassesPerDay + 1
 							// 星期几

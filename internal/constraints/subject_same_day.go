@@ -60,12 +60,12 @@ func isSubjectSameDay(classMatrix *types.ClassMatrix, sn string, timeSlots []int
 
 	for _, teacherMap := range classMatrix.Elements[sn] {
 		for _, venueMap := range teacherMap {
-			for timeSlotStr, element := range venueMap {
+			for timeSlotStr, e := range venueMap {
 
 				timeSlots1 := utils.ParseTimeSlotStr(timeSlotStr)
 				intersect := lo.Intersect(timeSlots, timeSlots1)
 
-				if element.Val.Used == 1 && len(intersect) == 0 {
+				if e.Val.Used == 1 && len(intersect) == 0 {
 					day1 := timeSlots1[0] / totalClassesPerDay
 					if day == day1 {
 						count++

@@ -74,11 +74,11 @@ func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, s
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, element := range venueMap {
+				for timeSlotStr, e := range venueMap {
 
 					timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 					for _, timeSlot := range timeSlots {
-						if element.Val.Used == 1 && element.GradeID == gradeID && element.ClassID == classID && element.SubjectID == subjectID {
+						if e.Val.Used == 1 && e.GradeID == gradeID && e.ClassID == classID && e.SubjectID == subjectID {
 							subjectTimeSlots = append(subjectTimeSlots, timeSlot)
 						}
 					}
