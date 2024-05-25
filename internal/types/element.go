@@ -1,5 +1,7 @@
 package types
 
+import "course_scheduler/internal/models"
+
 // 课班适应性矩阵中的一个元素
 type Element struct {
 	ClassSN     string // 科目_年级_班级
@@ -84,4 +86,20 @@ func (e *Element) GetSkippedConstraints() []string {
 
 	skippedConstraints := append(fixedSkipped, dynamicSkipped...)
 	return skippedConstraints
+}
+
+// 当前元素排课信息的节次
+func GetElementPeriods(element Element, schedule *models.Schedule) []int {
+
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+	currTimeSlots := element.TimeSlots
+
+	// 当前元素,课程所在的节次
+	var currPeriods []int
+	for _, currTimeSlot := range currTimeSlots {
+		currPeriod := currTimeSlot % totalClassesPerDay
+		currPeriods = append(currPeriods, currPeriod)
+	}
+
+	return currPeriods
 }

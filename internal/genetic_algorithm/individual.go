@@ -676,7 +676,7 @@ func (i *Individual) PrintSchedule(schedule *models.Schedule, subjects []*models
 		fmt.Println("   |", strings.Join(getWeekdays(), " | "), "|")
 		fmt.Println("---+-------------------------------------------")
 		for c := 0; c < totalClassesPerDay; c++ {
-			fmt.Printf("%-2d |", c)
+			fmt.Printf("%-2d |", c+1)
 			for d := 0; d < numWorkdays; d++ {
 				class, ok := scheduleMap[gradeAndClass][d][c]
 				if !ok {
