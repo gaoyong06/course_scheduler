@@ -82,8 +82,11 @@ func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 		if preCheckPassed {
 			count := countTeacherClassInPeriod(teacherID, period, classMatrix, schedule)
 
-			// 这里count++是指,假设给当前节点排课count会+1
-			count++
+			// 如果当前元素已经被排课,要去除掉
+			// 否则,则假设在现在的节点排课，count要加1
+			if element.Val.Used == 0 {
+				count++
+			}
 			shouldPenalize = preCheckPassed && count > maxClassesCount
 
 		}

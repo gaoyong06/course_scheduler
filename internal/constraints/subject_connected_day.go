@@ -38,9 +38,8 @@ func GetSubjectConnectedDayRules(constraints []*SubjectConnectedDay) []*types.Ru
 func (s *SubjectConnectedDay) genRule() *types.Rule {
 	fn := s.genConstraintFn()
 	return &types.Rule{
-		Name: "subjectConnectedDay",
-		// Type:     "dynamic",
-		Type:     "fixed",
+		Name:     "subjectConnectedDay",
+		Type:     "dynamic",
 		Fn:       fn,
 		Score:    s.getPoints(),
 		Penalty:  s.getPoints(),
@@ -89,8 +88,12 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 			count = weekdayConnectedCountMap[eleWeekday]
 		}
 
-		// 固定次数
-		count++
+		// 如果当前元素已经被排课,要去除掉
+		// 否则,则假设在现在的节点排课，count要加1
+		if element.Val.Used == 0 {
+			count++
+		}
+
 		if preCheckPassed && count == s.Count {
 
 			isReward = true

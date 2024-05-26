@@ -70,3 +70,17 @@ func GetConnectedTimeSlots(schedule *models.Schedule, availableSlots []int) (int
 	// 没有找到可用的连堂课时间，返回-1，-1
 	return -1, -1
 }
+
+// 从timeSlotStr切片中获取连堂课时间段,组成切片返回
+func GetConnectedTimeSlotStrs(timeSlotStrs []string) []string {
+
+	var strs []string
+	for _, str := range timeSlotStrs {
+
+		parts := strings.Split(str, "_")
+		if len(parts) == 2 {
+			strs = append(strs, str)
+		}
+	}
+	return strs
+}

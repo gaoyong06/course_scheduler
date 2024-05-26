@@ -98,6 +98,7 @@ func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 
 	// 将timeSlots随机打乱
 	timeSlots = lo.Shuffle(timeSlots)
+	// timeSlot是否占用
 	timeSlotsMap := make(map[int]bool)
 
 	// 将时间段数组中的各个项作为键，值都为 false 地添加到 timeSlotsMap 中
