@@ -67,6 +67,91 @@ func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*m
 	return subjectClasses, nil
 }
 
+// 连堂课时间段集合
+// 基于教师集合和教室集合确定时间集合
+// TODO: 如果教师有禁止时间,教室有禁止时间,这里是否需要处理? 如何处理?
+// 每周5天上学,每天8节课, 一周40节课, {0, 1, 2, ... 39}
+//
+// 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
+// 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
+// 根据前一个逻辑选择的教师,和教室,给定可选的时间段
+func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+
+	var timeSlotStrs []string
+
+	// 课班(科目班级)每周周连堂课次数
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	if connectedCount > 0 {
+
+		timeSlots := schedule.GenWeekTimeSlots()
+		// timeSlots = lo.Shuffle(timeSlots)
+		totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
+		// timeSlot是否占用
+		timeSlotsMap := make(map[int]bool)
+
+		// 将时间段数组中的各个项作为键，值都为 false 地添加到 timeSlotsMap 中
+		for _, timeSlot := range timeSlots {
+			timeSlotsMap[timeSlot] = false
+		}
+
+		// 可以设置连堂课的时间是上午和下午
+		amStart, amEnd := schedule.GetPeriodWithRange("forenoon")
+		pmStart, pmEnd := schedule.GetPeriodWithRange("afternoon")
+
+		for _, timeSlot := range timeSlots {
+
+			if !lo.Contains(timeSlots, timeSlot+1) {
+				continue
+			}
+
+			if timeSlotsMap[timeSlot] || timeSlotsMap[timeSlot+1] {
+				continue
+			}
+
+			day1, day2 := timeSlot/totalClassesPerDay, (timeSlot+1)/totalClassesPerDay
+			period1, period2 := timeSlot%totalClassesPerDay, (timeSlot+1)%totalClassesPerDay
+
+			if day1 == day2 && ((period1 >= amStart && period1 <= amEnd && period2 >= amStart && period2 <= amEnd) ||
+				(period1 >= pmStart && period1 <= pmEnd && period2 >= pmStart && period2 <= pmEnd)) {
+				timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d_%d", timeSlot, timeSlot+1))
+				timeSlotsMap[timeSlot] = true
+				timeSlotsMap[timeSlot+1] = true
+			}
+		}
+	}
+	return timeSlotStrs
+}
+
+// 普通课时间集合
+// 基于教师集合和教室集合确定时间集合
+// TODO: 如果教师有禁止时间,教室有禁止时间,这里是否需要处理? 如何处理?
+// 每周5天上学,每天8节课, 一周40节课, {0, 1, 2, ... 39}
+//
+// 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
+// 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
+// 根据前一个逻辑选择的教师,和教室,给定可选的时间段
+func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+
+	var timeSlotStrs []string
+
+	// 班级每周的排课时间段节数
+	total := schedule.TotalClassesPerWeek()
+
+	// 课班(科目班级)每周周连堂课次数
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+
+	normalCount := total - connectedCount*2
+	if normalCount > 0 {
+
+		timeSlots := schedule.GenWeekTimeSlots()
+		for _, timeSlot := range timeSlots {
+			timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d", timeSlot))
+		}
+	}
+	return timeSlotStrs
+}
+
 // 时间集合
 // 基于教师集合和教室集合确定时间集合
 // TODO: 如果教师有禁止时间,教室有禁止时间,这里是否需要处理? 如何处理?
@@ -77,6 +162,7 @@ func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*m
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
 //
 // 2024.5.20 将一周的课时，根据教学安排,分成多个组,每个组内的普通课课时和连堂课课时和教学计划相同,最后不足以分成一个组的,都按照普通课处理
+// TODO: 下面的的方法,需要废弃掉
 func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) ([]string, error) {
 
 	var timeSlotStrs []string
@@ -91,6 +177,10 @@ func SubjectClassTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 	numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
 	// 连堂课次数
+
+	// 测试
+	numConnectedClassesPerWeek = 5
+
 	waitAllocConnectedCount := numConnectedClassesPerWeek
 
 	// 普通课次数

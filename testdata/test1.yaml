@@ -15,13 +15,13 @@ schedule:
 #   4. 晚自习
 #   5. 班会
 subjects:
-  - { subject_id: 1, name: "语文", subject_group_ids: [1], priority: 3 }
-  - { subject_id: 2, name: "数学", subject_group_ids: [1], priority: 3 }
-  - { subject_id: 3, name: "英语", subject_group_ids: [1], priority: 3 }
-  - { subject_id: 4, name: "物理", subject_group_ids: [1], priority: 2 }
-  - { subject_id: 5, name: "化学", subject_group_ids: [1], priority: 2 }
-  - { subject_id: 6, name: "道法", subject_group_ids: [2], priority: 1 }
-  - { subject_id: 7, name: "历史", subject_group_ids: [2], priority: 1 }
+  - { subject_id: 1, name: "语文", subject_group_ids: [1], priority: 2 }
+  - { subject_id: 2, name: "数学", subject_group_ids: [1], priority: 2 }
+  - { subject_id: 3, name: "英语", subject_group_ids: [1], priority: 2 }
+  - { subject_id: 4, name: "物理", subject_group_ids: [1], priority: 1 }
+  - { subject_id: 5, name: "化学", subject_group_ids: [1], priority: 1 }
+  - { subject_id: 6, name: "道法", subject_group_ids: [2], priority: 3 }
+  - { subject_id: 7, name: "历史", subject_group_ids: [2], priority: 3 }
   - { subject_id: 17, name: "班会", subject_group_ids: [5], priority: 6 }
 
 
@@ -77,115 +77,115 @@ teachers:
 teach_task_allocations:
   # 语文
   - {id: 1, grade_id: 9, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 2, grade_id: 9, class_id: 2, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 3, grade_id: 9, class_id: 3, subject_id: 1, teacher_id: 2, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 4, grade_id: 9, class_id: 4, subject_id: 1, teacher_id: 2, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 5, grade_id: 9, class_id: 5, subject_id: 1, teacher_id: 3, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 6, grade_id: 9, class_id: 6, subject_id: 1, teacher_id: 3, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 7, grade_id: 9, class_id: 7, subject_id: 1, teacher_id: 4, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 8, grade_id: 9, class_id: 8, subject_id: 1, teacher_id: 4, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 9, grade_id: 9, class_id: 9, subject_id: 1, teacher_id: 5, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 10, grade_id: 9, class_id: 10, subject_id: 1, teacher_id: 5, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 11, grade_id: 9, class_id: 11, subject_id: 1, teacher_id: 6, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 12, grade_id: 9, class_id: 12, subject_id: 1, teacher_id: 6, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 13, grade_id: 9, class_id: 13, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
-  # - {id: 14, grade_id: 9, class_id: 14, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 2, grade_id: 9, class_id: 2, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 3, grade_id: 9, class_id: 3, subject_id: 1, teacher_id: 2, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 4, grade_id: 9, class_id: 4, subject_id: 1, teacher_id: 2, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 5, grade_id: 9, class_id: 5, subject_id: 1, teacher_id: 3, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 6, grade_id: 9, class_id: 6, subject_id: 1, teacher_id: 3, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 7, grade_id: 9, class_id: 7, subject_id: 1, teacher_id: 4, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 8, grade_id: 9, class_id: 8, subject_id: 1, teacher_id: 4, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 9, grade_id: 9, class_id: 9, subject_id: 1, teacher_id: 5, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 10, grade_id: 9, class_id: 10, subject_id: 1, teacher_id: 5, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 11, grade_id: 9, class_id: 11, subject_id: 1, teacher_id: 6, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 12, grade_id: 9, class_id: 12, subject_id: 1, teacher_id: 6, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 13, grade_id: 9, class_id: 13, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 14, grade_id: 9, class_id: 14, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
 
   # 数学  
   - {id: 15, grade_id: 9, class_id: 1, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 16, grade_id: 9, class_id: 2, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 17, grade_id: 9, class_id: 3, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 18, grade_id: 9, class_id: 4, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 19, grade_id: 9, class_id: 5, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 20, grade_id: 9, class_id: 6, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 21, grade_id: 9, class_id: 7, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 22, grade_id: 9, class_id: 8, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 23, grade_id: 9, class_id: 9, subject_id: 2, teacher_id: 12, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 24, grade_id: 9, class_id: 10, subject_id: 2, teacher_id: 13, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 25, grade_id: 9, class_id: 11, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 26, grade_id: 9, class_id: 12, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 27, grade_id: 9, class_id: 13, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  # - {id: 28, grade_id: 9, class_id: 14, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 16, grade_id: 9, class_id: 2, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 17, grade_id: 9, class_id: 3, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 18, grade_id: 9, class_id: 4, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 19, grade_id: 9, class_id: 5, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 20, grade_id: 9, class_id: 6, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 21, grade_id: 9, class_id: 7, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 22, grade_id: 9, class_id: 8, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 23, grade_id: 9, class_id: 9, subject_id: 2, teacher_id: 12, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 24, grade_id: 9, class_id: 10, subject_id: 2, teacher_id: 13, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 25, grade_id: 9, class_id: 11, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 26, grade_id: 9, class_id: 12, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 27, grade_id: 9, class_id: 13, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  - {id: 28, grade_id: 9, class_id: 14, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
 
   # 英语  
-  # - {id: 29, grade_id: 9, class_id: 1, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 30, grade_id: 9, class_id: 2, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 31, grade_id: 9, class_id: 3, subject_id: 3, teacher_id: 17, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 32, grade_id: 9, class_id: 4, subject_id: 3, teacher_id: 17, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 33, grade_id: 9, class_id: 5, subject_id: 3, teacher_id: 18, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 34, grade_id: 9, class_id: 6, subject_id: 3, teacher_id: 18, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 35, grade_id: 9, class_id: 7, subject_id: 3, teacher_id: 19, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 36, grade_id: 9, class_id: 8, subject_id: 3, teacher_id: 19, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 37, grade_id: 9, class_id: 9, subject_id: 3, teacher_id: 20, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 38, grade_id: 9, class_id: 10, subject_id: 3, teacher_id: 20, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 39, grade_id: 9, class_id: 11, subject_id: 3, teacher_id: 21, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 40, grade_id: 9, class_id: 12, subject_id: 3, teacher_id: 21, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 41, grade_id: 9, class_id: 13, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
-  # - {id: 42, grade_id: 9, class_id: 14, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 29, grade_id: 9, class_id: 1, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 30, grade_id: 9, class_id: 2, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 31, grade_id: 9, class_id: 3, subject_id: 3, teacher_id: 17, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 32, grade_id: 9, class_id: 4, subject_id: 3, teacher_id: 17, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 33, grade_id: 9, class_id: 5, subject_id: 3, teacher_id: 18, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 34, grade_id: 9, class_id: 6, subject_id: 3, teacher_id: 18, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 35, grade_id: 9, class_id: 7, subject_id: 3, teacher_id: 19, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 36, grade_id: 9, class_id: 8, subject_id: 3, teacher_id: 19, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 37, grade_id: 9, class_id: 9, subject_id: 3, teacher_id: 20, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 38, grade_id: 9, class_id: 10, subject_id: 3, teacher_id: 20, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 39, grade_id: 9, class_id: 11, subject_id: 3, teacher_id: 21, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 40, grade_id: 9, class_id: 12, subject_id: 3, teacher_id: 21, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 41, grade_id: 9, class_id: 13, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
+  - {id: 42, grade_id: 9, class_id: 14, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
 
   # 物理  
-  # - {id: 43, grade_id: 9, class_id: 1, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 44, grade_id: 9, class_id: 2, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 45, grade_id: 9, class_id: 3, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 46, grade_id: 9, class_id: 4, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 47, grade_id: 9, class_id: 5, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 48, grade_id: 9, class_id: 6, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 49, grade_id: 9, class_id: 7, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 50, grade_id: 9, class_id: 8, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 51, grade_id: 9, class_id: 9, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 52, grade_id: 9, class_id: 10, subject_id: 4, teacher_id: 26, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 53, grade_id: 9, class_id: 11, subject_id: 4, teacher_id: 26, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 54, grade_id: 9, class_id: 12, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 55, grade_id: 9, class_id: 13, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 56, grade_id: 9, class_id: 14, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 43, grade_id: 9, class_id: 1, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 44, grade_id: 9, class_id: 2, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 45, grade_id: 9, class_id: 3, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 46, grade_id: 9, class_id: 4, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 47, grade_id: 9, class_id: 5, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 48, grade_id: 9, class_id: 6, subject_id: 4, teacher_id: 24, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 49, grade_id: 9, class_id: 7, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 50, grade_id: 9, class_id: 8, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 51, grade_id: 9, class_id: 9, subject_id: 4, teacher_id: 25, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 52, grade_id: 9, class_id: 10, subject_id: 4, teacher_id: 26, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 53, grade_id: 9, class_id: 11, subject_id: 4, teacher_id: 26, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 54, grade_id: 9, class_id: 12, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 55, grade_id: 9, class_id: 13, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 56, grade_id: 9, class_id: 14, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
 
   # 化学
-  # - {id: 57, grade_id: 9, class_id: 1, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 58, grade_id: 9, class_id: 2, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 59, grade_id: 9, class_id: 3, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 60, grade_id: 9, class_id: 4, subject_id: 5, teacher_id: 29, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 61, grade_id: 9, class_id: 5, subject_id: 5, teacher_id: 29, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 62, grade_id: 9, class_id: 6, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 63, grade_id: 9, class_id: 7, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 64, grade_id: 9, class_id: 8, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 65, grade_id: 9, class_id: 9, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 66, grade_id: 9, class_id: 10, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 67, grade_id: 9, class_id: 11, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 68, grade_id: 9, class_id: 12, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 69, grade_id: 9, class_id: 13, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
-  # - {id: 70, grade_id: 9, class_id: 14, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 57, grade_id: 9, class_id: 1, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 58, grade_id: 9, class_id: 2, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 59, grade_id: 9, class_id: 3, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 60, grade_id: 9, class_id: 4, subject_id: 5, teacher_id: 29, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 61, grade_id: 9, class_id: 5, subject_id: 5, teacher_id: 29, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 62, grade_id: 9, class_id: 6, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 63, grade_id: 9, class_id: 7, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 64, grade_id: 9, class_id: 8, subject_id: 5, teacher_id: 30, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 65, grade_id: 9, class_id: 9, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 66, grade_id: 9, class_id: 10, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 67, grade_id: 9, class_id: 11, subject_id: 5, teacher_id: 31, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 68, grade_id: 9, class_id: 12, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 69, grade_id: 9, class_id: 13, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
+  - {id: 70, grade_id: 9, class_id: 14, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
     
   # 道法  
-  # - {id: 71, grade_id: 9, class_id: 1, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 72, grade_id: 9, class_id: 2, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 73, grade_id: 9, class_id: 3, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 74, grade_id: 9, class_id: 4, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 75, grade_id: 9, class_id: 5, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 76, grade_id: 9, class_id: 6, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 77, grade_id: 9, class_id: 7, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 78, grade_id: 9, class_id: 8, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 79, grade_id: 9, class_id: 9, subject_id: 6, teacher_id: 35, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 80, grade_id: 9, class_id: 10, subject_id: 6, teacher_id: 35, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 81, grade_id: 9, class_id: 11, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 82, grade_id: 9, class_id: 12, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 83, grade_id: 9, class_id: 13, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 84, grade_id: 9, class_id: 14, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 71, grade_id: 9, class_id: 1, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 72, grade_id: 9, class_id: 2, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 73, grade_id: 9, class_id: 3, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 74, grade_id: 9, class_id: 4, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 75, grade_id: 9, class_id: 5, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 76, grade_id: 9, class_id: 6, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 77, grade_id: 9, class_id: 7, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 78, grade_id: 9, class_id: 8, subject_id: 6, teacher_id: 34, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 79, grade_id: 9, class_id: 9, subject_id: 6, teacher_id: 35, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 80, grade_id: 9, class_id: 10, subject_id: 6, teacher_id: 35, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 81, grade_id: 9, class_id: 11, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 82, grade_id: 9, class_id: 12, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 83, grade_id: 9, class_id: 13, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 84, grade_id: 9, class_id: 14, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
 
   # 历史  
-  # - {id: 85, grade_id: 9, class_id: 1, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 86, grade_id: 9, class_id: 2, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 87, grade_id: 9, class_id: 3, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 88, grade_id: 9, class_id: 4, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 89, grade_id: 9, class_id: 5, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 90, grade_id: 9, class_id: 6, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 91, grade_id: 9, class_id: 7, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 92, grade_id: 9, class_id: 8, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 93, grade_id: 9, class_id: 9, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 94, grade_id: 9, class_id: 10, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 95, grade_id: 9, class_id: 11, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 96, grade_id: 9, class_id: 12, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 97, grade_id: 9, class_id: 13, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
-  # - {id: 98, grade_id: 9, class_id: 14, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 85, grade_id: 9, class_id: 1, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 86, grade_id: 9, class_id: 2, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 87, grade_id: 9, class_id: 3, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 88, grade_id: 9, class_id: 4, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 89, grade_id: 9, class_id: 5, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 90, grade_id: 9, class_id: 6, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 91, grade_id: 9, class_id: 7, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 92, grade_id: 9, class_id: 8, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 93, grade_id: 9, class_id: 9, subject_id: 7, teacher_id: 38, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 94, grade_id: 9, class_id: 10, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 95, grade_id: 9, class_id: 11, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 96, grade_id: 9, class_id: 12, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 97, grade_id: 9, class_id: 13, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
+  - {id: 98, grade_id: 9, class_id: 14, subject_id: 7, teacher_id: 39, num_classes_per_week: 4, num_connected_classes_per_week: 1}
 
 grades:
   - school_id: 1
@@ -200,53 +200,53 @@ grades:
         class_id: 2
         name: "(2)班"
 
-      # - school_id: 1
-      #   class_id: 3
-      #   name: "(3)班"
+      - school_id: 1
+        class_id: 3
+        name: "(3)班"
 
-      # - school_id: 1
-      #   class_id: 4
-      #   name: "(4)班"
+      - school_id: 1
+        class_id: 4
+        name: "(4)班"
 
-      # - school_id: 1
-      #   class_id: 5
-      #   name: "(5)班"
+      - school_id: 1
+        class_id: 5
+        name: "(5)班"
 
-      # - school_id: 1
-      #   class_id: 6
-      #   name: "(6)班"
+      - school_id: 1
+        class_id: 6
+        name: "(6)班"
 
-      # - school_id: 1
-      #   class_id: 7
-      #   name: "(7)班"
+      - school_id: 1
+        class_id: 7
+        name: "(7)班"
 
-      # - school_id: 1
-      #   class_id: 8
-      #   name: "(8)班"
+      - school_id: 1
+        class_id: 8
+        name: "(8)班"
 
-      # - school_id: 1
-      #   class_id: 9
-      #   name: "(9)班"
+      - school_id: 1
+        class_id: 9
+        name: "(9)班"
 
-      # - school_id: 1
-      #   class_id: 10
-      #   name: "(10)班"
+      - school_id: 1
+        class_id: 10
+        name: "(10)班"
 
-      # - school_id: 1
-      #   class_id: 11
-      #   name: "(11)班"
+      - school_id: 1
+        class_id: 11
+        name: "(11)班"
 
-      # - school_id: 1
-      #   class_id: 12
-      #   name: "(12)班"
+      - school_id: 1
+        class_id: 12
+        name: "(12)班"
 
-      # - school_id: 1
-      #   class_id: 13
-      #   name: "(13)班"
+      - school_id: 1
+        class_id: 13
+        name: "(13)班"
 
-      # - school_id: 1
-      #   class_id: 14
-      #   name: "(14)班"
+      - school_id: 1
+        class_id: 14
+        name: "(14)班"
 
 
 ##### 班级固排禁排
@@ -256,6 +256,14 @@ class_constraints:
   
   # 九年级 周五 第8节 禁排
   - {grade_id: 9, class_id: 0, subject_id: 0, teacher_id: 0, time_slots: [39], limit: "not", desc: ""}
+
+  # 九年级 英语 周二  禁排
+  - {grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, time_slots: [8,9,10,11,12,13,14,15], limit: "not", desc: ""}
+
+  # 测试
+  # 九年级(1)班 语文 周二 第1,2节 固排
+  # 九年级(1)班 语文 周四 第3,4节 固排
+  # - {grade_id: 9, class_id: 1, subject_id: 1, teacher_id: 1, time_slots: [8,9,26,27], limit: "not", desc: ""}
   
   # ======= 九年级(1)班
   # 九年级(1)班 语文 周二 第1,2节 固排
@@ -315,4 +323,44 @@ subject_connected_day_constraints:
   - {id: 1, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 5, count: 1}
 
 
+# 科目固排禁排
+# subject_constraints:
+#   # 语文,数学,英语, 物理, 化学 优先排 上午
+#   - {id: 9, subject_group_id: 0, subject_id: 1, time_slots: [0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27,32,33,34,35], limit: "prefer", desc: ""}
   
+# 教师固排禁排
+# 教师 语文1 周一~周三 第1,2节 固排
+teacher_constraints:
+  # - {id: 1, teacher_group_id: 0, teacher_id: 1, time_slots: [0,1,8,9,16,17], limit: "not", desc: ""}
+    
+# 科目互斥
+subject_mutex_constraints:
+  # - {id: 1, subject_a_id: 5, subject_b_id: 6}
+
+# 教师互斥
+teacher_mutex_constraints:
+  # - {id: 1, teacher_a_id: 28, teacher_b_id: 33}
+
+# 科目顺序现在
+# 化学 不排在 道法 之前
+subject_order_constraints:
+  # - {id: 1, subject_a_id: 5, subject_b_id: 6}
+
+# 每天限制
+subject_day_limit_constraints:
+  # 化学 每天 固定 一节课
+  # - {id: 1, grade_id: 9, class_id: 1, object: "subject", subject_id: 5, teacher_id: 0, weekday: 2, type: "max", count: 3}
+  # 教师 化学1 每天 固定 一节课
+  # - {id: 1, grade_id: 0, class_id: 0, object: "teacher", subject_id: 0, teacher_id: 28, weekday: 0, type: "fixed", count: 1}
+    
+# 教师跨上午下午
+teacher_noon_break_constraints:
+  # - {id: 1, teacher_id: 1}
+
+# 教师节次限制  
+teacher_period_limit_constraints:
+  # - {id: 1, teacher_id: 1, period: 3, max_classes_count: 2 }
+
+# 教师时间段限制
+teacher_range_limit_constraints:
+# - {id: 1, teacher_id: 1, range: "forenoon", max_classes_count: 2 }

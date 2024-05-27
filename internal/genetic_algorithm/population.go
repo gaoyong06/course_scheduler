@@ -78,14 +78,14 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, bool, error) {
 
 	replaced := false
-	for _, individual := range population {
+	for i, individual := range population {
 
-		// log.Printf("individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
+		log.Printf("update best individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
 		if individual.Fitness > (*bestIndividual).Fitness {
 
-			log.Printf("UpdateBest individual.Fitness: %d, bestIndividual.Fitness: %d\n", individual.Fitness, bestIndividual.Fitness)
+			log.Printf("update best individual.Fitness: %d, bestIndividual.Fitness: %d\n", individual.Fitness, bestIndividual.Fitness)
 			newBestIndividual := individual.Copy()
 			bestIndividual = newBestIndividual
 			replaced = true
@@ -201,7 +201,11 @@ func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskA
 	// 打印课班适应性矩阵信息
 	// classMatrix.PrintKeysAndLength()
 
-	calculateFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
+	// 计算固定约束条件得分
+	calcFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
+
+	// 计算动态约束条件得分
+	calcDynamicScores(classMatrix, schedule, taskAllocs, constraints)
 	allocateCount, err := allocateClassMatrix(classMatrix, schedule, constraints)
 
 	if err != nil {
@@ -210,16 +214,26 @@ func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskA
 	log.Printf("Class matrix %p allocate count  %d\n", classMatrix, allocateCount)
 
 	// 打印矩阵
-	// classMatrix.PrintConstraintElement()
+	classMatrix.PrintConstraintElement()
 
 	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }
 
 // 计算固定得分
-func calculateFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
+func calcFixedScores(classMatrix *types.ClassMatrix, subjects []*models.Subject, teachers []*models.Teacher, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
 
-	fixedRules := constraint.GetFixedRules(subjects, teachers, constraints)
-	err := classMatrix.CalcElementFixedScores(schedule, taskAllocs, fixedRules)
+	rules := constraint.GetFixedRules(subjects, teachers, constraints)
+	err := classMatrix.CalcElementFixedScores(schedule, taskAllocs, rules)
+	if err != nil {
+		log.Fatalf("Failed to calculate fixed scores: %v", err)
+	}
+}
+
+// 计算动态约束得分
+func calcDynamicScores(classMatrix *types.ClassMatrix, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, constraints map[string]interface{}) {
+
+	rules := constraint.GetDynamicRules(schedule, constraints)
+	err := classMatrix.CalcElementDynamicScores(schedule, taskAllocs, rules)
 	if err != nil {
 		log.Fatalf("Failed to calculate fixed scores: %v", err)
 	}
