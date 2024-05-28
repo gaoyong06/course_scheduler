@@ -4,7 +4,6 @@ import (
 	"course_scheduler/internal/models"
 	"fmt"
 	"log"
-	"math/rand"
 	"sort"
 
 	"github.com/samber/lo"
@@ -87,14 +86,6 @@ func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 		// timeSlots = lo.Shuffle(timeSlots)
 		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
-		// timeSlot是否占用
-		timeSlotsMap := make(map[int]bool)
-
-		// 将时间段数组中的各个项作为键，值都为 false 地添加到 timeSlotsMap 中
-		for _, timeSlot := range timeSlots {
-			timeSlotsMap[timeSlot] = false
-		}
-
 		// 可以设置连堂课的时间是上午和下午
 		amStart, amEnd := schedule.GetPeriodWithRange("forenoon")
 		pmStart, pmEnd := schedule.GetPeriodWithRange("afternoon")
@@ -105,18 +96,12 @@ func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 				continue
 			}
 
-			if timeSlotsMap[timeSlot] || timeSlotsMap[timeSlot+1] {
-				continue
-			}
-
 			day1, day2 := timeSlot/totalClassesPerDay, (timeSlot+1)/totalClassesPerDay
 			period1, period2 := timeSlot%totalClassesPerDay, (timeSlot+1)%totalClassesPerDay
 
 			if day1 == day2 && ((period1 >= amStart && period1 <= amEnd && period2 >= amStart && period2 <= amEnd) ||
 				(period1 >= pmStart && period1 <= pmEnd && period2 >= pmStart && period2 <= pmEnd)) {
 				timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d_%d", timeSlot, timeSlot+1))
-				timeSlotsMap[timeSlot] = true
-				timeSlotsMap[timeSlot+1] = true
 			}
 		}
 	}
@@ -265,12 +250,12 @@ func shuffleSubjectClassesOrder(subjectClasses []SubjectClass) {
 	sort.Slice(subjectClasses, func(i, j int) bool {
 		return subjectClasses[i].Priority > subjectClasses[j].Priority
 	})
-	for i := len(subjectClasses) - 1; i > 0; i-- {
-		j := rand.Intn(i + 1)
-		// 只有当优先级相同时，才随机打乱顺序
-		if subjectClasses[i].Priority == subjectClasses[j].Priority {
-			subjectClasses[i], subjectClasses[j] = subjectClasses[j], subjectClasses[i]
-		}
-	}
-	log.Println("Class order shuffled")
+	// for i := len(subjectClasses) - 1; i > 0; i-- {
+	// 	j := rand.Intn(i + 1)
+	// 	// 只有当优先级相同时，才随机打乱顺序
+	// 	if subjectClasses[i].Priority == subjectClasses[j].Priority {
+	// 		subjectClasses[i], subjectClasses[j] = subjectClasses[j], subjectClasses[i]
+	// 	}
+	// }
+	log.Println("Class order shuffled  ")
 }

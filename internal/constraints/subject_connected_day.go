@@ -112,6 +112,7 @@ func (s *SubjectConnectedDay) getPoints() int {
 }
 
 // 计算特定年级(班级)科目的每天的连堂课数量
+// key: 星期几, value:
 func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (map[int]int, error) {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
@@ -135,11 +136,17 @@ func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types
 
 			// 班级信息一致
 			if s.ClassID != 0 {
+
+				// 只限制特定班级
 				if SN.ClassID == classID && SN.ClassID == s.ClassID {
 					isValid = true
 				}
 			} else {
-				isValid = true
+
+				// 限制所有的班级
+				if SN.ClassID == classID {
+					isValid = true
+				}
 			}
 		}
 

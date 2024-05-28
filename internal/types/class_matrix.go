@@ -85,6 +85,7 @@ func (cm *ClassMatrix) Init() error {
 		connectedTimeSlots := getConnectedTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
 		normalTimeSlots := getNormalTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
 		// log.Printf("gradeID: %d, classID: %d, subjectID: %d, connectedTimeSlots: %v, normalTimeSlots: %v\n", gradeID, classID, subjectID, connectedTimeSlots, normalTimeSlots)
+
 		if len(connectedTimeSlots) == 0 && len(normalTimeSlots) == 0 {
 			return fmt.Errorf("no time slot available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
@@ -157,55 +158,53 @@ func (cm *ClassMatrix) UpdateElementScore(schedule *models.Schedule, taskAllocs 
 
 // 根据班级适应性矩阵分配课时
 // 循环迭代各个课班，根据匹配结果值, 为每个课班选择课班适应性矩阵中可用的点位，并记录，下个课班选择点位时会避免冲突(一个点位可以引起多点位冲突)
+// 排课顺序：
+// 1: 代班多的 教师 对应科目的 大课(连堂课)
+// 2. 代班少的 教师 对应科目的 大课
+// 3. 代表多的 教师 对应科目的 小课(普通课)
+// 4. 代表少的 教师 对应科目的 小课
 func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 
 	// 已分配的课时数量
 	allocateCount := 0
 
 	// 优先分配连堂课
-	for _, subjectClasses := range cm.SubjectClasses {
+	for _, sc := range cm.SubjectClasses {
 
-		sn := subjectClasses.SN.Generate()
-		gradeID := subjectClasses.SN.GradeID
-		classID := subjectClasses.SN.ClassID
-		subjectID := subjectClasses.SN.SubjectID
-		// numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
+		sn := sc.SN.Generate()
+		gradeID := sc.SN.GradeID
+		classID := sc.SN.ClassID
+		subjectID := sc.SN.SubjectID
 		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 
 		// 分配课时
 		connectedCount := numConnectedClassesPerWeek
-		// 优先分配连堂课
 		for i := 0; i < connectedCount; i++ {
-			// isConnected := connectedCount > 0
 			if err := cm.allocateClass(sn, true, rules); err != nil {
 				return allocateCount, err
 			}
-			// connectedCount--
 			allocateCount++
 		}
 	}
 
-	// 然后在分配普通课
-	for _, subjectClasses := range cm.SubjectClasses {
+	// 最后在分配普通课
+	for _, sc := range cm.SubjectClasses {
 
-		sn := subjectClasses.SN.Generate()
-		gradeID := subjectClasses.SN.GradeID
-		classID := subjectClasses.SN.ClassID
-		subjectID := subjectClasses.SN.SubjectID
+		sn := sc.SN.Generate()
+		gradeID := sc.SN.GradeID
+		classID := sc.SN.ClassID
+		subjectID := sc.SN.SubjectID
 		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 
 		// 分配课时
 		normalCount := numClassesPerWeek - numConnectedClassesPerWeek*2
 
-
 		// 然后在分配普通课
 		for i := 0; i < normalCount; i++ {
-			// isConnected := connectedCount > 0
 			if err := cm.allocateClass(sn, false, rules); err != nil {
 				return allocateCount, err
 			}
-			// connectedCount--
 			allocateCount++
 		}
 	}
@@ -267,7 +266,8 @@ func (cm *ClassMatrix) PrintConstraintElement() {
 	fmt.Println("================== PrintConstraintElement ==================")
 
 	for sn, classMap := range cm.Elements {
-		if sn == "1_9_1" || sn == "2_9_1" || sn == "3_9_1" {
+		// if sn == "1_9_1" || sn == "1_9_2" || sn == "3_9_1" {
+		if strings.Contains(sn, "1_9_") {
 			for teacherID, teacherMap := range classMap {
 				for venueID, venueMap := range teacherMap {
 					for timeSlotStr, element := range venueMap {
@@ -312,7 +312,7 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 	classID := SN.ClassID
 	subjectID := SN.SubjectID
 
-	var err error
+	// var err error
 
 	for snKey, classMap := range cm.Elements {
 
@@ -328,13 +328,11 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 						continue
 					}
 
-					// 检查该时间段段,是否被同年级同班级, 或者相同教师, 占用
-					isUsed := false
-					for _, timeSlot := range element.TimeSlots {
-						isUsed, err = cm.isTimeSlotUsed(gradeID, classID, element.TeacherID, timeSlot)
-						if err != nil {
-							return -1, -1, "", -1, err
-						}
+					// 检查当前元素的时间段,同年级同班级 是否有排课
+					// 或者相同教师,在该时间段 是否有排课
+					isUsed, err := cm.isTimeSlotsUsed(element.GradeID, element.ClassID, element.TeacherID, element.TimeSlots)
+					if err != nil {
+						return -1, -1, "", -1, err
 					}
 
 					if isUsed {
@@ -369,7 +367,7 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 }
 
 // 辅助函数：检查时间段是否已被使用
-func (cm *ClassMatrix) isTimeSlotUsed(gradeID int, classID int, teacherID int, timeSlot int) (bool, error) {
+func (cm *ClassMatrix) isTimeSlotsUsed(gradeID int, classID int, teacherID int, timeSlots []int) (bool, error) {
 
 	for sn, classMap := range cm.Elements {
 
@@ -384,7 +382,9 @@ func (cm *ClassMatrix) isTimeSlotUsed(gradeID int, classID int, teacherID int, t
 
 					if element.Val.Used == 1 && ((SN.GradeID == gradeID && SN.ClassID == classID) || teacherIDKey == teacherID) {
 
-						if lo.Contains(element.TimeSlots, timeSlot) {
+						intersect := lo.Intersect(element.TimeSlots, timeSlots)
+						isContain := len(intersect) > 0
+						if isContain {
 							return true, nil
 						}
 					}
