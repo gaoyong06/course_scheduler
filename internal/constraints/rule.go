@@ -19,10 +19,12 @@ func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher, const
 			classConstraints := constraintValue.([]*Class)
 			classRules := GetClassRules(classConstraints)
 			rules = append(rules, classRules...)
+
 		case "Subject":
 			subjectConstraints := constraintValue.([]*Subject)
 			subjectRules := GetSubjectRules(subjects, subjectConstraints)
 			rules = append(rules, subjectRules...)
+
 		case "Teacher":
 			teacherConstraints := constraintValue.([]*Teacher)
 			teacherRules := GetTeacherRules(teachers, teacherConstraints)
@@ -41,16 +43,13 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 
 	// 下面是一些内部规则
 	// 连堂课校验(科目课时数大于上课天数时, 禁止同一天排多次课是非连续的, 要排成连堂课)
-	rules = append(rules, subjectConnectedRule)
+	// rules = append(rules, subjectConnectedRule)
 
 	// 同一个年级,班级,科目相同节次的排课是否超过数量限制
 	rules = append(rules, subjectPeriodLimitRule)
 
-	// 同一个年级,班级,科目,在同一天的排课是否超过数量限制
-	// rules = append(rules, subjectDayLimitRule)
-
 	// 科目课时小于天数,禁止同一天排多次相同科目的课
-	// rules = append(rules, subjectSameDayRule)
+	rules = append(rules, subjectSameDayRule)
 
 	for constraintType, constraintValue := range constraints {
 		switch constraintType {
@@ -71,11 +70,6 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			// 每天限制(科目,教师每天的排课数量限制)
 			subjectDayLimitConstraints := constraintValue.([]*SubjectDayLimit)
 			rules = append(rules, GetSubjectDayLimitRules(subjectDayLimitConstraints)...)
-
-		case "SubjectConnectedDay":
-			// 连堂课每天限制
-			subjectConnectedDayConstraints := constraintValue.([]*SubjectConnectedDay)
-			rules = append(rules, GetSubjectConnectedDayRules(subjectConnectedDayConstraints)...)
 
 		case "TeacherMutex":
 
@@ -100,6 +94,11 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			// 教师时间段限制
 			teacherRangeLimitConstraints := constraintValue.([]*TeacherRangeLimit)
 			rules = append(rules, GetTeacherRangeLimitRules(teacherRangeLimitConstraints)...)
+
+		case "SubjectConnectedDay":
+			// 连堂课每天限制
+			subjectConnectedDayConstraints := constraintValue.([]*SubjectConnectedDay)
+			rules = append(rules, GetSubjectConnectedDayRules(subjectConnectedDayConstraints)...)
 		}
 	}
 

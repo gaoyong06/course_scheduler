@@ -7,6 +7,7 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"fmt"
+	"math"
 
 	"github.com/samber/lo"
 )
@@ -108,7 +109,7 @@ func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn
 func (t *Teacher) getScore() int {
 	score := 0
 	if t.Limit == "fixed" {
-		score = 6
+		score = math.MaxInt32
 	} else if t.Limit == "prefer" {
 		score = 4
 	}
@@ -119,7 +120,7 @@ func (t *Teacher) getScore() int {
 func (t *Teacher) getPenalty() int {
 	penalty := 0
 	if t.Limit == "not" {
-		penalty = 6
+		penalty = math.MaxInt32
 	} else if t.Limit == "avoid" {
 		penalty = 4
 	}

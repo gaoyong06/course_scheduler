@@ -17,13 +17,14 @@ var subjectSameDayRule = &types.Rule{
 	Name:     "subjectSameDay",
 	Type:     "dynamic",
 	Fn:       ssdRuleFn,
-	Score:    0,
-	Penalty:  2,
+	Score:    2,
+	Penalty:  6,
 	Weight:   1,
 	Priority: 1,
 }
 
-// 科目课时小于天数,禁止同一天排多次相同科目的课
+// 如果上课次数和上课天数相同, 或者小于上课天数 则一天排一次课
+// 正常来讲,上课总次数,应该和上课天数相同
 func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
@@ -37,16 +38,17 @@ func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	subjectID := SN.SubjectID
 
 	// 科目周课时
-	classHours := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	total := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	count := total - connectedCount
 
-	preCheckPassed := classHours <= numWorkdays
+	preCheckPassed := count <= numWorkdays
 
 	shouldPenalize := false
 	if preCheckPassed {
 
 		// 检查同一天是否安排科目的排课
-		ret := isSubjectSameDay(classMatrix, classSN, timeSlots, schedule)
-		shouldPenalize = ret
+		shouldPenalize = isSubjectSameDay(classMatrix, classSN, timeSlots, schedule)
 	}
 	return preCheckPassed, !shouldPenalize, nil
 }

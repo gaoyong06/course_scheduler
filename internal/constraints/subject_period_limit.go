@@ -17,7 +17,7 @@ var subjectPeriodLimitRule = &types.Rule{
 	Type:     "dynamic",
 	Fn:       splRuleFn,
 	Score:    0,
-	Penalty:  1,
+	Penalty:  2,
 	Weight:   1,
 	Priority: 1,
 }
