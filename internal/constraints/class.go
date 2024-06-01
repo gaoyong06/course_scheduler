@@ -133,3 +133,16 @@ func (c *Class) getPenalty() int {
 	}
 	return penalty
 }
+
+// 获取班级禁排时间
+func GetClassNotTimeSlots(gradeID, classID int, constraints []*Class) []int {
+
+	var timeSlots []int
+	for _, constraint := range constraints {
+		// 禁排
+		if constraint.Limit == "not" && (constraint.GradeID == gradeID && (constraint.ClassID == 0 || constraint.ClassID == classID)) {
+			timeSlots = append(timeSlots, constraint.TimeSlots...)
+		}
+	}
+	return timeSlots
+}

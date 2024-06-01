@@ -2,9 +2,11 @@ package utils
 
 import (
 	"course_scheduler/internal/models"
+	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
 
@@ -83,4 +85,45 @@ func GetConnectedTimeSlotStrs(timeSlotStrs []string) []string {
 		}
 	}
 	return strs
+}
+
+// 全部的连堂课时间段
+func GetAllConnectedTimeSlots(schedule *models.Schedule) []string {
+
+	var timeSlotStrs []string
+
+	timeSlots := schedule.GenWeekTimeSlots()
+	totalClassesPerDay := schedule.GetTotalClassesPerDay()
+
+	// 设置连堂课的时间是上午和下午
+	amStart, amEnd := schedule.GetPeriodWithRange("forenoon")
+	pmStart, pmEnd := schedule.GetPeriodWithRange("afternoon")
+
+	for _, timeSlot := range timeSlots {
+
+		if !lo.Contains(timeSlots, timeSlot+1) {
+			continue
+		}
+
+		day1, day2 := timeSlot/totalClassesPerDay, (timeSlot+1)/totalClassesPerDay
+		period1, period2 := timeSlot%totalClassesPerDay, (timeSlot+1)%totalClassesPerDay
+
+		if day1 == day2 && ((period1 >= amStart && period1 <= amEnd && period2 >= amStart && period2 <= amEnd) ||
+			(period1 >= pmStart && period1 <= pmEnd && period2 >= pmStart && period2 <= pmEnd)) {
+			timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d_%d", timeSlot, timeSlot+1))
+		}
+	}
+
+	return timeSlotStrs
+}
+
+// 全部的普通课时间段
+func GetAllNormalTimeSlots(schedule *models.Schedule) []string {
+
+	var timeSlotStrs []string
+	timeSlots := schedule.GenWeekTimeSlots()
+	for _, timeSlot := range timeSlots {
+		timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d", timeSlot))
+	}
+	return timeSlotStrs
 }

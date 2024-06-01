@@ -30,29 +30,3 @@ func TestTimeSoltHelper(t *testing.T) {
 	timeSlots4, timeSlots5 := utils.GetConnectedTimeSlots(schedule, availableSlots)
 	fmt.Printf("utils.GetConnectedTimeSlots timeSlots4: %d, timeSlots5: %d\n", timeSlots4, timeSlots5)
 }
-
-// func TestSubjectClassTimeSlots(t *testing.T) {
-
-// 	input, err := base.LoadTestData()
-// 	if err != nil {
-// 		log.Fatalf("load test data failed. %s", err)
-// 	}
-// 	schedule := input.Schedule
-// 	taskAllocs := input.TeachTaskAllocations
-// 	teachers := input.Teachers
-// 	venueMap := input.SubjectVenueMap
-
-// 	gradeID := 9
-// 	classID := 1
-// 	subjectID := 1
-
-// 	teacherIDs := models.ClassTeacherIDs(gradeID, classID, subjectID, teachers)
-// 	venueIDs := models.ClassVenueIDs(gradeID, classID, subjectID, venueMap)
-
-// 	usedTimeSlotsMap := make(map[int]bool)
-
-// 	timeSlotStrs, err := types.SubjectClassTimeSlots(schedule, taskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs, usedTimeSlotsMap)
-
-// 	fmt.Printf("timeSlotStrs: %#v\n", timeSlotStrs)
-// 	fmt.Printf("err: %#v\n", err)
-// }

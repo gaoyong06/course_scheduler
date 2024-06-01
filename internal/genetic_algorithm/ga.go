@@ -86,15 +86,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 			bestGen = gen
 		}
 
-		// 评估适应度
-		// for _, individual := range population {
-		// 	individual.Fitness = EvaluateFitness(scheduleInput, individual.LessonListMap)
-		// 	individual.Generation = currentIteration
-		// }
-		// log.Println("Fitness evaluation completed")
-
 		// 计算最优,最差,平均适应度
-		// bestIndividual = GetBestIndividual(currentPopulation)
 		worstIndividual = GetWorstIndividual(currentPopulation)
 		monitor.BestFitnessPerGen[gen] = bestIndividual.Fitness
 		monitor.WorstFitnessPerGen[gen] = worstIndividual.Fitness

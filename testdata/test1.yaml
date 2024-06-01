@@ -15,14 +15,14 @@ schedule:
 #   4. 晚自习
 #   5. 班会
 subjects:
-  - { subject_id: 1, name: "语文", subject_group_ids: [1], priority: 2 }
+  - { subject_id: 1, name: "语文", subject_group_ids: [1], priority: 1 }
   - { subject_id: 2, name: "数学", subject_group_ids: [1], priority: 2 }
-  - { subject_id: 3, name: "英语", subject_group_ids: [1], priority: 2 }
-  - { subject_id: 4, name: "物理", subject_group_ids: [1], priority: 1 }
-  - { subject_id: 5, name: "化学", subject_group_ids: [1], priority: 1 }
-  - { subject_id: 6, name: "道法", subject_group_ids: [2], priority: 3 }
-  - { subject_id: 7, name: "历史", subject_group_ids: [2], priority: 3 }
-  - { subject_id: 17, name: "班会", subject_group_ids: [5], priority: 6 }
+  - { subject_id: 3, name: "英语", subject_group_ids: [1], priority: 3 }
+  - { subject_id: 4, name: "物理", subject_group_ids: [1], priority: 4 }
+  - { subject_id: 5, name: "化学", subject_group_ids: [1], priority: 5 }
+  - { subject_id: 6, name: "道法", subject_group_ids: [2], priority: 6 }
+  - { subject_id: 7, name: "历史", subject_group_ids: [2], priority: 7 }
+  - { subject_id: 17, name: "班会", subject_group_ids: [5], priority: 8 }
 
 
 teachers:
@@ -75,7 +75,7 @@ teachers:
 
 # 教学任务
 teach_task_allocations:
-  # 语文
+  # 语文 7
   - {id: 1, grade_id: 9, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
   - {id: 2, grade_id: 9, class_id: 2, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
   - {id: 3, grade_id: 9, class_id: 3, subject_id: 1, teacher_id: 2, num_classes_per_week: 7, num_connected_classes_per_week: 2}
@@ -91,23 +91,23 @@ teach_task_allocations:
   - {id: 13, grade_id: 9, class_id: 13, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
   - {id: 14, grade_id: 9, class_id: 14, subject_id: 1, teacher_id: 7, num_classes_per_week: 7, num_connected_classes_per_week: 2}
 
-  # 数学  
-  - {id: 15, grade_id: 9, class_id: 1, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 16, grade_id: 9, class_id: 2, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 17, grade_id: 9, class_id: 3, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 18, grade_id: 9, class_id: 4, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 19, grade_id: 9, class_id: 5, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 20, grade_id: 9, class_id: 6, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 21, grade_id: 9, class_id: 7, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 22, grade_id: 9, class_id: 8, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 23, grade_id: 9, class_id: 9, subject_id: 2, teacher_id: 12, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 24, grade_id: 9, class_id: 10, subject_id: 2, teacher_id: 13, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 25, grade_id: 9, class_id: 11, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 26, grade_id: 9, class_id: 12, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 27, grade_id: 9, class_id: 13, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
-  - {id: 28, grade_id: 9, class_id: 14, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 1}
+  # 数学 7  
+  - {id: 15, grade_id: 9, class_id: 1, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 16, grade_id: 9, class_id: 2, subject_id: 2, teacher_id: 8, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 17, grade_id: 9, class_id: 3, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 18, grade_id: 9, class_id: 4, subject_id: 2, teacher_id: 9, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 19, grade_id: 9, class_id: 5, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 20, grade_id: 9, class_id: 6, subject_id: 2, teacher_id: 10, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 21, grade_id: 9, class_id: 7, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 22, grade_id: 9, class_id: 8, subject_id: 2, teacher_id: 11, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 23, grade_id: 9, class_id: 9, subject_id: 2, teacher_id: 12, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 24, grade_id: 9, class_id: 10, subject_id: 2, teacher_id: 13, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 25, grade_id: 9, class_id: 11, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 26, grade_id: 9, class_id: 12, subject_id: 2, teacher_id: 14, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 27, grade_id: 9, class_id: 13, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 2}
+  - {id: 28, grade_id: 9, class_id: 14, subject_id: 2, teacher_id: 15, num_classes_per_week: 7, num_connected_classes_per_week: 2}
 
-  # 英语  
+  # 英语 6  
   - {id: 29, grade_id: 9, class_id: 1, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
   - {id: 30, grade_id: 9, class_id: 2, subject_id: 3, teacher_id: 16, num_classes_per_week: 6, num_connected_classes_per_week: 2}
   - {id: 31, grade_id: 9, class_id: 3, subject_id: 3, teacher_id: 17, num_classes_per_week: 6, num_connected_classes_per_week: 2}
@@ -123,7 +123,7 @@ teach_task_allocations:
   - {id: 41, grade_id: 9, class_id: 13, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
   - {id: 42, grade_id: 9, class_id: 14, subject_id: 3, teacher_id: 22, num_classes_per_week: 6, num_connected_classes_per_week: 2}
 
-  # 物理  
+  # 物理 5  
   - {id: 43, grade_id: 9, class_id: 1, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 44, grade_id: 9, class_id: 2, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 45, grade_id: 9, class_id: 3, subject_id: 4, teacher_id: 23, num_classes_per_week: 5, num_connected_classes_per_week: 1}
@@ -139,7 +139,7 @@ teach_task_allocations:
   - {id: 55, grade_id: 9, class_id: 13, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 56, grade_id: 9, class_id: 14, subject_id: 4, teacher_id: 27, num_classes_per_week: 5, num_connected_classes_per_week: 1}
 
-  # 化学
+  # 化学 5
   - {id: 57, grade_id: 9, class_id: 1, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 58, grade_id: 9, class_id: 2, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 59, grade_id: 9, class_id: 3, subject_id: 5, teacher_id: 28, num_classes_per_week: 5, num_connected_classes_per_week: 1}
@@ -155,7 +155,7 @@ teach_task_allocations:
   - {id: 69, grade_id: 9, class_id: 13, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
   - {id: 70, grade_id: 9, class_id: 14, subject_id: 5, teacher_id: 32, num_classes_per_week: 5, num_connected_classes_per_week: 1}
     
-  # 道法  
+  # 道法 4  
   - {id: 71, grade_id: 9, class_id: 1, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
   - {id: 72, grade_id: 9, class_id: 2, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
   - {id: 73, grade_id: 9, class_id: 3, subject_id: 6, teacher_id: 33, num_classes_per_week: 4, num_connected_classes_per_week: 1}
@@ -171,7 +171,7 @@ teach_task_allocations:
   - {id: 83, grade_id: 9, class_id: 13, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
   - {id: 84, grade_id: 9, class_id: 14, subject_id: 6, teacher_id: 36, num_classes_per_week: 4, num_connected_classes_per_week: 1}
 
-  # 历史  
+  # 历史 4  
   - {id: 85, grade_id: 9, class_id: 1, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
   - {id: 86, grade_id: 9, class_id: 2, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
   - {id: 87, grade_id: 9, class_id: 3, subject_id: 7, teacher_id: 37, num_classes_per_week: 4, num_connected_classes_per_week: 1}
@@ -312,15 +312,15 @@ subject_connected_day_constraints:
   # 九年级 语文 周二 连堂 1次
   # 九年级 语文 周四 连堂 1次
   - {id: 1, grade_id: 9, class_id: 0, subject_id: 1, teacher_id: 0, weekday: 2, count: 1}
-  - {id: 1, grade_id: 9, class_id: 0, subject_id: 1, teacher_id: 0, weekday: 4, count: 1}
+  - {id: 2, grade_id: 9, class_id: 0, subject_id: 1, teacher_id: 0, weekday: 4, count: 1}
     
   # 九年级 数学 周三 连堂 1次
-  - {id: 1, grade_id: 9, class_id: 0, subject_id: 2, teacher_id: 0, weekday: 3, count: 1}
+  - {id: 3, grade_id: 9, class_id: 0, subject_id: 2, teacher_id: 0, weekday: 3, count: 1}
 
   # 九年级 英语 周三 连堂 1次
   # 九年级 英语 周五 连堂 1次
-  - {id: 1, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 3, count: 1}
-  - {id: 1, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 5, count: 1}
+  - {id: 4, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 3, count: 1}
+  - {id: 5, grade_id: 9, class_id: 0, subject_id: 3, teacher_id: 0, weekday: 5, count: 1}
 
 
 # 科目固排禁排

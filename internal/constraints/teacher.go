@@ -126,3 +126,23 @@ func (t *Teacher) getPenalty() int {
 	}
 	return penalty
 }
+
+// 获取教师禁排时间
+func GetTeacherNotTimeSlots(teacherID int, teachers []*models.Teacher, constraints []*Teacher) ([]int, error) {
+
+	var timeSlots []int
+	teacher, err := models.FindTeacherByID(teacherID, teachers)
+	if err != nil {
+		return nil, err
+	}
+
+	teacherGroupIDs := teacher.TeacherGroupIDs
+	for _, constraint := range constraints {
+		// 禁排
+		if constraint.Limit == "not" && (constraint.TeacherID == teacherID || lo.Contains(teacherGroupIDs, constraint.TeacherGroupID)) {
+			timeSlots = append(timeSlots, constraint.TimeSlots...)
+		}
+	}
+
+	return timeSlots, nil
+}
