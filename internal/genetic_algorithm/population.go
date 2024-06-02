@@ -6,6 +6,7 @@ import (
 	constraint "course_scheduler/internal/constraints"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"fmt"
 	"log"
 	"sort"
 )
@@ -185,36 +186,52 @@ func CheckConflicts(population []*Individual) bool {
 // 创建个体
 func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
 
+	// 最大重试次数
+	retry := 6
+	allocated := false
+
 	classMatrix, err := types.NewClassMatrix(schedule, taskAllocs, subjects, teachers, subjectVenueMap)
 	if err != nil {
 		return nil, err
 	}
 
-	// 初始化课程矩阵
-	err = classMatrix.Init()
-	if err != nil {
-		return nil, err
+	for !allocated && retry > 0 {
+
+		// 初始化课程矩阵
+		err = classMatrix.Init()
+		if err != nil {
+			return nil, err
+		}
+
+		log.Printf("Class matrix %p initialized successfully \n", classMatrix)
+
+		// 打印课班适应性矩阵信息
+		// classMatrix.PrintKeysAndLength()
+
+		// 计算固定约束条件得分
+		calcFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
+
+		// 计算动态约束条件得分
+		calcDynamicScores(classMatrix, schedule, taskAllocs, constraints)
+
+		// 会出现因为排课时间有限和要满足，不能出现班级排课时间互斥,教师排课时间互斥的要求
+		// 而出现最终有课排不下去的情况,出现这种情况时,多试几次
+		allocateCount, err := allocateClassMatrix(classMatrix, schedule, constraints)
+		if err != nil {
+			log.Printf("allocate class matrix failed. allocate count: %d, err : %s\n", allocateCount, err)
+			retry--
+		}
+
+		allocated = true
+		log.Printf("allocate class matrix success. allocate count  %d\n", allocateCount)
+
+		// 打印矩阵
+		classMatrix.PrintConstraintElement()
 	}
 
-	log.Printf("Class matrix %p initialized successfully \n", classMatrix)
-
-	// 打印课班适应性矩阵信息
-	// classMatrix.PrintKeysAndLength()
-
-	// 计算固定约束条件得分
-	calcFixedScores(classMatrix, subjects, teachers, schedule, taskAllocs, constraints)
-
-	// 计算动态约束条件得分
-	calcDynamicScores(classMatrix, schedule, taskAllocs, constraints)
-	allocateCount, err := allocateClassMatrix(classMatrix, schedule, constraints)
-
-	if err != nil {
-		return nil, err
+	if !allocated {
+		return nil, fmt.Errorf("create individual failed. because allocate class matrix failed")
 	}
-	log.Printf("Class matrix %p allocate count  %d\n", classMatrix, allocateCount)
-
-	// 打印矩阵
-	classMatrix.PrintConstraintElement()
 
 	return newIndividual(classMatrix, schedule, subjects, teachers, constraints)
 }

@@ -20,7 +20,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 选择操作,选择个体的数量
 	selectionSize := config.SelectionSize
 	// 变异率
-	mutationRate := config.MutationRate
+	// mutationRate := config.MutationRate
 	// 交叉率
 	crossoverRate := config.CrossoverRate
 	// 选择最佳个体百分比
@@ -129,12 +129,12 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-				if err != nil {
-					return bestIndividual, bestGen, err
-				}
-				monitor.NumPreparedMutation[gen] = prepared
-				monitor.NumExecutedMutation[gen] = executed
+				// offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				// if err != nil {
+				// 	return bestIndividual, bestGen, err
+				// }
+				// monitor.NumPreparedMutation[gen] = prepared
+				// monitor.NumExecutedMutation[gen] = executed
 
 				// 更新种群
 				// 更新前后的个体数量不变

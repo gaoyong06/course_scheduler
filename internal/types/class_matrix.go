@@ -304,15 +304,13 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, string, int, error) {
 
 	maxScore := math.MinInt32
-	teacherID, venueID := -1, -1
+	teacherID, venueID := 0, 0
 	timeSlotStr := ""
 
 	SN, _ := ParseSN(sn)
 	gradeID := SN.GradeID
 	classID := SN.ClassID
 	subjectID := SN.SubjectID
-
-	// var err error
 
 	for snKey, classMap := range cm.Elements {
 
@@ -359,8 +357,8 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 	}
 
 	// 如果没有找到可用的时间段，则返回一个错误信息
-	if teacherID == -1 && venueID == -1 && timeSlotStr == "" {
-		return -1, -1, "", -1, fmt.Errorf("no available time slots for gradeID %d, classID %d, subjectID %d, isConnected %t", gradeID, classID, subjectID, isConnected)
+	if teacherID == 0 && venueID == 0 && timeSlotStr == "" {
+		return 0, 0, "", 0, fmt.Errorf("no available time slots for gradeID %d, classID %d, subjectID %d, isConnected %t", gradeID, classID, subjectID, isConnected)
 	}
 
 	return teacherID, venueID, timeSlotStr, maxScore, nil
