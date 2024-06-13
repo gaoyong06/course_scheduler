@@ -226,7 +226,7 @@ func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskA
 		log.Printf("allocate class matrix success. allocate count  %d\n", allocateCount)
 
 		// 打印矩阵
-		classMatrix.PrintConstraintElement()
+		// classMatrix.PrintConstraintElement()
 	}
 
 	if !allocated {

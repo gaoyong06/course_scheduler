@@ -15,6 +15,7 @@ import (
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
+// 返回值: 交叉后的个体,准备交叉次数,实际交叉次数,错误信息
 func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, subjectVenueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
@@ -33,17 +34,13 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			parent1 := selected[i].Copy()
 			parent2 := selected[i+1].Copy()
 
-			// 交叉操作并进行后续检查
+			// 执行交叉操作并进行后续检查
 			offspring1, offspring2, err := crossoverAndValidate(parent1, parent2, crossPoint, schedule, grades, teachers, constr1, constr2)
 
 			// 如果交叉操作出现错误, 则撤销当前交叉操作
-			if err != nil {
+			if err == nil {
 
-				log.Printf("undo the current crossover operation. prepared: %d, executed: %d, err: %s", prepared, executed, err)
-				offspring = append(offspring, selected[i], selected[i+1])
-
-			} else {
-
+				log.Printf("crossover and validate success. prepared: %d, executed: %d, err: %s", prepared, executed, err)
 				// 评估子代个体的适应度并赋值
 				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraintMap)
 				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraintMap)
@@ -62,14 +59,21 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 				offspring2.Fitness = fitness2
 
 				// 交叉后父代和子代的适应度
-				// fmt.Printf("individual1.Fitness: %d, individual2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", individual1.Fitness, individual2.Fitness, offspring1.Fitness, offspring2.Fitness)
+				fmt.Printf("parent1.Fitness: %d, parent2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", parent1.Fitness, parent2.Fitness, offspring1.Fitness, offspring2.Fitness)
 
 				offspring = append(offspring, offspring1, offspring2)
 				executed++
 
 				// 打印交叉明细
-				// log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+				log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+
+			} else {
+				log.Printf("undo the current crossover operation. prepared: %d, executed: %d, err: %s", prepared, executed, err)
+				offspring = append(offspring, selected[i], selected[i+1])
 			}
+
+		} else {
+			offspring = append(offspring, selected[i], selected[i+1])
 		}
 	}
 
@@ -88,6 +92,32 @@ func crossoverAndValidate(parent1, parent2 *Individual, crossPoint int, schedule
 	// 判断染色体数量是否相同
 	if len(offspring1.Chromosomes) != len(offspring2.Chromosomes) {
 		return nil, nil, fmt.Errorf("invalid offspring chromosomes length")
+	}
+
+	// 判断基因数量是否相同
+	for i, pc1 := range parent1.Chromosomes {
+		oc1 := offspring1.Chromosomes[i]
+		if len(pc1.Genes) != len(oc1.Genes) {
+			return nil, nil, fmt.Errorf("invalid offspring chromosome gene length. pc1 len: %d, oc1 len: %d", len(pc1.Genes), len(oc1.Genes))
+		}
+
+		oc2 := offspring2.Chromosomes[i]
+		if len(pc1.Genes) != len(oc2.Genes) {
+			return nil, nil, fmt.Errorf("invalid offspring chromosome gene length. pc1 len: %d, oc2 len: %d", len(pc1.Genes), len(oc2.Genes))
+		}
+	}
+
+	for i, pc2 := range parent2.Chromosomes {
+
+		oc1 := offspring1.Chromosomes[i]
+		if len(pc2.Genes) != len(oc1.Genes) {
+			return nil, nil, fmt.Errorf("invalid offspring chromosome gene length. pc2 len: %d, oc1 len: %d", len(pc2.Genes), len(oc1.Genes))
+		}
+
+		oc2 := offspring2.Chromosomes[i]
+		if len(pc2.Genes) != len(oc2.Genes) {
+			return nil, nil, fmt.Errorf("invalid offspring chromosome gene length. pc2 len: %d, oc2 len: %d", len(pc2.Genes), len(oc2.Genes))
+		}
 	}
 
 	// 判断各个染色体中课班信息是否相同
@@ -155,17 +185,18 @@ func crossoverIndividuals(parent1, parent2 *Individual, crossPoint int, schedule
 	count1, err1 := offspring1.resolveConflicts(schedule, teachers, constr1, constr2)
 	count2, err2 := offspring2.resolveConflicts(schedule, teachers, constr1, constr2)
 
-	if err1 == nil && err2 == nil {
-
-		// 个体内基因排序
-		offspring1.sortChromosomes()
-		offspring2.sortChromosomes()
-
-		log.Printf("crossover resolve conflicts success. count1: %d, count2: %d\n", count1, count2)
-
-		// 返回两个子代个体和nil错误
-		return offspring1, offspring2, nil
+	if err1 != nil || err2 != nil {
+		str := fmt.Sprintf("crossover resolve conflicts failed. offspring1 count: %d, offspring1 err: %s, offspring2 count: %d, offspring2 err: %s\n", count1, err1, count2, err2)
+		log.Println(str)
+		return nil, nil, fmt.Errorf(str)
 	}
 
-	return nil, nil, fmt.Errorf("ERROR: offspring repair timeSlot conflicts failed. err1: %v, err2: %v", err1, err2)
+	log.Printf("crossover resolve conflicts success. count1: %d, count2: %d\n", count1, count2)
+
+	// 个体内基因排序
+	offspring1.sortChromosomes()
+	offspring2.sortChromosomes()
+
+	// 返回两个子代个体和nil错误
+	return offspring1, offspring2, nil
 }

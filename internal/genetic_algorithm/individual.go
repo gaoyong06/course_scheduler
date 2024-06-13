@@ -279,10 +279,13 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []string) {
 
 				if usedClassTimeSlots[key] {
 					conflicts = append(conflicts, key)
-				} else if usedTeacherTimeSlots[teacherKey] {
-					conflicts = append(conflicts, teacherKey)
 				} else {
 					usedClassTimeSlots[key] = true
+				}
+
+				if usedTeacherTimeSlots[teacherKey] {
+					conflicts = append(conflicts, teacherKey)
+				} else {
 					usedTeacherTimeSlots[teacherKey] = true
 				}
 			}
@@ -306,30 +309,15 @@ func (i *Individual) HasTimeSlotConflicts() (bool, []string) {
 //  5. 获取班级 冲突的 时间段列表
 //     遍历个体中，统计班级已经使用, 但有冲突的连堂课 时间段
 //     遍历个体中，统计班级已经使用, 但有冲突的普通课 时间段
+//
+// 获取班级时间段
 func (i *Individual) getClassTimeSlots(conflict bool) (map[string][]*Gene, map[string][]*Gene) {
-	connected := make(map[string][]*Gene)
-	normal := make(map[string][]*Gene)
-	usage := make(map[int]bool)
 
-	for _, chromosome := range i.Chromosomes {
-		for _, gene := range chromosome.Genes {
-			SN, _ := types.ParseSN(gene.ClassSN)
-			gradeID := SN.GradeID
-			classID := SN.ClassID
-			key := fmt.Sprintf("%d_%d", gradeID, classID)
-			for _, ts := range gene.TimeSlots {
-				if !usage[ts] || (conflict && usage[ts]) {
-					if gene.IsConnected {
-						connected[key] = append(connected[key], gene)
-					} else {
-						normal[key] = append(normal[key], gene)
-					}
-				}
-				usage[ts] = true
-			}
-		}
+	classKeyFunc := func(gene *Gene) string {
+		SN, _ := types.ParseSN(gene.ClassSN)
+		return fmt.Sprintf("%d_%d", SN.GradeID, SN.ClassID)
 	}
-
+	connected, normal := i.getTimeSlots(conflict, classKeyFunc)
 	return connected, normal
 }
 
@@ -341,43 +329,87 @@ func (i *Individual) getClassTimeSlots(conflict bool) (map[string][]*Gene, map[s
 //  6. 获取教师 冲突的 时间段列表
 //     遍历个体中，统计教师已经使用, 但有冲突的连堂课 时间段
 //     遍历个体中，统计教师已经使用, 但有冲突的普通课 时间段
+//
+// 获取教师时间段
 func (i *Individual) getTeacherTimeSlots(conflict bool) (map[string][]*Gene, map[string][]*Gene) {
 
+	teacherKeyFunc := func(gene *Gene) string {
+		return cast.ToString(gene.TeacherID)
+	}
+	connected, normal := i.getTimeSlots(conflict, teacherKeyFunc)
+	return connected, normal
+}
+
+type KeyFunc func(gene *Gene) string
+
+func (i *Individual) getTimeSlots(conflict bool, keyFunc KeyFunc) (map[string][]*Gene, map[string][]*Gene) {
+
+	// 已使用的时间段列表(连堂,普通)
 	connected := make(map[string][]*Gene)
 	normal := make(map[string][]*Gene)
-	usage := make(map[int]bool)
+
+	// 冲突的(连堂,普通)时间段列表
+	conflictConnected := make(map[string][]*Gene)
+	conflictNormal := make(map[string][]*Gene)
+
+	// 已使用
+	usage := make(map[string]map[int]bool)
+	// 已添加
+	added := make(map[string]map[string]bool)
 
 	for _, chromosome := range i.Chromosomes {
 		for _, gene := range chromosome.Genes {
-			key := cast.ToString(gene.TeacherID)
-			for _, ts := range gene.TimeSlots {
-				if !usage[ts] || (conflict && usage[ts]) {
-					if gene.IsConnected {
+
+			key := keyFunc(gene)
+			if usage[key] == nil {
+				usage[key] = make(map[int]bool)
+			}
+
+			if added[key] == nil {
+				added[key] = make(map[string]bool)
+			}
+
+			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
+			if !added[key][tsStr] {
+				added[key][tsStr] = true
+				if gene.IsConnected {
+					ts0, ts1 := gene.TimeSlots[0], gene.TimeSlots[1]
+					if usage[key][ts0] || usage[key][ts1] {
+						conflictConnected[key] = append(conflictConnected[key], gene)
+					} else {
 						connected[key] = append(connected[key], gene)
+					}
+					usage[key][ts0], usage[key][ts1] = true, true
+				} else {
+					ts0 := gene.TimeSlots[0]
+					if usage[key][ts0] {
+						conflictNormal[key] = append(conflictNormal[key], gene)
 					} else {
 						normal[key] = append(normal[key], gene)
 					}
+					usage[key][ts0] = true
 				}
-				usage[ts] = true
+
 			}
 		}
 	}
 
-	return connected, normal
+	if conflict {
+		return conflictConnected, conflictNormal
+	} else {
+		return connected, normal
+	}
 }
 
 //  3. 获取班级 可用的时间段(连堂,普通)
-//     全部的连堂课时间段 剔除 班级已经使用的连堂课时间段
-//     全部的普通课时间段 剔除 班级已经使用的连堂课时间段
+//     全部的连堂课时间段 剔除 班级已经使用的连堂课时间段, 剔除 班级已经使用的普通课时间段
+//     全部的普通课时间段 剔除 班级已经使用的连堂课时间段, 剔除 班级已经使用的普通课时间段
 func (i *Individual) getClassValidTimeSlots(schedule *models.Schedule, constr []*constraints.Class) (map[string][]string, map[string][]string) {
 
 	connected := make(map[string][]string)
 	normal := make(map[string][]string)
 
-	// 全部连堂课时间
 	allConnected := utils.GetAllConnectedTimeSlots(schedule)
-
-	// 全部的普通课时间
 	allNormal := utils.GetAllNormalTimeSlots(schedule)
 
 	// 已经使用的连堂课, 普通课时间段
@@ -386,28 +418,14 @@ func (i *Individual) getClassValidTimeSlots(schedule *models.Schedule, constr []
 
 	connectedGenes, normalGenes := i.getClassTimeSlots(false)
 
-	for key, genes := range connectedGenes {
-		for _, gene := range genes {
-			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
-			usageConnected[key] = append(usageConnected[key], tsStr)
-		}
-	}
+	// 获取已经使用的时间段列表(连堂,普通)
+	getUsedTimeSlots(connectedGenes, usageConnected)
+	getUsedTimeSlots(normalGenes, usageNormal)
 
-	for key, genes := range normalGenes {
-		for _, gene := range genes {
-			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
-			usageNormal[key] = append(usageNormal[key], tsStr)
-		}
-	}
-
-	// 取数组的差集
-	for key, items := range usageConnected {
-		connected[key], _ = lo.Difference(allConnected, items)
-	}
-
-	for key, items := range usageNormal {
-		normal[key], _ = lo.Difference(allNormal, items)
-	}
+	// 从全部的普通课中,去掉已用的连堂课时间段, 已用的普通课时间段
+	getDifference(usageNormal, usageConnected, allNormal, normal)
+	// 从全部的连堂课中,去掉已用的普通课时间段, 已用的连堂课时间段
+	getDifference(usageConnected, usageNormal, allConnected, connected)
 
 	// 过滤掉班级禁排时间段
 	connected = i.filterClassTimeSlots(connected, constr)
@@ -436,29 +454,14 @@ func (i *Individual) getTeacherValidTimeSlots(schedule *models.Schedule, teacher
 
 	connectedGenes, normalGenes := i.getTeacherTimeSlots(false)
 
-	for key, genes := range connectedGenes {
-		for _, gene := range genes {
-			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
-			usageConnected[key] = append(usageConnected[key], tsStr)
-		}
-	}
+	// 获取已经使用的时间段列表(连堂,普通)
+	getUsedTimeSlots(connectedGenes, usageConnected)
+	getUsedTimeSlots(normalGenes, usageNormal)
 
-	for key, genes := range normalGenes {
-		for _, gene := range genes {
-			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
-			usageNormal[key] = append(usageNormal[key], tsStr)
-		}
-	}
-
-	// 可用的连堂课时间段（取数组的差集)
-	for key, items := range usageConnected {
-		connected[key], _ = lo.Difference(allConnected, items)
-	}
-
-	// 可用的普通课时间
-	for key, items := range usageNormal {
-		normal[key], _ = lo.Difference(allNormal, items)
-	}
+	// 从全部的普通课中,去掉已用的连堂课时间段, 已用的普通课时间段
+	getDifference(usageNormal, usageConnected, allNormal, normal)
+	// 从全部的连堂课中,去掉已用的普通课时间段, 已用的连堂课时间段
+	getDifference(usageConnected, usageNormal, allConnected, connected)
 
 	// 过滤掉教师禁排时间段
 	connected, err := i.filterTeacherTimeSlots(connected, teachers, constr)
@@ -503,7 +506,7 @@ func (i *Individual) filterTeacherTimeSlots(timeSlotsMap map[string][]string, te
 }
 
 // 从班级可用时间中,过滤掉班级的禁排时间
-// timeSlotsMap key: teacherID, value: 时间段列表
+// timeSlotsMap key: gradeID_classID, value: 时间段列表
 func (i *Individual) filterClassTimeSlots(timeSlotsMap map[string][]string, constr []*constraints.Class) map[string][]string {
 
 	for key, items := range timeSlotsMap {
@@ -567,80 +570,69 @@ func (i *Individual) resolveConflicts(schedule *models.Schedule, teachers []*mod
 	i.rejectConflictGenes(teacherConnectedConflict, classConnectedConflict)
 	i.rejectConflictGenes(teacherNormalConflict, classNormalConflict)
 
-	// 修复班级连堂课冲突
-	for key, conflictList := range classConnectedConflict {
+	// 修复班级连堂课,普通课冲突
+	count1, err1 := i.resolveClassConflict(classConnectedConflict, classConnected, teacherConnected)
+	count2, err2 := i.resolveClassConflict(classNormalConflict, classNormal, teacherNormal)
+
+	// 修复教师连堂课,普通课冲突
+	count3, err3 := i.resolveTeacherConflict(teacherConnectedConflict, teacherConnected, classConnected)
+	count4, err4 := i.resolveTeacherConflict(teacherNormalConflict, teacherNormal, classNormal)
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+
+		return 0, fmt.Errorf("resolve conflicts failed. err1: %v, err2: %v, err3: %v, err4: %v", err1, err2, err3, err4)
+	}
+	count = count1 + count2 + count3 + count4
+	fmt.Printf("resolve conflicts success. count: %d\n", count)
+	return count, nil
+}
+
+// resolveClassConflict 用于解决班级的课程表冲突
+func (i *Individual) resolveClassConflict(conflictMap map[string][]*Gene, classValidTime map[string][]string, teacherValidTime map[string][]string) (int, error) {
+
+	count := 0
+	for key, conflictList := range conflictMap {
 
 		for _, gene := range conflictList {
 
 			repaired := false
 			teacherIDStr := cast.ToString(gene.TeacherID)
-			classValidList := classConnected[key]
-			teacherValidList := teacherConnected[teacherIDStr]
+			classValidList := classValidTime[key]
+			teacherValidList := teacherValidTime[teacherIDStr]
 			for _, str := range classValidList {
+
+				// 找到一个班级可用的时间段，并且教师也可用
 				if lo.Contains(teacherValidList, str) {
 
-					gene.TimeSlots = utils.ParseTimeSlotStr(str)
+					// 更新班级和教师的可用时间段
+					newTimeSlots := utils.ParseTimeSlotStr(str)
+					gene.TimeSlots = newTimeSlots
 					repaired = true
 					count++
 
 					// 从班级可用时间段中移除
-					classConnected[key] = lo.Reject(classConnected[key], func(x string, _ int) bool {
-						return x == str
-					})
+					classValidTime[key] = utils.RemoveStr(classValidTime[key], str)
 
 					// 从教师可用时间段中移除
-					teacherConnected[teacherIDStr] = lo.Reject(teacherConnected[teacherIDStr], func(x string, _ int) bool {
-						return x == str
-					})
+					teacherValidTime[teacherIDStr] = utils.RemoveStr(teacherValidTime[teacherIDStr], str)
 					break
 				}
 			}
 
 			// 如果冲突无法修复
 			if !repaired {
-				return count, fmt.Errorf("resolve conflicts failed. gene: %#v", gene)
+				return count, fmt.Errorf("resolve class conflict failed. gene: %#v", gene)
 			}
 		}
 	}
 
-	// 修复班普通课冲突
-	for key, conflictList := range classNormalConflict {
+	return count, nil
+}
 
-		for _, gene := range conflictList {
+// resolveTeacherConflict 用于解决教师的课程表冲突
+func (i *Individual) resolveTeacherConflict(conflictMap map[string][]*Gene, teacherValidTime map[string][]string, classValidTime map[string][]string) (int, error) {
 
-			repaired := false
-			teacherIDStr := cast.ToString(gene.TeacherID)
-			classValidList := classNormal[key]
-			teacherValidList := teacherNormal[teacherIDStr]
-			for _, str := range classValidList {
-				if lo.Contains(teacherValidList, str) {
-
-					gene.TimeSlots = utils.ParseTimeSlotStr(str)
-					repaired = true
-					count++
-
-					// 从班级可用时间段中移除
-					classNormal[key] = lo.Reject(classNormal[key], func(x string, _ int) bool {
-						return x == str
-					})
-
-					// 从教师可用时间段中移除
-					teacherNormal[teacherIDStr] = lo.Reject(teacherNormal[teacherIDStr], func(x string, _ int) bool {
-						return x == str
-					})
-					break
-				}
-			}
-
-			// 如果冲突无法修复
-			if !repaired {
-				return count, fmt.Errorf("resolve conflicts failed. gene: %#v", gene)
-			}
-		}
-	}
-
-	// 修复教师连堂课冲突
-	for key, conflictList := range teacherConnectedConflict {
+	count := 0
+	for key, conflictList := range conflictMap {
 
 		for _, gene := range conflictList {
 
@@ -651,81 +643,38 @@ func (i *Individual) resolveConflicts(schedule *models.Schedule, teachers []*mod
 
 			repaired := false
 			teacherIDStr := cast.ToString(gene.TeacherID)
-			teacherValidList := teacherConnected[key]
-			classValidList := classConnected[classKey]
+			teacherValidList := teacherValidTime[key]
+			classValidList := classValidTime[classKey]
 			for _, str := range teacherValidList {
+
+				// 找到一个可教师用的时间段，并且班级也可用
 				if lo.Contains(classValidList, str) {
 
+					// 更新基因的时间段
 					gene.TimeSlots = utils.ParseTimeSlotStr(str)
 					repaired = true
 					count++
 
 					// 从班级可用时间段中移除
-					classConnected[classKey] = lo.Reject(classConnected[classKey], func(x string, _ int) bool {
-						return x == str
-					})
-
+					classValidTime[classKey] = utils.RemoveStr(classValidTime[classKey], str)
 					// 从教师可用时间段中移除
-					teacherConnected[teacherIDStr] = lo.Reject(teacherConnected[teacherIDStr], func(x string, _ int) bool {
-						return x == str
-					})
+					teacherValidTime[teacherIDStr] = utils.RemoveStr(teacherValidTime[teacherIDStr], str)
 					break
 				}
 			}
 
 			// 如果冲突无法修复
 			if !repaired {
-				return count, fmt.Errorf("resolve conflicts failed. gene: %#v", gene)
+				return count, fmt.Errorf("resolve teacher conflict failed. gene: %#v", gene)
 			}
 		}
 	}
 
-	// 修复教师普通课冲突
-	for key, conflictList := range teacherNormalConflict {
-
-		for _, gene := range conflictList {
-
-			SN, _ := types.ParseSN(gene.ClassSN)
-			gradeID := SN.GradeID
-			classID := SN.ClassID
-			classKey := fmt.Sprintf("%d_%d", gradeID, classID)
-
-			repaired := false
-			teacherIDStr := cast.ToString(gene.TeacherID)
-			teacherValidList := teacherNormal[key]
-			classValidList := classNormal[classKey]
-			for _, str := range teacherValidList {
-				if lo.Contains(classValidList, str) {
-
-					gene.TimeSlots = utils.ParseTimeSlotStr(str)
-					repaired = true
-					count++
-
-					// 从班级可用时间段中移除
-					classNormal[classKey] = lo.Reject(classNormal[classKey], func(x string, _ int) bool {
-						return x == str
-					})
-
-					// 从教师可用时间段中移除
-					teacherNormal[teacherIDStr] = lo.Reject(teacherNormal[teacherIDStr], func(x string, _ int) bool {
-						return x == str
-					})
-					break
-				}
-			}
-
-			// 如果冲突无法修复
-			if !repaired {
-				return count, fmt.Errorf("resolve conflicts failed. gene: %#v", gene)
-			}
-		}
-	}
-
-	return count, err
+	return count, nil
 }
 
 // 冲突去重
-// 从教师冲突中去重, 即在班级冲突中存在又在教师冲突中存在的基因
+// 从教师冲突中去重, 即如果既在班级冲突中存在, 又在教师冲突中存在的基因, 则从教师冲突中删除
 func (individual *Individual) rejectConflictGenes(teacherConflictGenes map[string][]*Gene, classConflictGenes map[string][]*Gene) {
 
 	for tid, teacherGenes := range teacherConflictGenes {
@@ -1049,4 +998,39 @@ func (i *Individual) PrintConstraints() {
 
 func getWeekdays() []string {
 	return []string{"Mon", "Tue", "Wed", "Thu", "Fri"}
+}
+
+// 取数组的差集
+func getDifference(usageMap map[string][]string, usageMap1 map[string][]string, allTimeSlots []string, resultMap map[string][]string) {
+
+	for key, items := range usageMap {
+		resultMap[key], _ = lo.Difference(allTimeSlots, items)
+		var removeItems []string
+
+		// 剔除已经使用的时间段
+		for _, tsStr1 := range usageMap1[key] {
+			for _, tsStr := range resultMap[key] {
+
+				ts1 := utils.ParseTimeSlotStr(tsStr1)
+				ts := utils.ParseTimeSlotStr(tsStr)
+				intersect := lo.Intersect(ts1, ts)
+
+				if len(intersect) > 0 {
+					removeItems = append(removeItems, tsStr)
+				}
+			}
+		}
+		// 剔除已经使用的普通课时间段
+		resultMap[key], _ = lo.Difference(resultMap[key], removeItems)
+	}
+}
+
+// 获取已经使用的时间段列表(连堂,普通)
+func getUsedTimeSlots(genesMap map[string][]*Gene, usageMap map[string][]string) {
+	for key, genes := range genesMap {
+		for _, gene := range genes {
+			tsStr := utils.TimeSlotsToStr(gene.TimeSlots)
+			usageMap[key] = append(usageMap[key], tsStr)
+		}
+	}
 }

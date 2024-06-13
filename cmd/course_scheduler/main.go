@@ -53,5 +53,5 @@ func main() {
 	bestIndividual.PrintConstraints()
 
 	// 打印监控数据
-	// monitor.Dump()
+	monitor.Dump()
 }
