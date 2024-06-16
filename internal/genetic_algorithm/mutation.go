@@ -88,11 +88,10 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 	}
 
 	// 修复个体时间段冲突
-	count, err := individual.resolveConflicts(schedule, teachers, constr1, constr2)
+	_, err = individual.resolveConflicts(schedule, teachers, constr1, constr2)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("mutation gene resolve conflicts success. count: %d\n", count)
 
 	// 个体内基因排序
 	individual.sortChromosomes()

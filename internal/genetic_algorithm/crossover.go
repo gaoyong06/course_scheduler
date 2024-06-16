@@ -185,10 +185,12 @@ func crossoverIndividuals(parent1, parent2 *Individual, crossPoint int, schedule
 	count1, err1 := offspring1.resolveConflicts(schedule, teachers, constr1, constr2)
 	count2, err2 := offspring2.resolveConflicts(schedule, teachers, constr1, constr2)
 
-	if err1 != nil || err2 != nil {
-		str := fmt.Sprintf("crossover resolve conflicts failed. offspring1 count: %d, offspring1 err: %s, offspring2 count: %d, offspring2 err: %s\n", count1, err1, count2, err2)
-		log.Println(str)
-		return nil, nil, fmt.Errorf(str)
+	if err1 != nil {
+		return nil, nil, err1
+	}
+
+	if err2 != nil {
+		return nil, nil, err2
 	}
 
 	log.Printf("crossover resolve conflicts success. count1: %d, count2: %d\n", count1, count2)
