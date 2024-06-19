@@ -27,7 +27,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 
 	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
-			prepared++
+					prepared++
 			crossPoint := rand.Intn(len(selected[i].Chromosomes))
 
 			// 复制一份新的个体
@@ -89,6 +89,15 @@ func crossoverAndValidate(parent1, parent2 *Individual, crossPoint int, schedule
 		return nil, nil, err
 	}
 
+	// 个体的课时数是否相同
+	parent1Count := parent1.GetTimeSlotsCount()
+	parent2Count := parent2.GetTimeSlotsCount()
+	offspring1Count := offspring1.GetTimeSlotsCount()
+	offspring2Count := offspring2.GetTimeSlotsCount()
+	if parent1Count != parent2Count || parent1Count != offspring1Count || parent1Count != offspring2Count {
+		return nil, nil, fmt.Errorf("invalid time slots count")
+	}
+
 	// 判断染色体数量是否相同
 	if len(offspring1.Chromosomes) != len(offspring2.Chromosomes) {
 		return nil, nil, fmt.Errorf("invalid offspring chromosomes length")
@@ -127,6 +136,7 @@ func crossoverAndValidate(parent1, parent2 *Individual, crossPoint int, schedule
 			return nil, nil, fmt.Errorf("invalid offspring chromosomes length")
 		}
 	}
+
 	return offspring1, offspring2, nil
 }
 
@@ -183,12 +193,11 @@ func crossoverIndividuals(parent1, parent2 *Individual, crossPoint int, schedule
 
 	// 修复时间段冲突
 	count1, err1 := offspring1.resolveConflicts(schedule, teachers, constr1, constr2)
-	count2, err2 := offspring2.resolveConflicts(schedule, teachers, constr1, constr2)
-
 	if err1 != nil {
 		return nil, nil, err1
 	}
 
+	count2, err2 := offspring2.resolveConflicts(schedule, teachers, constr1, constr2)
 	if err2 != nil {
 		return nil, nil, err2
 	}

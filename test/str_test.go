@@ -8,10 +8,11 @@ import (
 
 func TestRemoveStr(t *testing.T) {
 
-	slice := []string{"a", "b", "c", "d"}
-	s := "c"
+	slice := []string{"8_9", "9_10", "8", "9", "10", "25", "27"}
+	// s := "8_9"
+	s := "8"
 
-	a := utils.RemoveStr(slice, s)
+	a := utils.RemoveRelatedItems(slice, s)
 	fmt.Printf("%v\n", a)
 
 }
