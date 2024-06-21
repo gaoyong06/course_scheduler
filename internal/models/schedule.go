@@ -2,6 +2,9 @@
 package models
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/samber/lo"
 )
 
@@ -18,6 +21,43 @@ type Schedule struct {
 	// NumNoonClasses           int    `json:"num_noon_classes" mapstructure:"num_noon_classes"`                       // 中午 几节课, 默认: 4节
 	NumAfternoonClasses int `json:"num_afternoon_classes" mapstructure:"num_afternoon_classes"` // 下午 几节课, 默认: 4节
 	NumNightClasses     int `json:"num_night_classes" mapstructure:"num_night_classes"`         // 晚自习 几节课, 默认: 0节
+}
+
+func (s *Schedule) Check() error {
+
+	if s.Name == "" {
+		return errors.New("schedule name cannot be empty")
+	}
+
+	if s.NumWorkdays <= 0 || s.NumWorkdays > 30 {
+		return errors.New("invalid num_workdays, must be in range (1, 30]")
+	}
+
+	if s.NumDaysOff < 0 {
+		return errors.New("invalid num_days_off, must be non-negative")
+	}
+
+	if s.NumMorningReadingClasses < 0 {
+		return errors.New("invalid num_morning_reading_classes, must be non-negative")
+	}
+
+	if s.NumForenoonClasses < 0 {
+		return errors.New("invalid num_forenoon_classes, must be non-negative")
+	}
+
+	if s.NumAfternoonClasses < 0 {
+		return errors.New("invalid num_afternoon_classes, must be non-negative")
+	}
+
+	if s.NumNightClasses < 0 {
+		return errors.New("invalid num_night_classes, must be non-negative")
+	}
+
+	if s.NumMorningReadingClasses+s.NumForenoonClasses+s.NumAfternoonClasses+s.NumNightClasses <= 0 {
+		return fmt.Errorf("invalid schedule, the sum of morning reading, forenoon, afternoon and night classes, must be positive")
+	}
+
+	return nil
 }
 
 // 获取每天的总课时数，包括早读、上午、中午、下午和晚自习的课时数

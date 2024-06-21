@@ -3,8 +3,9 @@ package genetic_algorithm
 import (
 	"course_scheduler/config"
 	"course_scheduler/internal/base"
-	"course_scheduler/internal/types"
+	"errors"
 	"log"
+	"math"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 选择操作,选择个体的数量
 	selectionSize := config.SelectionSize
 	// 变异率
-	mutationRate := config.MutationRate
+	// mutationRate := config.MutationRate
 	// 交叉率
 	crossoverRate := config.CrossoverRate
 	// 选择最佳个体百分比
@@ -39,7 +40,10 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 最佳个体是否发生替换
 	replaced := false
 	// 最优的个体
-	bestIndividual := &Individual{}
+	bestIndividual := &Individual{
+		Chromosomes: nil,
+		Fitness:     math.MinInt32,
+	}
 	// 最差的个体
 	var worstIndividual *Individual
 
@@ -51,14 +55,11 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 	return nil, err
 	// }
 
-	// 课班初始化
-	classes := types.InitClasses(input.TeachTaskAllocations)
-
 	// 初始化当前种群
-	constraints := input.ConvertConstraints()
-	currentPopulation, err := InitPopulation(classes, popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+	constraints := input.ConstraintToMap()
+	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
-		log.Panic(err)
+		return bestIndividual, bestGen, err
 	}
 	initPopulationTime := time.Since(startTime)
 	log.Printf("Init population runtime: %v\n", initPopulationTime)
@@ -77,7 +78,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 		prevBestIndividual := bestIndividual.Copy()
 		bestIndividual, replaced, err = UpdateBest(currentPopulation, bestIndividual)
 		if err != nil {
-			log.Panic(err)
+			return bestIndividual, bestGen, err
 		}
 
 		// 如果 bestIndividual 被替换，则记录当前 gen 值
@@ -85,15 +86,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 			bestGen = gen
 		}
 
-		// 评估适应度
-		// for _, individual := range population {
-		// 	individual.Fitness = EvaluateFitness(scheduleInput, individual.LessonListMap)
-		// 	individual.Generation = currentIteration
-		// }
-		// log.Println("Fitness evaluation completed")
-
 		// 计算最优,最差,平均适应度
-		// bestIndividual = GetBestIndividual(currentPopulation)
 		worstIndividual = GetWorstIndividual(currentPopulation)
 		monitor.BestFitnessPerGen[gen] = bestIndividual.Fitness
 		monitor.WorstFitnessPerGen[gen] = worstIndividual.Fitness
@@ -118,7 +111,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 			// 选择的个体是原个体数量的一半
 			selectedPopulation, err := Selection(currentPopulation, selectionSize, bestRatio)
 			if err != nil {
-				log.Panic(err)
+				return bestIndividual, bestGen, err
 			}
 
 			selectedCount := len(selectedPopulation)
@@ -128,26 +121,27 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
-					log.Panic(err)
+					return bestIndividual, bestGen, err
 				}
 				monitor.NumPreparedCrossover[gen] = prepared
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
-				if err != nil {
-					log.Panic(err)
-				}
-				monitor.NumPreparedMutation[gen] = prepared
-				monitor.NumExecutedMutation[gen] = executed
+				// offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				// if err != nil {
+				// 	return bestIndividual, bestGen, err
+				// }
+				// monitor.NumPreparedMutation[gen] = prepared
+				// monitor.NumExecutedMutation[gen] = executed
 
 				// 更新种群
 				// 更新前后的个体数量不变
 				hasConflicts := CheckConflicts(currentPopulation)
 				if hasConflicts {
-					log.Panic("Population time slot conflicts")
+					err = errors.New("population time slot conflicts")
+					return bestIndividual, bestGen, err
 				}
 				currentPopulation = UpdatePopulation(currentPopulation, offspring)
 			}

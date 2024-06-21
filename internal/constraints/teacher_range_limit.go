@@ -6,7 +6,9 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
+	"log"
 )
 
 // ###### 教师时间段限制
@@ -30,7 +32,7 @@ func (t *TeacherRangeLimit) String() string {
 	return fmt.Sprintf("ID: %d, TeacherID: %d, Range: %s, MaxClasses: %d", t.ID, t.TeacherID, t.Range, t.MaxClassesCount)
 }
 
-// 获取教师时间段限制规则
+// 获取规则
 func GetTeacherRangeLimitRules(constraints []*TeacherRangeLimit) []*types.Rule {
 
 	// constraints := loadTeacherRangeLimitConstraintsFromDB()
@@ -49,8 +51,8 @@ func (t *TeacherRangeLimit) genRule() *types.Rule {
 		Name:     "teacherRangeLimit",
 		Type:     "dynamic",
 		Fn:       fn,
-		Score:    0,
-		Penalty:  1,
+		Score:    0, // 遵守规则, 没有奖励
+		Penalty:  2, // 违反规则, 有处罚
 		Weight:   1,
 		Priority: 1,
 	}
@@ -75,35 +77,56 @@ func (t *TeacherRangeLimit) genConstraintFn() types.ConstraintFn {
 		// 将range转为时间段的起止时间段
 		startPeriod, endPeriod := schedule.GetPeriodWithRange(t.Range)
 
-		currTeacherID := element.GetTeacherID()
-		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % totalClassesPerDay
 		count := countTeacherClassesInRange(teacherID, startPeriod, endPeriod, classMatrix, schedule)
+		currTeacherID := element.GetTeacherID()
 
-		preCheckPassed := currTeacherID == teacherID && currPeriod >= startPeriod && currPeriod <= endPeriod
+		isValidPeriod := false
+		currTimeSlots := element.GetTimeSlots()
+		currPeriod := -1
+		for _, currTimeSlot := range currTimeSlots {
+			currPeriod = currTimeSlot % totalClassesPerDay
+			if currPeriod >= startPeriod && currPeriod <= endPeriod {
+				isValidPeriod = true
+				break
+			}
+		}
+
+		preCheckPassed := currTeacherID == teacherID && isValidPeriod
+
+		if preCheckPassed {
+			log.Printf("element.TimeSlots: %v, currTeacherID: %d, currPeriod: %d, count: %d, isValidPeriod: %v, preCheckPassed: %v\n", element.TimeSlots, currTeacherID, currPeriod, count, isValidPeriod, preCheckPassed)
+		}
+		// 这里count++是指,假设给当前节点排课count会+1
+		count++
+
 		shouldPenalize := preCheckPassed && count > maxClasses
 
 		return preCheckPassed, !shouldPenalize, nil
 	}
 }
 
-// 26. 王老师 晚自习 最多1节
+// 统计特定教师在某个时间区间的的排课节数
 func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, classMatrix *types.ClassMatrix, schedule *models.Schedule) int {
 
 	count := 0
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
 	// key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
+	// 统计矩阵内的其他元素
 	for _, classMap := range classMatrix.Elements {
+
 		for _, teacherMap := range classMap {
-			for id, venueMap := range teacherMap {
-				if teacherID == id {
-					for timeSlot, element := range venueMap {
+			for _, venueMap := range teacherMap {
+				for timeSlotStr, e := range venueMap {
+					if e.Val.Used == 1 && e.TeacherID == teacherID {
 
-						period := timeSlot % totalClassesPerDay
-
-						if element.Val.Used == 1 && period >= startPeriod && period <= endPeriod {
-							count++
+						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, timeSlot := range timeSlots {
+							period := timeSlot % totalClassesPerDay
+							// log.Printf("countTeacherClassesInRange, teacherID: %d, startPeriod: %d, endPeriod: %d, period: %d, count: %d\n", teacherID, startPeriod, endPeriod, period, count)
+							if period >= startPeriod && period <= endPeriod {
+								count++
+							}
 						}
 					}
 				}
@@ -111,5 +134,6 @@ func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, class
 		}
 	}
 
+	// log.Printf("countTeacherClassesInRange, teacherID: %d, startPeriod: %d, endPeriod: %d, count: %d\n", teacherID, startPeriod, endPeriod, count)
 	return count
 }

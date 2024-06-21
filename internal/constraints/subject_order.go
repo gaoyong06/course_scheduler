@@ -5,8 +5,11 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 	"sort"
+
+	"github.com/samber/lo"
 )
 
 // ###### 科目顺序限制
@@ -46,8 +49,8 @@ func (s *SubjectOrder) genRule() *types.Rule {
 		Name:     "subjectOrder",
 		Type:     "dynamic",
 		Fn:       fn,
-		Score:    0,
-		Penalty:  1,
+		Score:    4,
+		Penalty:  6,
 		Weight:   1,
 		Priority: 1,
 	}
@@ -77,24 +80,22 @@ func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
 		preCheckPassed := subjectID == subjectAID || subjectID == subjectBID
 		shouldPenalize := false
 		if preCheckPassed {
-			ret, err := isSubjectABeforeSubjectB(subjectAID, subjectBID, classMatrix, element, schedule)
+			shouldPenalize, err = isElementSubjectABeforeSubjectB(subjectAID, subjectBID, classMatrix, element, schedule)
 			if err != nil {
 				return false, false, err
 			}
-			shouldPenalize = ret
 		}
 		return preCheckPassed, !shouldPenalize, nil
 	}
 }
 
-// 判断体育课后是否就是数学课
-// 判断课程A(体育)是在课程B(数学)之前
-func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
+// 判断当前元素的排课课程是否会出现课程A(体育)是在课程B(数学)之前的结果
+func isElementSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
-	timeSlot := element.GetTimeSlot()
+	timeSlots := element.GetTimeSlots()
 	for sn, classMap := range classMatrix.Elements {
 		SN, err := types.ParseSN(sn)
 		if err != nil {
@@ -102,12 +103,17 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 		}
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlot, e := range venueMap {
+				for timeSlotStr, e := range venueMap {
 					if e.Val.Used == 1 {
-						if SN.SubjectID == subjectAID {
-							timeSlotsA = append(timeSlotsA, timeSlot)
-						} else if SN.SubjectID == subjectBID {
-							timeSlotsB = append(timeSlotsB, timeSlot)
+
+						eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, timeSlot := range eleTimeSlots {
+
+							if SN.SubjectID == subjectAID {
+								timeSlotsA = append(timeSlotsA, timeSlot)
+							} else if SN.SubjectID == subjectBID {
+								timeSlotsB = append(timeSlotsB, timeSlot)
+							}
 						}
 					}
 				}
@@ -115,26 +121,30 @@ func isSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *types.Cla
 		}
 	}
 
-	// 如果课程A或课程B没有上课时间段，则返回false
-	if len(timeSlotsA) == 0 || len(timeSlotsB) == 0 {
-		return false, nil
+	// 如果当前课时是课程A
+	if element.SubjectID == subjectAID {
+		timeSlotsA = append(timeSlotsA, timeSlots...)
+	}
+
+	// 如果当前课时是课程B
+	if element.SubjectID == subjectBID {
+		timeSlotsB = append(timeSlotsB, timeSlots...)
 	}
 
 	// 对上课时间段进行排序
 	sort.Ints(timeSlotsA)
 	sort.Ints(timeSlotsB)
-	// 检查课程B是否在课程A之后
+
+	// 检查课程A是否在课程B之前
+
 	for _, timeSlotA := range timeSlotsA {
 		for _, timeSlotB := range timeSlotsB {
 
-			if timeSlotA == timeSlot || timeSlotB == timeSlot {
+			dayA := timeSlotA / totalClassesPerDay
+			dayB := timeSlotB / totalClassesPerDay
 
-				dayA := timeSlotA / totalClassesPerDay
-				dayB := timeSlotB / totalClassesPerDay
-
-				if dayA == dayB && timeSlotB == timeSlotA+1 {
-					return true, nil
-				}
+			if dayA == dayB && timeSlotB == timeSlotA+1 && (lo.Contains(timeSlots, timeSlotA) || lo.Contains(timeSlots, timeSlotB)) {
+				return true, nil
 			}
 		}
 	}

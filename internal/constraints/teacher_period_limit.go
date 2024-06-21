@@ -4,7 +4,10 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // ###### 教师节数限制
@@ -18,7 +21,7 @@ import (
 type TeacherPeriodLimit struct {
 	ID              int `json:"id" mapstructure:"id"`                               // 自增ID
 	TeacherID       int `json:"teacher_id" mapstructure:"teacher_id"`               // 教师ID
-	Period          int `json:"period" mapstructure:"period"`                       // 节次
+	Period          int `json:"period" mapstructure:"period"`                       // 节次(period 从1开始)
 	MaxClassesCount int `json:"max_classes_count" mapstructure:"max_classes_count"` // 最多排课次数
 }
 
@@ -27,7 +30,7 @@ func (t *TeacherPeriodLimit) String() string {
 	return fmt.Sprintf("ID: %d, TeacherID: %d, Period: %d, MaxClassesCount: %d", t.ID, t.TeacherID, t.Period, t.MaxClassesCount)
 }
 
-// 获取班级固排禁排规则
+// 获取规则
 func GetTeacherClassLimitRules(constraints []*TeacherPeriodLimit) []*types.Rule {
 	// constraints := loadTeacherPeriodLimitConstraintsFromDB()
 	var rules []*types.Rule
@@ -45,14 +48,14 @@ func (t *TeacherPeriodLimit) genRule() *types.Rule {
 		Name:     "teacherPeriodLimit",
 		Type:     "dynamic",
 		Fn:       fn,
-		Score:    0,
-		Penalty:  1,
+		Score:    0, // 遵守规则,没有奖励
+		Penalty:  2, // 违反规则,有处罚
 		Weight:   1,
 		Priority: 1,
 	}
 }
 
-// 加载班级固排禁排规则
+// 加载规则
 func loadTeacherPeriodLimitConstraintsFromDB() []*TeacherPeriodLimit {
 	var constraints []*TeacherPeriodLimit
 	return constraints
@@ -62,20 +65,30 @@ func loadTeacherPeriodLimitConstraintsFromDB() []*TeacherPeriodLimit {
 func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
 
-		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 		teacherID := t.TeacherID
-		period := t.Period
+
+		// t.Period 从1开始
+		period := t.Period - 1
 		maxClassesCount := t.MaxClassesCount
 
 		currTeacherID := element.GetTeacherID()
-		currTimeSlot := element.GetTimeSlot()
-		currPeriod := currTimeSlot % totalClassesPerDay
-		preCheckPassed := teacherID == currTeacherID && period == currPeriod
+
+		// 当前元素排课的节次
+		elementPeriods := types.GetElementPeriods(element, schedule)
+
+		preCheckPassed := teacherID == currTeacherID && lo.Contains(elementPeriods, period)
 
 		shouldPenalize := false
 		if preCheckPassed {
 			count := countTeacherClassInPeriod(teacherID, period, classMatrix, schedule)
+
+			// 如果当前元素已经被排课,要去除掉
+			// 否则,则假设在现在的节点排课，count要加1
+			if element.Val.Used == 0 {
+				count++
+			}
 			shouldPenalize = preCheckPassed && count > maxClassesCount
+
 		}
 
 		return preCheckPassed, !shouldPenalize, nil
@@ -93,11 +106,15 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 		for id, venueMap := range teacherMap {
 			if teacherID == id {
 				for _, timeSlotMap := range venueMap {
-					for timeSlot, element := range timeSlotMap {
+					for timeSlotStr, element := range timeSlotMap {
+
 						if element.Val.Used == 1 {
-							elementPeriod := timeSlot % totalClassesPerDay
-							if elementPeriod == period {
-								count++
+							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							for _, timeSlot := range timeSlots {
+								elementPeriod := timeSlot % totalClassesPerDay
+								if elementPeriod == period {
+									count++
+								}
 							}
 						}
 					}

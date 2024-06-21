@@ -2,9 +2,9 @@
 package constraints
 
 import (
-	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
+	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -43,9 +43,9 @@ func (s *SubjectMutex) genRule() *types.Rule {
 		Name:     "subjectMutex",
 		Type:     "dynamic",
 		Fn:       fn,
-		Score:    0,
-		Penalty:  config.MaxPenaltyScore,
-		Weight:   2,
+		Score:    4,
+		Penalty:  6,
+		Weight:   1,
 		Priority: 1,
 	}
 }
@@ -75,29 +75,29 @@ func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 
 		shouldPenalize := false
 		if preCheckPassed {
-			ret, err := isSubjectsSameDay(subjectAID, subjectBID, classMatrix, element, schedule)
+			shouldPenalize, err = isElementSubjectOnSameDay(subjectAID, subjectBID, classMatrix, element, schedule)
 			if err != nil {
 				return false, false, err
 			}
-			shouldPenalize = ret
 		}
 		return preCheckPassed, !shouldPenalize, nil
 	}
 }
 
-func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
+// 判断当前元素排课科目,是否和subjectAID或者subjectBID,在同一天
+func isElementSubjectOnSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
-	timeSlot := element.GetTimeSlot()
+	timeSlots := element.GetTimeSlots()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	elementDay := timeSlot / totalClassesPerDay
+
+	// 这里使用第一个时间段
+	elementDay := timeSlots[0] / totalClassesPerDay
 
 	// key: day, val:bool
 	subjectADays := make(map[int]bool)
 	subjectBDays := make(map[int]bool)
 
-	// key: timeSlot val: day
-	subjectATimeSlots := make(map[int]int)
-	subjectBTimeSlots := make(map[int]int)
+	onSameDay := false
 
 	for sn, classMap := range classMatrix.Elements {
 
@@ -108,14 +108,15 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for ts, e := range venueMap {
+				for timeSlotStr, e := range venueMap {
 					if e.Val.Used == 1 {
-						if SN.SubjectID == subjectAID {
-							subjectADays[ts/totalClassesPerDay] = true // 将时间段转换为天数
-							subjectATimeSlots[ts] = ts / totalClassesPerDay
-						} else if SN.SubjectID == subjectBID {
-							subjectBDays[ts/totalClassesPerDay] = true // 将时间段转换为天数
-							subjectBTimeSlots[ts] = ts / totalClassesPerDay
+						ts := utils.ParseTimeSlotStr(timeSlotStr)
+						for _, t := range ts {
+							if SN.SubjectID == subjectAID {
+								subjectADays[t/totalClassesPerDay] = true // 将时间段转换为天数
+							} else if SN.SubjectID == subjectBID {
+								subjectBDays[t/totalClassesPerDay] = true // 将时间段转换为天数
+							}
 						}
 					}
 				}
@@ -123,26 +124,15 @@ func isSubjectsSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatri
 		}
 	}
 
-	if subjectADays[elementDay] && subjectBDays[elementDay] {
-
-		// fmt.Printf("subjectAID: %d, subjectADays: %v, subjectBID: %d, subjectBDays: %v\n", subjectAID, subjectADays, subjectBID, subjectBDays)
-
-		// Print time slots of both subjects on the same day (elementDay) in a single line
-		var subjectATimeSlotsStr, subjectBTimeSlotsStr string
-		for ts, day := range subjectATimeSlots {
-			if day == elementDay {
-				subjectATimeSlotsStr += fmt.Sprintf(" %d", ts)
-			}
-		}
-		for ts, day := range subjectBTimeSlots {
-			if day == elementDay {
-				subjectBTimeSlotsStr += fmt.Sprintf(" %d", ts)
-			}
-		}
-
-		// fmt.Printf("Current timeSlot: %d Subject A Time Slots on elementDay: %s, Subject B Time Slots on elementDay: %s\n", timeSlot, subjectATimeSlotsStr, subjectBTimeSlotsStr)
-
-		return true, nil
+	if element.SubjectID == subjectAID {
+		onSameDay = subjectBDays[elementDay]
 	}
-	return false, nil
+
+	if element.SubjectID == subjectBID {
+		onSameDay = subjectADays[elementDay]
+	}
+
+	// log.Printf("subject mutex, element.timeSlots: %v, element.subjectID: %d, subjectAID: %d, subjectBID: %d, elementDay: %d, onSameDay: %v\n", element.TimeSlots, element.SubjectID, subjectAID, subjectBID, elementDay, onSameDay)
+
+	return onSameDay, nil
 }

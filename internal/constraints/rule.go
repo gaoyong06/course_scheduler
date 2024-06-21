@@ -19,10 +19,12 @@ func GetFixedRules(subjects []*models.Subject, teachers []*models.Teacher, const
 			classConstraints := constraintValue.([]*Class)
 			classRules := GetClassRules(classConstraints)
 			rules = append(rules, classRules...)
+
 		case "Subject":
 			subjectConstraints := constraintValue.([]*Subject)
 			subjectRules := GetSubjectRules(subjects, subjectConstraints)
 			rules = append(rules, subjectRules...)
+
 		case "Teacher":
 			teacherConstraints := constraintValue.([]*Teacher)
 			teacherRules := GetTeacherRules(teachers, teacherConstraints)
@@ -41,7 +43,7 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 
 	// 下面是一些内部规则
 	// 连堂课校验(科目课时数大于上课天数时, 禁止同一天排多次课是非连续的, 要排成连堂课)
-	rules = append(rules, subjectConnectedRule)
+	// rules = append(rules, subjectConnectedRule)
 
 	// 同一个年级,班级,科目相同节次的排课是否超过数量限制
 	rules = append(rules, subjectPeriodLimitRule)
@@ -62,6 +64,12 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			// 科目顺序限制(体育课不排在数学课前)
 			subjectOrderConstraints := constraintValue.([]*SubjectOrder)
 			rules = append(rules, GetSubjectOrderRules(subjectOrderConstraints)...)
+
+		case "SubjectDayLimit":
+
+			// 每天限制(科目,教师每天的排课数量限制)
+			subjectDayLimitConstraints := constraintValue.([]*SubjectDayLimit)
+			rules = append(rules, GetSubjectDayLimitRules(subjectDayLimitConstraints)...)
 
 		case "TeacherMutex":
 
@@ -86,6 +94,11 @@ func GetDynamicRules(schedule *models.Schedule, constraints map[string]interface
 			// 教师时间段限制
 			teacherRangeLimitConstraints := constraintValue.([]*TeacherRangeLimit)
 			rules = append(rules, GetTeacherRangeLimitRules(teacherRangeLimitConstraints)...)
+
+		case "SubjectConnectedDay":
+			// 连堂课每天限制
+			subjectConnectedDayConstraints := constraintValue.([]*SubjectConnectedDay)
+			rules = append(rules, GetSubjectConnectedDayRules(subjectConnectedDayConstraints)...)
 		}
 	}
 

@@ -11,6 +11,7 @@ type Subject struct {
 	SubjectID       int    `json:"subject_id" mapstructure:"subject_id"`               // 科目id
 	Name            string `json:"name" mapstructure:"name"`                           // 名称
 	SubjectGroupIDs []int  `json:"subject_group_ids" mapstructure:"subject_group_ids"` // 科目分组id
+	Priority        int    `json:"priority" mapstructure:"priority"`                   // 排课的优先级, 优先级高的优先排课
 }
 
 // 读取科目信息

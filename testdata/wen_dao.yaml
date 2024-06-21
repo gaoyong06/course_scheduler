@@ -1,0 +1,79 @@
+
+# 遗漏问题:
+#   1. 3个教师,最多可以有多少个课时
+#   2. 连堂课设置
+#   3. 交叉变异时,教师时间占用的处理
+
+
+schedule:
+  name: "闻道2024暑假课程表"
+  num_workdays: 5
+  num_days_off: 2
+  num_morning_reading_classes: 0
+  num_forenoon_classes: 4
+  num_afternoon_classes: 4
+  num_night_classes: 0
+
+subjects:
+  - { subject_id: 1, name: "语文", subject_group_ids: [1], priority: 3 }
+  - { subject_id: 2, name: "数学", subject_group_ids: [1], priority: 3 }
+  - { subject_id: 3, name: "英语", subject_group_ids: [1], priority: 3 }
+
+teachers:
+  - { teacher_id: 1, name: "语文1", teacher_group_ids: [], class_subjects: [{ grade_id: 2, class_id: 1, subject_id: [1] }, { grade_id: 3, class_id: 1, subject_id: [1] }, { grade_id: 4, class_id: 1, subject_id: [1] }, { grade_id: 5, class_id: 1, subject_id: [1] }, { grade_id: 6, class_id: 1, subject_id: [1] }] }
+  - { teacher_id: 2, name: "数学1", teacher_group_ids: [], class_subjects: [{ grade_id: 2, class_id: 1, subject_id: [2] }, { grade_id: 3, class_id: 1, subject_id: [2] }, { grade_id: 4, class_id: 1, subject_id: [2] }, { grade_id: 5, class_id: 1, subject_id: [2] }, { grade_id: 6, class_id: 1, subject_id: [2] }] }
+  - { teacher_id: 3, name: "英语1", teacher_group_ids: [], class_subjects: [{ grade_id: 3, class_id: 1, subject_id: [3] }, { grade_id: 4, class_id: 1, subject_id: [3] }, { grade_id: 5, class_id: 1, subject_id: [3] }, { grade_id: 6, class_id: 1, subject_id: [3] }] }
+
+# 教学任务
+teach_task_allocations:
+  - {id: 1, grade_id: 2, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 2, grade_id: 2, class_id: 1, subject_id: 2, teacher_id: 2, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 3, grade_id: 3, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 4, grade_id: 3, class_id: 1, subject_id: 2, teacher_id: 2, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 5, grade_id: 3, class_id: 1, subject_id: 3, teacher_id: 3, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 6, grade_id: 4, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 7, grade_id: 4, class_id: 1, subject_id: 2, teacher_id: 2, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 8, grade_id: 4, class_id: 1, subject_id: 3, teacher_id: 3, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 9, grade_id: 5, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 10, grade_id: 5, class_id: 1, subject_id: 2, teacher_id: 2, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 11, grade_id: 5, class_id: 1, subject_id: 3, teacher_id: 3, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 12, grade_id: 6, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 13, grade_id: 6, class_id: 1, subject_id: 2, teacher_id: 2, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+  - {id: 14, grade_id: 6, class_id: 1, subject_id: 3, teacher_id: 3, num_classes_per_week: 5, num_connected_classes_per_week: 0}
+
+grades:
+  - school_id: 1
+    grade_id: 2
+    name: "二年级"
+    classes:
+      - school_id: 1
+        class_id: 1
+        name: "(1)班"
+  - school_id: 1
+    grade_id: 3
+    name: "三年级"
+    classes:
+      - school_id: 1
+        class_id: 1
+        name: "(1)班"
+  # - school_id: 1
+  #   grade_id: 4
+  #   name: "四年级"
+  #   classes:
+  #     - school_id: 1
+  #       class_id: 1
+  #       name: "(1)班"
+  # - school_id: 1
+  #   grade_id: 5
+  #   name: "五年级"
+  #   classes:
+  #     - school_id: 1
+  #       class_id: 1
+  #       name: "(1)班"
+  # - school_id: 1
+  #   grade_id: 6
+  #   name: "六年级"
+  #   classes:
+  #     - school_id: 1
+  #       class_id: 1
+  #       name: "(1)班"

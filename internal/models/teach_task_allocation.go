@@ -49,3 +49,32 @@ func GetNumClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachT
 	}
 	return count
 }
+
+// 获取连堂课次数
+func GetNumConnectedClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) int {
+
+	count := 0
+	for _, task := range teachAllocs {
+
+		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
+			count = task.NumConnectedClassesPerWeek
+			break
+		}
+	}
+	return count
+}
+
+// 获取一个年级,一个班级，一个科目的所有老师
+func GetTeacherIDs(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) []int {
+
+	var teacherIDs []int
+	for _, task := range teachAllocs {
+
+		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
+			teacherIDs = append(teacherIDs, task.TeacherID)
+		}
+	}
+	return teacherIDs
+}
+
+// 
