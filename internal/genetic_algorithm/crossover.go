@@ -27,7 +27,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 
 	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
-					prepared++
+			prepared++
 			crossPoint := rand.Intn(len(selected[i].Chromosomes))
 
 			// 复制一份新的个体
@@ -143,6 +143,86 @@ func crossoverAndValidate(parent1, parent2 *Individual, crossPoint int, schedule
 // 两个个体之间进行交叉操作，生成两个子代个体
 // 返回两个子代个体和错误信息（如果有）
 func crossoverIndividuals(parent1, parent2 *Individual, crossPoint int, schedule *models.Schedule, grades []*models.Grade, teachers []*models.Teacher, constr1 []*constraints.Class, constr2 []*constraints.Teacher) (*Individual, *Individual, error) {
+
+	// 检查交叉点是否在有效范围内
+	if crossPoint <= 0 || crossPoint >= len(parent1.Chromosomes) {
+		return nil, nil, fmt.Errorf("invalid crossPoint %d", crossPoint)
+	}
+
+	// 提前年级班级信息
+	gradeAndClass := parent1.Chromosomes[crossPoint].ExtractGradeAndClass()
+
+	// 深度复制父代个体的染色体序列
+	chromosomes1 := make([]*Chromosome, len(parent1.Chromosomes))
+	for i, chromosome := range parent1.Chromosomes {
+		chromosomes1[i] = chromosome.Copy()
+	}
+	chromosomes2 := make([]*Chromosome, len(parent2.Chromosomes))
+	for i, chromosome := range parent2.Chromosomes {
+		chromosomes2[i] = chromosome.Copy()
+	}
+
+	// 初始化子代个体的染色体序列
+	offspring1 := &Individual{
+		Chromosomes: make([]*Chromosome, len(parent1.Chromosomes)),
+	}
+	offspring2 := &Individual{
+		Chromosomes: make([]*Chromosome, len(parent1.Chromosomes)),
+	}
+
+	// 为子代个体1复制基因
+	for i := 0; i < len(chromosomes1); i++ {
+
+		var source *Chromosome
+		gradeAndClass1 := chromosomes1[i].ExtractGradeAndClass()
+		if gradeAndClass == gradeAndClass1 {
+			source = chromosomes1[i]
+		} else {
+			source = chromosomes2[i]
+		}
+		target := source.Copy()
+		offspring1.Chromosomes[i] = target
+	}
+
+	// 为子代个体2复制基因
+	for i := 0; i < len(chromosomes1); i++ {
+
+		var source *Chromosome
+		gradeAndClass2 := chromosomes2[i].ExtractGradeAndClass()
+		if gradeAndClass == gradeAndClass2 {
+			source = chromosomes2[i]
+		} else {
+			source = chromosomes1[i]
+		}
+		target := source.Copy()
+		offspring2.Chromosomes[i] = target
+	}
+
+	// 修复时间段冲突
+	count1, err1 := offspring1.resolveConflicts(schedule, teachers, constr1, constr2)
+	if err1 != nil {
+		return nil, nil, err1
+	}
+
+	count2, err2 := offspring2.resolveConflicts(schedule, teachers, constr1, constr2)
+	if err2 != nil {
+		return nil, nil, err2
+	}
+
+	log.Printf("crossover resolve conflicts success. count1: %d, count2: %d\n", count1, count2)
+
+	// 个体内基因排序
+	offspring1.sortChromosomes()
+	offspring2.sortChromosomes()
+
+	// 返回两个子代个体和nil错误
+	return offspring1, offspring2, nil
+}
+
+// 旧的实现方法备份
+// 两个个体之间进行交叉操作，生成两个子代个体
+// 返回两个子代个体和错误信息（如果有）
+func crossoverIndividualsBAK(parent1, parent2 *Individual, crossPoint int, schedule *models.Schedule, grades []*models.Grade, teachers []*models.Teacher, constr1 []*constraints.Class, constr2 []*constraints.Teacher) (*Individual, *Individual, error) {
 
 	// 检查交叉点是否在有效范围内
 	if crossPoint <= 0 || crossPoint >= len(parent1.Chromosomes) {
