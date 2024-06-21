@@ -568,9 +568,9 @@ func (i *Individual) resolveConflicts(schedule *models.Schedule, teachers []*mod
 	if err != nil {
 		return 0, err
 	}
-	// fmt.Println("==== 教师可用时间段 ===")
-	// fmt.Printf("teacherConnected: %v\n", teacherConnected)
-	// fmt.Printf("teacherNormal: %v\n", teacherNormal)
+	fmt.Println("==== 教师可用时间段 ===")
+	fmt.Printf("teacherConnected: %v\n", teacherConnected)
+	fmt.Printf("teacherNormal: %v\n", teacherNormal)
 
 	// 班级时间段冲突
 	classConnectedConflictGenes, classNormalConflictGenes := i.getClassTimeSlots(true)
@@ -585,20 +585,20 @@ func (i *Individual) resolveConflicts(schedule *models.Schedule, teachers []*mod
 
 	// 教师时间段冲突
 	teacherConnectedConflictGenes, teacherNormalConflictGenes := i.getTeacherTimeSlots(true)
-	// teacherConnectedConflict := getTimeSlotsFromGenes(teacherConnectedConflictGenes)
-	// teacherNormalConflict := getTimeSlotsFromGenes(teacherNormalConflictGenes)
-	// fmt.Println("==== 教师时间段冲突 ===")
-	// fmt.Printf("teacherConnectedConflict: %v\n", teacherConnectedConflict)
-	// fmt.Printf("teacherNormalConflict: %v\n", teacherNormalConflict)
+	teacherConnectedConflict := getTimeSlotsFromGenes(teacherConnectedConflictGenes)
+	teacherNormalConflict := getTimeSlotsFromGenes(teacherNormalConflictGenes)
+	fmt.Println("==== 教师时间段冲突 ===")
+	fmt.Printf("teacherConnectedConflict: %v\n", teacherConnectedConflict)
+	fmt.Printf("teacherNormalConflict: %v\n", teacherNormalConflict)
 
 	// 冲突去重
 	// 从教师冲突中去重, 即在班级冲突中存在又在教师冲突中存在的基因
 	i.rejectConflictGenes(teacherConnectedConflictGenes, classConnectedConflictGenes)
 	i.rejectConflictGenes(teacherNormalConflictGenes, classNormalConflictGenes)
 
-	// fmt.Println("==== 从教师冲突中去重, 即在班级冲突中存在又在教师冲突中存在的基因 ===")
-	// fmt.Printf("teacherConnectedConflictGenes: %v\n", teacherConnectedConflictGenes)
-	// fmt.Printf("teacherNormalConflictGenes: %v\n", teacherNormalConflictGenes)
+	fmt.Println("==== 从教师冲突中去重, 即在班级冲突中存在又在教师冲突中存在的基因 ===")
+	fmt.Printf("teacherConnectedConflictGenes: %v\n", teacherConnectedConflictGenes)
+	fmt.Printf("teacherNormalConflictGenes: %v\n", teacherNormalConflictGenes)
 
 	// 班级可用时间段
 	classValidTime := make(map[string][]string)
