@@ -7,7 +7,6 @@ import (
 	"course_scheduler/config"
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 )
 
 // #### 同一个年级,班级,科目相同节次的排课是否超过数量限制
@@ -29,7 +28,7 @@ func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
 	venueID := element.GetVenueID()
-	timeSlots := element.GetTimeSlots()
+	timeSlot := element.GetTimeSlot()
 
 	periodCount := countPeriodClasses(classMatrix, classSN, teacherID, venueID, schedule)
 
@@ -37,19 +36,19 @@ func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	preCheckPassed := false
 	count := 0
 
-	for _, timeSlot := range timeSlots {
+	// for _, timeSlot := range timeSlots {
 
-		period := timeSlot % totalClassesPerDay
-		count, preCheckPassed = periodCount[period]
+	period := timeSlot % totalClassesPerDay
+	count, preCheckPassed = periodCount[period]
 
-		if preCheckPassed {
-			// 检查相同节次的排课是否超过数量限制
-			shouldPenalize = count > config.SubjectPeriodLimitThreshold
-			if shouldPenalize {
-				return true, false, nil
-			}
+	if preCheckPassed {
+		// 检查相同节次的排课是否超过数量限制
+		shouldPenalize = count > config.SubjectPeriodLimitThreshold
+		if shouldPenalize {
+			return true, false, nil
 		}
 	}
+	// }
 
 	return preCheckPassed, true, nil
 }
@@ -61,15 +60,15 @@ func countPeriodClasses(classMatrix *types.ClassMatrix, sn string, teacherID, ve
 	// key: 节次, val: 数量
 	periodCount := make(map[int]int)
 
-	for timeSlotStr, element := range classMatrix.Elements[sn][teacherID][venueID] {
+	for timeSlot, element := range classMatrix.Elements[sn][teacherID][venueID] {
 
-		timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-		for _, timeSlot := range timeSlots {
-			if element.Val.Used == 1 {
-				period := timeSlot % totalClassesPerDay
-				periodCount[period]++
-			}
+		// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+		// for _, timeSlot := range timeSlots {
+		if element.Val.Used == 1 {
+			period := timeSlot % totalClassesPerDay
+			periodCount[period]++
 		}
+		// }
 	}
 	return periodCount
 }

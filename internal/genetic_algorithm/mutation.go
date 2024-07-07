@@ -6,7 +6,6 @@ import (
 
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"errors"
 	"fmt"
 	"log"
@@ -67,11 +66,11 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 	constr2 := constraintMap["Teacher"].([]*constraints.Teacher)
 
 	// 查找基因中未使用的教师或教室或时间段
-	teacherID, venueID, timeSlotStr, err := findRandomScheduleForGene(individual, chromosome, gene, schedule, teachers, venueMap, constr1, constr2)
+	teacherID, venueID, timeSlot, err := findRandomScheduleForGene(individual, chromosome, gene, schedule, teachers, venueMap, constr1, constr2)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("find random schedule for gene teacherID: %d, venueID: %d, timeSlotStr: %s\n", teacherID, venueID, timeSlotStr)
+	fmt.Printf("find random schedule for gene teacherID: %d, venueID: %d, timeSlot: %s\n", teacherID, venueID, timeSlot)
 
 	// 用未使用的值(如果有的话)改变基因
 	if teacherID > 0 {
@@ -82,9 +81,8 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 		gene.VenueID = venueID
 	}
 
-	if timeSlotStr != "" {
-		timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-		gene.TimeSlots = timeSlots
+	if timeSlot > 0 {
+		gene.TimeSlot = timeSlot
 	}
 
 	// 修复个体时间段冲突
@@ -113,23 +111,23 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 }
 
 // findRandomScheduleForGene 查找基因中未使用的教师或教室或时间段
-func findRandomScheduleForGene(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachers []*models.Teacher, venueMap map[string][]int, constr1 []*constraints.Class, constr2 []*constraints.Teacher) (int, int, string, error) {
+func findRandomScheduleForGene(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachers []*models.Teacher, venueMap map[string][]int, constr1 []*constraints.Class, constr2 []*constraints.Teacher) (int, int, int, error) {
 
 	SN, err := types.ParseSN(gene.ClassSN)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, 0, err
 	}
 
 	gradeID := SN.GradeID
 	classID := SN.ClassID
 	teacherID := gene.TeacherID
 	venueID := gene.VenueID
-	isConnected := gene.IsConnected
+	// isConnected := gene.IsConnected
 
 	// 随机获取一个闲置的教师
 	idleTeacherID, err := randomIdleTeacherID(chromosome, gene, teachers)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, 0, err
 	}
 
 	if idleTeacherID > 0 {
@@ -139,7 +137,7 @@ func findRandomScheduleForGene(individual *Individual, chromosome *Chromosome, g
 	// 随机获取一个闲置的教室
 	idleVenueID, err := randomIdleVenueID(chromosome, gene, venueMap)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, 0, err
 	}
 
 	if idleVenueID > 0 {
@@ -147,32 +145,34 @@ func findRandomScheduleForGene(individual *Individual, chromosome *Chromosome, g
 	}
 
 	// 班级可用时间段
-	classConnected, classNormal := individual.getClassValidTimeSlots(schedule, constr1)
+	classValidTime := individual.getClassValidTimeSlots(schedule, constr1)
 	classKey := fmt.Sprintf("%d_%d", gradeID, classID)
 	teacherIDStr := cast.ToString(teacherID)
-	var timeSlotStrs []string
+	// var timeSlotStrs []string
 
 	// 教师可用时间段
-	teacherConnected, teacherNormal, err := individual.getTeacherValidTimeSlots(schedule, teachers, constr2)
+	teacherValidTime, err := individual.getTeacherValidTimeSlots(schedule, teachers, constr2)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, 0, err
 	}
 
 	// 即是班级可用的时间段,又是教师可用的时间段
-	if isConnected {
-		timeSlotStrs = lo.Intersect(classConnected[classKey], teacherConnected[teacherIDStr])
-	} else {
-		timeSlotStrs = lo.Intersect(classNormal[classKey], teacherNormal[teacherIDStr])
-	}
+	// if isConnected {
+	// 	timeSlotStrs = lo.Intersect(classConnected[classKey], teacherConnected[teacherIDStr])
+	// } else {
+	// 	timeSlotStrs = lo.Intersect(classNormal[classKey], teacherNormal[teacherIDStr])
+	// }
+
+	timeSlots := lo.Intersect(classValidTime[classKey], teacherValidTime[teacherIDStr])
 
 	// 随机从可用时间段中取一个
-	timeSlotStrVal, err := randomSample(timeSlotStrs)
+	timeSlotVal, err := randomSample(timeSlots)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, 0, err
 	}
-	timeSlotStr := timeSlotStrVal.(string)
+	timeSlot := timeSlotVal.(int)
 
-	return teacherID, venueID, timeSlotStr, nil
+	return teacherID, venueID, timeSlot, nil
 }
 
 // 随机获取基因中未使用的教师ID

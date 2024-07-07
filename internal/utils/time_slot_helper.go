@@ -127,3 +127,10 @@ func GetAllNormalTimeSlots(schedule *models.Schedule) []string {
 	}
 	return timeSlotStrs
 }
+
+// 全部的普通课时间段
+func GetAllTimeSlots(schedule *models.Schedule) []int {
+
+	timeSlots := schedule.GenWeekTimeSlots()
+	return timeSlots
+}

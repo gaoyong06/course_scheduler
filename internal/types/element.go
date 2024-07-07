@@ -4,29 +4,29 @@ import "course_scheduler/internal/models"
 
 // 课班适应性矩阵中的一个元素
 type Element struct {
-	ClassSN     string // 科目_年级_班级
-	SubjectID   int    // 科目
-	GradeID     int    // 年级
-	ClassID     int    // 班级
-	TeacherID   int    // 教师
-	VenueID     int    // 教室
-	TimeSlots   []int  // 连堂课: 时间段1,时间段2, 普通课：时间段1
-	IsConnected bool   // 是否是连堂课
-	Val         Val    // 分数
+	ClassSN   string // 科目_年级_班级
+	SubjectID int    // 科目
+	GradeID   int    // 年级
+	ClassID   int    // 班级
+	TeacherID int    // 教师
+	VenueID   int    // 教室
+	TimeSlot  int    // 连堂课: 时间段1,时间段2, 普通课：时间段1
+	// IsConnected bool   // 是否是连堂课
+	Val Val // 分数
 }
 
-func NewElement(classSN string, subjectID, gradeID, classID, teacherID, venueID int, timeSlots []int) *Element {
+func NewElement(classSN string, subjectID, gradeID, classID, teacherID, venueID int, timeSlot int) *Element {
 
-	isConnected := len(timeSlots) == 2
+	// isConnected := len(timeSlots) == 2
 	return &Element{
-		ClassSN:     classSN,
-		SubjectID:   subjectID,
-		GradeID:     gradeID,
-		ClassID:     classID,
-		TeacherID:   teacherID,
-		VenueID:     venueID,
-		TimeSlots:   timeSlots,
-		IsConnected: isConnected,
+		ClassSN:   classSN,
+		SubjectID: subjectID,
+		GradeID:   gradeID,
+		ClassID:   classID,
+		TeacherID: teacherID,
+		VenueID:   venueID,
+		TimeSlot:  timeSlot,
+		// IsConnected: isConnected,
 		Val: Val{
 			ScoreInfo: ScoreInfo{
 				Score:          0,
@@ -56,8 +56,8 @@ func (e *Element) GetVenueID() int {
 	return e.VenueID
 }
 
-func (e *Element) GetTimeSlots() []int {
-	return e.TimeSlots
+func (e *Element) GetTimeSlot() int {
+	return e.TimeSlot
 }
 
 func (e *Element) GetPassedConstraints() []string {
@@ -89,17 +89,18 @@ func (e *Element) GetSkippedConstraints() []string {
 }
 
 // 当前元素排课信息的节次
-func GetElementPeriods(element Element, schedule *models.Schedule) []int {
+func GetElementPeriod(element Element, schedule *models.Schedule) int {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	currTimeSlots := element.TimeSlots
+	currTimeSlot := element.TimeSlot
 
 	// 当前元素,课程所在的节次
-	var currPeriods []int
-	for _, currTimeSlot := range currTimeSlots {
-		currPeriod := currTimeSlot % totalClassesPerDay
-		currPeriods = append(currPeriods, currPeriod)
-	}
+	// var currPeriods []int
+	// for _, currTimeSlot := range currTimeSlots {
+	// 	currPeriod := currTimeSlot % totalClassesPerDay
+	// 	currPeriods = append(currPeriods, currPeriod)
+	// }
+	currPeriod := currTimeSlot % totalClassesPerDay
 
-	return currPeriods
+	return currPeriod
 }

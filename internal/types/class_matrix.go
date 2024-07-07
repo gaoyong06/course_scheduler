@@ -8,8 +8,6 @@ import (
 	"log"
 	"math"
 	"strings"
-
-	"github.com/samber/lo"
 )
 
 // 课班适应性矩阵
@@ -35,7 +33,7 @@ type ClassMatrix struct {
 	SubjectVenueMap map[string][]int
 
 	// key: [课班(科目_年级_班级)][教师][教室][时间段1_时间段2], value: Element
-	Elements map[string]map[int]map[int]map[string]*Element
+	Elements map[string]map[int]map[int]map[int]*Element
 
 	// 已占用元素总分数
 	Score int
@@ -57,7 +55,7 @@ func NewClassMatrix(schedule *models.Schedule, taskAllocs []*models.TeachTaskAll
 		Subjects:        subjects,
 		Teachers:        teachers,
 		SubjectVenueMap: subjectVenueMap,
-		Elements:        make(map[string]map[int]map[int]map[string]*Element),
+		Elements:        make(map[string]map[int]map[int]map[int]*Element),
 	}, nil
 }
 
@@ -65,6 +63,8 @@ func NewClassMatrix(schedule *models.Schedule, taskAllocs []*models.TeachTaskAll
 // key: [课班(科目_年级_班级)][教师][教室][时间段], value: Element
 // key: [9][13][9][40]
 func (cm *ClassMatrix) Init() error {
+
+	timeSlots := utils.GetAllTimeSlots(cm.Schedule)
 
 	for _, subjectClass := range cm.SubjectClasses {
 
@@ -82,36 +82,43 @@ func (cm *ClassMatrix) Init() error {
 			return fmt.Errorf("no venue available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
 		}
 
-		connectedTimeSlots := getConnectedTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
-		normalTimeSlots := getNormalTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
+		// connectedTimeSlots := getConnectedTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
+		// normalTimeSlots := getNormalTimeSlots(cm.Schedule, cm.TaskAllocs, gradeID, classID, subjectID, teacherIDs, venueIDs)
 		// log.Printf("gradeID: %d, classID: %d, subjectID: %d, connectedTimeSlots: %v, normalTimeSlots: %v\n", gradeID, classID, subjectID, connectedTimeSlots, normalTimeSlots)
 
-		if len(connectedTimeSlots) == 0 && len(normalTimeSlots) == 0 {
-			return fmt.Errorf("no time slot available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
-		}
+		// if len(connectedTimeSlots) == 0 && len(normalTimeSlots) == 0 {
+		// 	return fmt.Errorf("no time slot available for class subjectID: %d, gradeID: %d, classID: %d", subjectID, gradeID, classID)
+		// }
 
 		sn := subjectClass.SN.Generate()
 
-		cm.Elements[sn] = make(map[int]map[int]map[string]*Element)
+		cm.Elements[sn] = make(map[int]map[int]map[int]*Element)
 		for _, teacherID := range teacherIDs {
-			cm.Elements[sn][teacherID] = make(map[int]map[string]*Element)
+			cm.Elements[sn][teacherID] = make(map[int]map[int]*Element)
 			for _, venueID := range venueIDs {
-				cm.Elements[sn][teacherID][venueID] = make(map[string]*Element)
+				cm.Elements[sn][teacherID][venueID] = make(map[int]*Element)
 
 				// 连堂课
-				for _, connectedStr := range connectedTimeSlots {
+				// for _, connectedStr := range connectedTimeSlots {
 
-					timeSlots := utils.ParseTimeSlotStr(connectedStr)
-					element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlots)
-					cm.Elements[sn][teacherID][venueID][connectedStr] = element
-				}
+				// 	timeSlots := utils.ParseTimeSlotStr(connectedStr)
+				// 	element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlots)
+				// 	cm.Elements[sn][teacherID][venueID][connectedStr] = element
+				// }
 
 				// 普通课
-				for _, normalStr := range normalTimeSlots {
+				// for _, normalStr := range normalTimeSlots {
 
-					timeSlots := utils.ParseTimeSlotStr(normalStr)
-					element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlots)
-					cm.Elements[sn][teacherID][venueID][normalStr] = element
+				// 	timeSlots := utils.ParseTimeSlotStr(normalStr)
+				// 	element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlots)
+				// 	cm.Elements[sn][teacherID][venueID][normalStr] = element
+				// }
+
+				for _, timeSlot := range timeSlots {
+
+					// timeSlots := utils.ParseTimeSlotStr(normalStr)
+					element := NewElement(sn, subjectClass.SubjectID, subjectClass.GradeID, subjectClass.ClassID, teacherID, venueID, timeSlot)
+					cm.Elements[sn][teacherID][venueID][timeSlot] = element
 				}
 			}
 		}
@@ -169,25 +176,27 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 	allocateCount := 0
 
 	// 优先分配连堂课
-	for _, sc := range cm.SubjectClasses {
+	// for _, sc := range cm.SubjectClasses {
 
-		sn := sc.SN.Generate()
-		gradeID := sc.SN.GradeID
-		classID := sc.SN.ClassID
-		subjectID := sc.SN.SubjectID
-		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
+	// 	sn := sc.SN.Generate()
+	// 	gradeID := sc.SN.GradeID
+	// 	classID := sc.SN.ClassID
+	// 	subjectID := sc.SN.SubjectID
+	// 	numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 
-		// 分配课时
-		connectedCount := numConnectedClassesPerWeek
-		for i := 0; i < connectedCount; i++ {
-			if err := cm.allocateClass(sn, true, rules); err != nil {
-				return allocateCount, err
-			}
-			allocateCount++
-		}
-	}
+	// 	// 分配课时
+	// 	connectedCount := numConnectedClassesPerWeek
+	// 	for i := 0; i < connectedCount; i++ {
+	// 		if err := cm.allocateClass(sn, true, rules); err != nil {
+	// 			return allocateCount, err
+	// 		}
+	// 		allocateCount++
+	// 	}
+	// }
 
 	// 最后在分配普通课
+
+	// 课程分配
 	for _, sc := range cm.SubjectClasses {
 
 		sn := sc.SN.Generate()
@@ -202,7 +211,7 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 
 		// 然后在分配普通课
 		for i := 0; i < normalCount; i++ {
-			if err := cm.allocateClass(sn, false, rules); err != nil {
+			if err := cm.allocateClass(sn, rules); err != nil {
 				return allocateCount, err
 			}
 			allocateCount++
@@ -214,19 +223,19 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 	return allocateCount, nil
 }
 
-func (cm *ClassMatrix) allocateClass(sn string, isConnected bool, rules []*Rule) error {
+func (cm *ClassMatrix) allocateClass(sn string, rules []*Rule) error {
 
-	teacherID, venueID, timeSlotStr, score, err := cm.findBestTimeSlot(sn, isConnected)
+	teacherID, venueID, timeSlot, score, err := cm.findBestTimeSlot(sn)
 	if err != nil {
 		return err
 	}
 
-	temp := cm.Elements[sn][teacherID][venueID][timeSlotStr].Val
+	temp := cm.Elements[sn][teacherID][venueID][timeSlot].Val
 	temp.Used = 1
-	cm.Elements[sn][teacherID][venueID][timeSlotStr].Val = temp
+	cm.Elements[sn][teacherID][venueID][timeSlot].Val = temp
 
 	// 打印当前选择元素信息
-	log.Printf("allocate class, class matrix: %p, sn: %s, isConnected: %v, teacherID: %d, venueID: %d, timeSlotStr: %s, score: %d, ", cm, sn, isConnected, teacherID, venueID, timeSlotStr, score)
+	log.Printf("allocate class, class matrix: %p, sn: %s, teacherID: %d, venueID: %d, timeSlot: %d, score: %d, ", cm, sn, teacherID, venueID, timeSlot, score)
 
 	// 动态更新元素分数
 	cm.updateElementDynamicScores(cm.Schedule, cm.TaskAllocs, rules)
@@ -270,10 +279,10 @@ func (cm *ClassMatrix) PrintConstraintElement() {
 		if strings.Contains(sn, "1_9_") {
 			for teacherID, teacherMap := range classMap {
 				for venueID, venueMap := range teacherMap {
-					for timeSlotStr, element := range venueMap {
+					for timeSlot, element := range venueMap {
 						fixedStr := strings.Join(element.Val.ScoreInfo.FixedFailed, ",")
 						dynamicStr := strings.Join(element.Val.ScoreInfo.DynamicFailed, ",")
-						log.Printf("class matrix sn: %s, teacherID: %d, venueID: %d, timeSlotStr: %s, failed rules: %s, %s, score: %d (fixedScore: %d, dynamicScore: %d))\n", sn, teacherID, venueID, timeSlotStr, fixedStr, dynamicStr, element.Val.ScoreInfo.Score, element.Val.ScoreInfo.FixedScore, element.Val.ScoreInfo.DynamicScore)
+						log.Printf("class matrix sn: %s, teacherID: %d, venueID: %d, timeSlot: %d, failed rules: %s, %s, score: %d (fixedScore: %d, dynamicScore: %d))\n", sn, teacherID, venueID, timeSlot, fixedStr, dynamicStr, element.Val.ScoreInfo.Score, element.Val.ScoreInfo.FixedScore, element.Val.ScoreInfo.DynamicScore)
 
 					}
 				}
@@ -301,11 +310,12 @@ func (cm *ClassMatrix) PrintKeysAndLength() {
 
 // 查找当前课程的最佳可用时间段
 // 返回值: teacherID, venueID, timeSlot, score, error
-func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, string, int, error) {
+func (cm *ClassMatrix) findBestTimeSlot(sn string) (int, int, int, int, error) {
 
 	maxScore := math.MinInt32
-	teacherID, venueID := 0, 0
-	timeSlotStr := ""
+	teacherID, venueID, timeSlot := 0, 0, 0
+	// timeSlotStr := ""
+	// timeSlotStr := ""
 
 	SN, _ := ParseSN(sn)
 	gradeID := SN.GradeID
@@ -320,7 +330,7 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 
 		for teacherIDKey, teacherMap := range classMap {
 			for venueIDKey, venueMap := range teacherMap {
-				for timeSlotStrKey, element := range venueMap {
+				for timeSlotKey, element := range venueMap {
 					// 检查当前时间段是否已经被使用
 					if element.Val.Used == 1 {
 						continue
@@ -328,9 +338,9 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 
 					// 检查当前元素的时间段,同年级同班级 是否有排课
 					// 或者相同教师,在该时间段 是否有排课
-					isUsed, err := cm.isTimeSlotsUsed(element.GradeID, element.ClassID, element.TeacherID, element.TimeSlots)
+					isUsed, err := cm.isTimeSlotsUsed(element.GradeID, element.ClassID, element.TeacherID, element.TimeSlot)
 					if err != nil {
-						return -1, -1, "", -1, err
+						return -1, -1, -1, -1, err
 					}
 
 					if isUsed {
@@ -338,17 +348,17 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 					}
 
 					// 连堂课,普通课判断
-					timeSlots := utils.ParseTimeSlotStr(timeSlotStrKey)
-					if (isConnected && len(timeSlots) != 2) || (!isConnected && len(timeSlots) != 1) {
-						continue
-					}
+					// timeSlots := utils.ParseTimeSlotStr(timeSlotStrKey)
+					// if (isConnected && len(timeSlots) != 2) || (!isConnected && len(timeSlots) != 1) {
+					// 	continue
+					// }
 
 					valScore := element.Val.ScoreInfo.Score
 					if valScore > maxScore {
 						maxScore = valScore
 						teacherID = teacherIDKey
 						venueID = venueIDKey
-						timeSlotStr = timeSlotStrKey
+						timeSlot = timeSlotKey
 					}
 				}
 			}
@@ -357,15 +367,15 @@ func (cm *ClassMatrix) findBestTimeSlot(sn string, isConnected bool) (int, int, 
 	}
 
 	// 如果没有找到可用的时间段，则返回一个错误信息
-	if teacherID == 0 && venueID == 0 && timeSlotStr == "" {
-		return 0, 0, "", 0, fmt.Errorf("no available time slots for gradeID %d, classID %d, subjectID %d, isConnected %t", gradeID, classID, subjectID, isConnected)
+	if teacherID == 0 && venueID == 0 && timeSlot == 0 {
+		return 0, 0, 0, 0, fmt.Errorf("no available time slots for gradeID %d, classID %d, subjectID %d", gradeID, classID, subjectID)
 	}
 
-	return teacherID, venueID, timeSlotStr, maxScore, nil
+	return teacherID, venueID, timeSlot, maxScore, nil
 }
 
 // 辅助函数：检查时间段是否已被使用
-func (cm *ClassMatrix) isTimeSlotsUsed(gradeID int, classID int, teacherID int, timeSlots []int) (bool, error) {
+func (cm *ClassMatrix) isTimeSlotsUsed(gradeID int, classID int, teacherID int, timeSlot int) (bool, error) {
 
 	for sn, classMap := range cm.Elements {
 
@@ -379,10 +389,7 @@ func (cm *ClassMatrix) isTimeSlotsUsed(gradeID int, classID int, teacherID int, 
 				for _, element := range venueMap {
 
 					if element.Val.Used == 1 && ((SN.GradeID == gradeID && SN.ClassID == classID) || teacherIDKey == teacherID) {
-
-						intersect := lo.Intersect(element.TimeSlots, timeSlots)
-						isContain := len(intersect) > 0
-						if isContain {
+						if element.TimeSlot == timeSlot {
 							return true, nil
 						}
 					}
@@ -412,11 +419,11 @@ func (cm *ClassMatrix) calcElementScore(schedule *models.Schedule, taskAllocs []
 	classSN := element.GetClassSN()
 	teacherID := element.GetTeacherID()
 	venueID := element.GetVenueID()
-	timeSlots := element.GetTimeSlots()
-	timeSlotsStr := utils.TimeSlotsToStr(timeSlots)
+	timeSlot := element.GetTimeSlot()
+	// timeSlotsStr := utils.TimeSlotsToStr(timeSlots)
 
 	// 先清空
-	elementVal := cm.Elements[classSN][teacherID][venueID][timeSlotsStr].Val
+	elementVal := cm.Elements[classSN][teacherID][venueID][timeSlot].Val
 	if scoreType == "fixed" {
 		elementVal.ScoreInfo.FixedPassed = []string{}
 		elementVal.ScoreInfo.FixedFailed = []string{}

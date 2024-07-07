@@ -4,10 +4,7 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
-
-	"github.com/samber/lo"
 )
 
 // ###### 教师节数限制
@@ -74,9 +71,9 @@ func (t *TeacherPeriodLimit) genConstraintFn() types.ConstraintFn {
 		currTeacherID := element.GetTeacherID()
 
 		// 当前元素排课的节次
-		elementPeriods := types.GetElementPeriods(element, schedule)
+		elementPeriod := types.GetElementPeriod(element, schedule)
 
-		preCheckPassed := teacherID == currTeacherID && lo.Contains(elementPeriods, period)
+		preCheckPassed := teacherID == currTeacherID && elementPeriod == period
 
 		shouldPenalize := false
 		if preCheckPassed {
@@ -106,16 +103,16 @@ func countTeacherClassInPeriod(teacherID int, period int, classMatrix *types.Cla
 		for id, venueMap := range teacherMap {
 			if teacherID == id {
 				for _, timeSlotMap := range venueMap {
-					for timeSlotStr, element := range timeSlotMap {
+					for timeSlot, element := range timeSlotMap {
 
 						if element.Val.Used == 1 {
-							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-							for _, timeSlot := range timeSlots {
-								elementPeriod := timeSlot % totalClassesPerDay
-								if elementPeriod == period {
-									count++
-								}
+							// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							// for _, timeSlot := range timeSlots {
+							elementPeriod := timeSlot % totalClassesPerDay
+							if elementPeriod == period {
+								count++
 							}
+							// }
 						}
 					}
 				}

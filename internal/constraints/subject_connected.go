@@ -8,7 +8,6 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"sort"
 )
 
@@ -74,14 +73,14 @@ func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, s
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, e := range venueMap {
+				for timeSlot, e := range venueMap {
 
-					timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-					for _, timeSlot := range timeSlots {
-						if e.Val.Used == 1 && e.GradeID == gradeID && e.ClassID == classID && e.SubjectID == subjectID {
-							subjectTimeSlots = append(subjectTimeSlots, timeSlot)
-						}
+					// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+					// for _, timeSlot := range timeSlots {
+					if e.Val.Used == 1 && e.GradeID == gradeID && e.ClassID == classID && e.SubjectID == subjectID {
+						subjectTimeSlots = append(subjectTimeSlots, timeSlot)
 					}
+					// }
 				}
 			}
 		}
@@ -97,19 +96,19 @@ func isSubjectConnected(classMatrix *types.ClassMatrix, element types.Element, s
 		dayTimeSlots[day] = append(dayTimeSlots[day], subjectTimeSlots[i])
 	}
 
-	for _, timeSlot := range element.TimeSlots {
+	// for _, timeSlot := range element.TimeSlots {
 
-		// 计算当前时间节点是第几天
-		elementDay := timeSlot / totalClassesPerDay
-		// 遍历同一天的时间段
-		timeSlots := dayTimeSlots[elementDay]
-		for i := 0; i < len(timeSlots)-1; i++ {
-			if timeSlots[i]+1 != timeSlots[i+1] {
-				return false, nil
-			}
+	// 计算当前时间节点是第几天
+	elementDay := element.TimeSlot / totalClassesPerDay
+	// 遍历同一天的时间段
+	timeSlots := dayTimeSlots[elementDay]
+	for i := 0; i < len(timeSlots)-1; i++ {
+		if timeSlots[i]+1 == timeSlots[i+1] {
+			return true, nil
 		}
 	}
+	// }
 
 	// log.Printf("elementDay: %d, timeSlots: %v\n", elementDay, timeSlots)
-	return true, nil
+	return false, nil
 }

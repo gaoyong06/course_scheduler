@@ -5,11 +5,8 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 	"sort"
-
-	"github.com/samber/lo"
 )
 
 // ###### 科目顺序限制
@@ -95,7 +92,7 @@ func isElementSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *ty
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	// 遍历课程表，同时记录课程A和课程B的上课时间段
 	var timeSlotsA, timeSlotsB []int
-	timeSlots := element.GetTimeSlots()
+	timeSlot := element.GetTimeSlot()
 	for sn, classMap := range classMatrix.Elements {
 		SN, err := types.ParseSN(sn)
 		if err != nil {
@@ -103,18 +100,18 @@ func isElementSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *ty
 		}
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, e := range venueMap {
+				for timeSlot, e := range venueMap {
 					if e.Val.Used == 1 {
 
-						eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-						for _, timeSlot := range eleTimeSlots {
+						// eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						// for _, timeSlot := range eleTimeSlots {
 
-							if SN.SubjectID == subjectAID {
-								timeSlotsA = append(timeSlotsA, timeSlot)
-							} else if SN.SubjectID == subjectBID {
-								timeSlotsB = append(timeSlotsB, timeSlot)
-							}
+						if SN.SubjectID == subjectAID {
+							timeSlotsA = append(timeSlotsA, timeSlot)
+						} else if SN.SubjectID == subjectBID {
+							timeSlotsB = append(timeSlotsB, timeSlot)
 						}
+						// }
 					}
 				}
 			}
@@ -123,12 +120,12 @@ func isElementSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *ty
 
 	// 如果当前课时是课程A
 	if element.SubjectID == subjectAID {
-		timeSlotsA = append(timeSlotsA, timeSlots...)
+		timeSlotsA = append(timeSlotsA, timeSlot)
 	}
 
 	// 如果当前课时是课程B
 	if element.SubjectID == subjectBID {
-		timeSlotsB = append(timeSlotsB, timeSlots...)
+		timeSlotsB = append(timeSlotsB, timeSlot)
 	}
 
 	// 对上课时间段进行排序
@@ -143,7 +140,7 @@ func isElementSubjectABeforeSubjectB(subjectAID, subjectBID int, classMatrix *ty
 			dayA := timeSlotA / totalClassesPerDay
 			dayB := timeSlotB / totalClassesPerDay
 
-			if dayA == dayB && timeSlotB == timeSlotA+1 && (lo.Contains(timeSlots, timeSlotA) || lo.Contains(timeSlots, timeSlotB)) {
+			if dayA == dayB && timeSlotB == timeSlotA+1 && timeSlot == timeSlotA || timeSlot == timeSlotB {
 				return true, nil
 			}
 		}

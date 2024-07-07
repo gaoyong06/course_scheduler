@@ -23,7 +23,7 @@ func (s *SubjectConnectedDay) String() string {
 	return fmt.Sprintf("ID: %d, GradeID: %d, ClassID: %d, SubjectID: %d, TeacherID: %d,  Weekday: %d, Count: %d", s.ID, s.GradeID, s.ClassID, s.SubjectID, s.TeacherID, s.Weekday, s.Count)
 }
 
-// 获取班级固排禁排规则
+// 获取规则
 func GetSubjectConnectedDayRules(constraints []*SubjectConnectedDay) []*types.Rule {
 	// constraints := loadSubjectMutexConstraintsFromDB()
 	var rules []*types.Rule
@@ -58,8 +58,8 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		eleGradeID := element.GradeID
 		eleClassID := element.ClassID
 		eleSubjectID := element.SubjectID
-		eleTimeSlots := element.GetTimeSlots()
-		eleIsConnected := element.IsConnected
+		eleTimeSlot := element.GetTimeSlot()
+		// eleIsConnected := element.IsConnected
 
 		preCheckPassed := false
 		isReward := false
@@ -67,7 +67,7 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		var weekdayConnectedCountMap map[int]int
 
 		// 这里使用第1个时间段
-		eleWeekday := eleTimeSlots[0]/totalClassesPerDay + 1
+		eleWeekday := eleTimeSlot/totalClassesPerDay + 1
 
 		// 如果年级(班级)科目不为空,则计算年级(班级)科目的连堂课数量
 		if eleIsConnected && eleGradeID == s.GradeID && (eleClassID == s.ClassID || s.ClassID == 0) && eleSubjectID == s.SubjectID && (eleWeekday == s.Weekday || s.Weekday == 0) {

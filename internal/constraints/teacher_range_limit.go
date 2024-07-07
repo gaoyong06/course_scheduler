@@ -6,7 +6,6 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
 )
@@ -81,20 +80,20 @@ func (t *TeacherRangeLimit) genConstraintFn() types.ConstraintFn {
 		currTeacherID := element.GetTeacherID()
 
 		isValidPeriod := false
-		currTimeSlots := element.GetTimeSlots()
+		currTimeSlot := element.GetTimeSlot()
 		currPeriod := -1
-		for _, currTimeSlot := range currTimeSlots {
-			currPeriod = currTimeSlot % totalClassesPerDay
-			if currPeriod >= startPeriod && currPeriod <= endPeriod {
-				isValidPeriod = true
-				break
-			}
+		// for _, currTimeSlot := range currTimeSlots {
+		currPeriod = currTimeSlot % totalClassesPerDay
+		if currPeriod >= startPeriod && currPeriod <= endPeriod {
+			isValidPeriod = true
+			// break
 		}
+		// }
 
 		preCheckPassed := currTeacherID == teacherID && isValidPeriod
 
 		if preCheckPassed {
-			log.Printf("element.TimeSlots: %v, currTeacherID: %d, currPeriod: %d, count: %d, isValidPeriod: %v, preCheckPassed: %v\n", element.TimeSlots, currTeacherID, currPeriod, count, isValidPeriod, preCheckPassed)
+			log.Printf("element.TimeSlots: %v, currTeacherID: %d, currPeriod: %d, count: %d, isValidPeriod: %v, preCheckPassed: %v\n", element.TimeSlot, currTeacherID, currPeriod, count, isValidPeriod, preCheckPassed)
 		}
 		// 这里count++是指,假设给当前节点排课count会+1
 		count++
@@ -117,17 +116,17 @@ func countTeacherClassesInRange(teacherID int, startPeriod, endPeriod int, class
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, e := range venueMap {
+				for timeSlot, e := range venueMap {
 					if e.Val.Used == 1 && e.TeacherID == teacherID {
 
-						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-						for _, timeSlot := range timeSlots {
-							period := timeSlot % totalClassesPerDay
-							// log.Printf("countTeacherClassesInRange, teacherID: %d, startPeriod: %d, endPeriod: %d, period: %d, count: %d\n", teacherID, startPeriod, endPeriod, period, count)
-							if period >= startPeriod && period <= endPeriod {
-								count++
-							}
+						// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						// for _, timeSlot := range timeSlots {
+						period := timeSlot % totalClassesPerDay
+						// log.Printf("countTeacherClassesInRange, teacherID: %d, startPeriod: %d, endPeriod: %d, period: %d, count: %d\n", teacherID, startPeriod, endPeriod, period, count)
+						if period >= startPeriod && period <= endPeriod {
+							count++
 						}
+						// }
 					}
 				}
 			}

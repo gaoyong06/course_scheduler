@@ -17,7 +17,7 @@ func (c *Chromosome) Copy() *Chromosome {
 			ClassSN:            gene.ClassSN,
 			TeacherID:          gene.TeacherID,
 			VenueID:            gene.VenueID,
-			TimeSlots:          gene.TimeSlots,
+			TimeSlot:           gene.TimeSlot,
 			IsConnected:        gene.IsConnected,
 			FailedConstraints:  make([]string, len(gene.FailedConstraints)),
 			PassedConstraints:  make([]string, len(gene.PassedConstraints)),

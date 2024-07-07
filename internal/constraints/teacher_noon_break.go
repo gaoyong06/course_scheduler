@@ -5,7 +5,6 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 
 	"github.com/samber/lo"
@@ -67,7 +66,7 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 
 		teacherID := t.TeacherID
 		currTeacherID := element.TeacherID
-		elementPeriods := types.GetElementPeriods(element, schedule)
+		elementPeriod := types.GetElementPeriod(element, schedule)
 
 		// 上午
 		_, forenoonEndPeriod := schedule.GetPeriodWithRange("forenoon")
@@ -75,8 +74,9 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 		afternoonStartPeriod, _ := schedule.GetPeriodWithRange("afternoon")
 
 		periods := []int{forenoonEndPeriod, afternoonStartPeriod}
-		intersect := lo.Intersect(elementPeriods, periods)
-		isContain := len(intersect) > 0
+		// intersect := lo.Intersect(elementPeriods, periods)
+		// isContain := len(intersect) > 0
+		isContain := lo.Contains(periods, elementPeriod)
 
 		preCheckPassed := currTeacherID == teacherID && isContain
 		isReward := false
@@ -92,23 +92,23 @@ func (t *TeacherNoonBreak) genConstraintFn() types.ConstraintFn {
 func isTeacherInBothPeriods(element types.Element, teacherID int, forenoonEndPeriod, afternoonStartPeriod int, classMatrix *types.ClassMatrix, schedule *models.Schedule) bool {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
-	elementDay := element.TimeSlots[0] / totalClassesPerDay
+	elementDay := element.TimeSlot / totalClassesPerDay
 	dayPeriodCount := calcTeacherDayClasses(classMatrix, teacherID, schedule)
 
 	// 判断元素所在的天,是否已经有排课
 	if periods, ok := dayPeriodCount[elementDay]; ok {
 
 		// 当前元素排课的节次
-		elementPeriods := types.GetElementPeriods(element, schedule)
+		elementPeriod := types.GetElementPeriod(element, schedule)
 
 		// 判断当前元素的节次是上午最后一节,还是下午第一节
 		// 如果是上午最后一节,则判断下午第一节,是否已经有排课
-		if lo.Contains(elementPeriods, forenoonEndPeriod) && lo.Contains(periods, afternoonStartPeriod) {
+		if elementPeriod == forenoonEndPeriod && lo.Contains(periods, afternoonStartPeriod) {
 			return true
 		}
 
 		// 如果是下午第1节,则判断上午最后一节,是否已经有排课
-		if lo.Contains(elementPeriods, afternoonStartPeriod) && lo.Contains(periods, forenoonEndPeriod) {
+		if elementPeriod == afternoonStartPeriod && lo.Contains(periods, forenoonEndPeriod) {
 			return true
 		}
 	}
@@ -127,16 +127,16 @@ func calcTeacherDayClasses(classMatrix *types.ClassMatrix, teacherID int, schedu
 		for id, venueMap := range teacherMap {
 			if teacherID == id {
 				for _, timeSlotMap := range venueMap {
-					for timeSlotStr, element := range timeSlotMap {
+					for timeSlot, element := range timeSlotMap {
 
-						timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-						for _, timeSlot := range timeSlots {
-							if element.Val.Used == 1 {
-								period := timeSlot % totalClassesPerDay
-								day := timeSlot / totalClassesPerDay
-								dayPeriodCount[day] = append(dayPeriodCount[day], period)
-							}
+						// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+						// for _, timeSlot := range timeSlots {
+						if element.Val.Used == 1 {
+							period := timeSlot % totalClassesPerDay
+							day := timeSlot / totalClassesPerDay
+							dayPeriodCount[day] = append(dayPeriodCount[day], period)
 						}
+						// }
 					}
 				}
 			}

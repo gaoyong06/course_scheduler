@@ -84,8 +84,9 @@ func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn
 		isReward := false
 
 		// 当前时间段,是否包含在约束时间段内
-		intersect := lo.Intersect(s.TimeSlots, element.TimeSlots)
-		isContain := len(intersect) > 0
+		// intersect := lo.Intersect(s.TimeSlots, element.TimeSlots)
+		// isContain := len(intersect) > 0
+		isContain := lo.Contains(s.TimeSlots, element.TimeSlot)
 
 		// 固排,优先排是: 排了有奖励,不排有处罚
 		if s.Limit == "fixed" || s.Limit == "prefer" {

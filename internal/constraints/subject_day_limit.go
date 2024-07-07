@@ -4,12 +4,11 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 )
 
 // 每天限制，即纵向时间段限制
-// 格式：对象+时间段+形式+次数
+// 格式：对象+时间段+限制类型+次数
 // 其中对象可选项为【科目，教师】，时间段可选项为【每天、星期一、星期二、星期三、星期四、星期五】，限制类型可选项为【固定、最少、最多】，次数为【0、1、2、···】；（+10）
 
 // | 对象 | 时间段 | 限制类型 | 课节数 |
@@ -70,21 +69,22 @@ func (s *SubjectDayLimit) genConstraintFn() types.ConstraintFn {
 		gradeID := element.GradeID
 		classID := element.ClassID
 		subjectID := element.SubjectID
-		timeSlots := element.GetTimeSlots()
+		timeSlot := element.GetTimeSlot()
 
 		preCheckPassed := false
 		isReward := false
 		count := 0
 
 		// 每天排课数量
-		// key: 星期几, value: sn排课数量
+		// key: 星期几, value: 特定科目,或特定教师的排课数量
 		weekdayCountMap, err := s.countElementDayClasses(classMatrix, element, schedule)
 		if err != nil {
 			return false, false, err
 		}
 
-		// 这里使用第1个时间段
-		weekday := timeSlots[0]/totalClassesPerDay + 1
+		// 周几
+		weekday := timeSlot/totalClassesPerDay + 1
+		// 周几的排课数量
 		count = weekdayCountMap[weekday]
 
 		// 对象是科目
@@ -186,7 +186,7 @@ func (s *SubjectDayLimit) countElementSubjectDayClasses(classMatrix *types.Class
 	// key: 星期几, val: 数量
 	weekdayCountMap := make(map[int]int)
 	// 当前元素是周几
-	eleWeekday := element.TimeSlots[0]/totalClassesPerDay + 1
+	eleWeekday := element.TimeSlot/totalClassesPerDay + 1
 
 	// 示例: 初一 语文 每天固定 1节课
 	if s.Object == "subject" {
@@ -210,12 +210,12 @@ func (s *SubjectDayLimit) countElementSubjectDayClasses(classMatrix *types.Class
 
 					for _, teacherMap := range classMap {
 						for _, venueMap := range teacherMap {
-							for timeSlotStr, e := range venueMap {
+							for timeSlot, e := range venueMap {
 								if e.Val.Used == 1 {
 
-									eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+									// eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 									// 这里把连堂课,也视为1节课
-									weekday := eleTimeSlots[0]/totalClassesPerDay + 1
+									weekday := timeSlot/totalClassesPerDay + 1
 									// 星期几
 									weekdayCountMap[weekday]++
 								}
@@ -240,7 +240,7 @@ func (s *SubjectDayLimit) countElementTeacherDayClasses(classMatrix *types.Class
 	// key: 星期几, val: 数量
 	weekdayCountMap := make(map[int]int)
 	// 当前元素是周几
-	eleWeekday := element.TimeSlots[0]/totalClassesPerDay + 1
+	eleWeekday := element.TimeSlot/totalClassesPerDay + 1
 
 	// 示例: : 王老师 每天固定 1节课
 	if s.Object == "teacher" {
@@ -255,12 +255,12 @@ func (s *SubjectDayLimit) countElementTeacherDayClasses(classMatrix *types.Class
 					if teacherID == s.TeacherID {
 
 						for _, venueMap := range teacherMap {
-							for timeSlotStr, e := range venueMap {
+							for timeSlot, e := range venueMap {
 								if e.Val.Used == 1 {
 
-									eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+									// eleTimeSlots := utils.ParseTimeSlotStr(timeSlotStr)
 									// 这里把连堂课,也视为1节课
-									weekday := eleTimeSlots[0]/totalClassesPerDay + 1
+									weekday := timeSlot/totalClassesPerDay + 1
 									// 星期几
 									weekdayCountMap[weekday]++
 								}

@@ -2,7 +2,6 @@ package types
 
 import (
 	"course_scheduler/internal/models"
-	"course_scheduler/internal/utils"
 	"fmt"
 	"log"
 	"sort"
@@ -73,18 +72,18 @@ func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*m
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+// func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
-	var timeSlotStrs []string
+// 	var timeSlotStrs []string
 
-	// 课班(科目班级)每周周连堂课次数
-	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-	if connectedCount > 0 {
+// 	// 课班(科目班级)每周周连堂课次数
+// 	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+// 	if connectedCount > 0 {
 
-		timeSlotStrs = utils.GetAllConnectedTimeSlots(schedule)
-	}
-	return timeSlotStrs
-}
+// 		timeSlotStrs = utils.GetAllConnectedTimeSlots(schedule)
+// 	}
+// 	return timeSlotStrs
+// }
 
 // 普通课时间集合
 // 基于教师集合和教室集合确定时间集合
@@ -94,22 +93,22 @@ func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+// func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
-	var timeSlotStrs []string
+// 	var timeSlotStrs []string
 
-	// 班级每周的排课时间段节数
-	total := schedule.TotalClassesPerWeek()
+// 	// 班级每周的排课时间段节数
+// 	total := schedule.TotalClassesPerWeek()
 
-	// 课班(科目班级)每周周连堂课次数
-	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+// 	// 课班(科目班级)每周周连堂课次数
+// 	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
 
-	normalCount := total - connectedCount*2
-	if normalCount > 0 {
-		timeSlotStrs = utils.GetAllNormalTimeSlots(schedule)
-	}
-	return timeSlotStrs
-}
+// 	normalCount := total - connectedCount*2
+// 	if normalCount > 0 {
+// 		timeSlotStrs = utils.GetAllNormalTimeSlots(schedule)
+// 	}
+// 	return timeSlotStrs
+// }
 
 // 时间集合
 // 基于教师集合和教室集合确定时间集合

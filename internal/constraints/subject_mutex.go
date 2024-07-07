@@ -4,7 +4,6 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -25,7 +24,7 @@ func (sm *SubjectMutex) String() string {
 	return fmt.Sprintf("ID: %d, SubjectAID: %d, SubjectBID: %d", sm.ID, sm.SubjectAID, sm.SubjectBID)
 }
 
-// 获取班级固排禁排规则
+// 获取规则
 func GetSubjectMutexRules(constraints []*SubjectMutex) []*types.Rule {
 	// constraints := loadSubjectMutexConstraintsFromDB()
 	var rules []*types.Rule
@@ -50,7 +49,7 @@ func (s *SubjectMutex) genRule() *types.Rule {
 	}
 }
 
-// 加载班级固排禁排规则
+// 加载规则
 func loadSubjectMutexConstraintsFromDB() []*SubjectMutex {
 	var constraints []*SubjectMutex
 	return constraints
@@ -87,11 +86,11 @@ func (s *SubjectMutex) genConstraintFn() types.ConstraintFn {
 // 判断当前元素排课科目,是否和subjectAID或者subjectBID,在同一天
 func isElementSubjectOnSameDay(subjectAID, subjectBID int, classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule) (bool, error) {
 
-	timeSlots := element.GetTimeSlots()
+	timeSlot := element.GetTimeSlot()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 
-	// 这里使用第一个时间段
-	elementDay := timeSlots[0] / totalClassesPerDay
+	// 元素所在的天数
+	elementDay := timeSlot / totalClassesPerDay
 
 	// key: day, val:bool
 	subjectADays := make(map[int]bool)
@@ -108,16 +107,16 @@ func isElementSubjectOnSameDay(subjectAID, subjectBID int, classMatrix *types.Cl
 
 		for _, teacherMap := range classMap {
 			for _, venueMap := range teacherMap {
-				for timeSlotStr, e := range venueMap {
+				for timeSlot, e := range venueMap {
 					if e.Val.Used == 1 {
-						ts := utils.ParseTimeSlotStr(timeSlotStr)
-						for _, t := range ts {
-							if SN.SubjectID == subjectAID {
-								subjectADays[t/totalClassesPerDay] = true // 将时间段转换为天数
-							} else if SN.SubjectID == subjectBID {
-								subjectBDays[t/totalClassesPerDay] = true // 将时间段转换为天数
-							}
+						// ts := utils.ParseTimeSlotStr(timeSlotStr)
+						// for _, t := range ts {
+						if SN.SubjectID == subjectAID {
+							subjectADays[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
+						} else if SN.SubjectID == subjectBID {
+							subjectBDays[timeSlot/totalClassesPerDay] = true // 将时间段转换为天数
 						}
+						// }
 					}
 				}
 			}
