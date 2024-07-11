@@ -1,6 +1,8 @@
 package types
 
-import "course_scheduler/internal/models"
+import (
+	"course_scheduler/internal/models"
+)
 
 // 课班适应性矩阵中的一个元素
 type Element struct {
@@ -10,7 +12,7 @@ type Element struct {
 	ClassID   int    // 班级
 	TeacherID int    // 教师
 	VenueID   int    // 教室
-	TimeSlot  int    // 连堂课: 时间段1,时间段2, 普通课：时间段1
+	TimeSlot  int    // 时间段
 	// IsConnected bool   // 是否是连堂课
 	Val Val // 分数
 }
@@ -58,6 +60,52 @@ func (e *Element) GetVenueID() int {
 
 func (e *Element) GetTimeSlot() int {
 	return e.TimeSlot
+}
+
+// 是否是连堂课
+func (e *Element) IsConnected(classMatrix *ClassMatrix) bool {
+
+	// 如果当前课节和下一节课的科目相同, 并且和上一节课科目不相同, 则当前是连堂课
+	// 当前课
+	currTimeSlot := e.TimeSlot
+	// 上节课
+	prevTimeSlot := e.TimeSlot - 1
+	// 下节课
+	nextTimeSlot := e.TimeSlot + 1
+
+	prevExist := false
+	currExist := false
+	nextExist := false
+
+	for sn, classMap := range classMatrix.Elements {
+		if sn == e.ClassSN {
+			for _, teacherMap := range classMap {
+				for _, venueMap := range teacherMap {
+					for timeSlot, e := range venueMap {
+						if e.Val.Used == 1 {
+
+							if prevTimeSlot == timeSlot {
+								prevExist = true
+							}
+
+							if currTimeSlot == timeSlot {
+								currExist = true
+							}
+
+							if nextTimeSlot == timeSlot {
+								nextExist = true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !prevExist && currExist && nextExist {
+		return true
+	}
+	return false
 }
 
 func (e *Element) GetPassedConstraints() []string {

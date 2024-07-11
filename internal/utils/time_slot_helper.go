@@ -88,9 +88,9 @@ func GetConnectedTimeSlotStrs(timeSlotStrs []string) []string {
 }
 
 // 全部的连堂课时间段
-func GetAllConnectedTimeSlots(schedule *models.Schedule) []string {
+func GetAllConnectedTimeSlots(schedule *models.Schedule) [][]int {
 
-	var timeSlotStrs []string
+	var connTimeSlots [][]int
 
 	timeSlots := schedule.GenWeekTimeSlots()
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
@@ -110,11 +110,11 @@ func GetAllConnectedTimeSlots(schedule *models.Schedule) []string {
 
 		if day1 == day2 && ((period1 >= amStart && period1 <= amEnd && period2 >= amStart && period2 <= amEnd) ||
 			(period1 >= pmStart && period1 <= pmEnd && period2 >= pmStart && period2 <= pmEnd)) {
-			timeSlotStrs = append(timeSlotStrs, fmt.Sprintf("%d_%d", timeSlot, timeSlot+1))
+			connTimeSlots = append(connTimeSlots, []int{timeSlot, timeSlot + 1})
 		}
 	}
 
-	return timeSlotStrs
+	return connTimeSlots
 }
 
 // 全部的普通课时间段

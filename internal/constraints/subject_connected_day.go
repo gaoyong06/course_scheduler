@@ -66,7 +66,7 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		count := 0
 		var weekdayConnectedCountMap map[int]int
 
-		// 这里使用第1个时间段
+		
 		eleWeekday := eleTimeSlot/totalClassesPerDay + 1
 
 		// 如果年级(班级)科目不为空,则计算年级(班级)科目的连堂课数量
