@@ -3,7 +3,6 @@ package constraints
 import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
-	"course_scheduler/internal/utils"
 	"fmt"
 )
 
@@ -59,14 +58,13 @@ func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 		eleClassID := element.ClassID
 		eleSubjectID := element.SubjectID
 		eleTimeSlot := element.GetTimeSlot()
-		// eleIsConnected := element.IsConnected
+		eleIsConnected := element.IsConnected(classMatrix)
 
 		preCheckPassed := false
 		isReward := false
 		count := 0
 		var weekdayConnectedCountMap map[int]int
 
-		
 		eleWeekday := eleTimeSlot/totalClassesPerDay + 1
 
 		// 如果年级(班级)科目不为空,则计算年级(班级)科目的连堂课数量
@@ -154,10 +152,10 @@ func (s *SubjectConnectedDay) countSubjectDayConnectedClasses(classMatrix *types
 		if isValid {
 			for _, teacherMap := range classMap {
 				for _, venueMap := range teacherMap {
-					for timeSlotStr, e := range venueMap {
-						if e.Val.Used == 1 && e.IsConnected {
-							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-							weekday := timeSlots[0]/totalClassesPerDay + 1
+					for timeSlot, e := range venueMap {
+						if e.Val.Used == 1 && e.IsConnected(classMatrix) {
+							// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							weekday := timeSlot/totalClassesPerDay + 1
 							// 星期几
 							weekdayConnectedCountMap[weekday]++
 						}
@@ -182,11 +180,11 @@ func (s *SubjectConnectedDay) countTeacherDayConnectedClasses(classMatrix *types
 		for id, teacherMap := range classMap {
 			if id == element.TeacherID && id == s.TeacherID {
 				for _, venueMap := range teacherMap {
-					for timeSlotStr, e := range venueMap {
+					for timeSlot, e := range venueMap {
 
-						if e.Val.Used == 1 && e.IsConnected {
-							timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
-							weekday := timeSlots[0]/totalClassesPerDay + 1
+						if e.Val.Used == 1 && e.IsConnected(classMatrix) {
+							// timeSlots := utils.ParseTimeSlotStr(timeSlotStr)
+							weekday := timeSlot/totalClassesPerDay + 1
 							// 星期几
 							weekdayConnectedCountMap[weekday]++
 						}

@@ -88,27 +88,24 @@ func convertIndividualToScheduleResults(taskID uint64, individual *genetic_algor
 
 			totalClassesPerDay := input.Schedule.GetTotalClassesPerDay()
 
-			for _, timeSlot := range gene.TimeSlots {
+			timeSlot := gene.TimeSlot
+			weekday := int8(timeSlot / totalClassesPerDay)
+			period := int8(timeSlot % totalClassesPerDay)
 
-				weekday := int8(timeSlot / totalClassesPerDay)
-				period := int8(timeSlot % totalClassesPerDay)
-
-				result := &models.ScheduleResult{
-					TaskID:    taskID,
-					SubjectID: uint64(SN.SubjectID),
-					TeacherID: uint64(gene.TeacherID),
-					GradeID:   uint64(SN.GradeID),
-					ClassID:   uint64(SN.ClassID),
-					VenueID:   uint64(gene.VenueID),
-					Weekday:   weekday,
-					Period:    period,
-					// TODO: 待完成
-					// StartTime: item.StartTime,
-					// EndTime:   item.EndTime,
-				}
-				scheduleResults = append(scheduleResults, result)
-
+			result := &models.ScheduleResult{
+				TaskID:    taskID,
+				SubjectID: uint64(SN.SubjectID),
+				TeacherID: uint64(gene.TeacherID),
+				GradeID:   uint64(SN.GradeID),
+				ClassID:   uint64(SN.ClassID),
+				VenueID:   uint64(gene.VenueID),
+				Weekday:   weekday,
+				Period:    period,
+				// TODO: 待完成
+				// StartTime: item.StartTime,
+				// EndTime:   item.EndTime,
 			}
+			scheduleResults = append(scheduleResults, result)
 		}
 	}
 
