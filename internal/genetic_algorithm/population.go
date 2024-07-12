@@ -185,6 +185,7 @@ func CheckConflicts(population []*Individual) bool {
 
 // 创建个体
 func createIndividual(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, subjectVenueMap map[string][]int, constraints map[string]interface{}) (*Individual, error) {
+
 	allocated := false
 	classMatrix, err := types.NewClassMatrix(schedule, taskAllocs, subjects, teachers, subjectVenueMap)
 	if err != nil {

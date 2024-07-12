@@ -8,9 +8,9 @@ const (
 	// PopSize       = 100 // 种群规模 20-100
 	// SelectionSize = 10  // 选择操作 个体数量
 	// MaxGen        = 500 // 遗传代数 100-500
-	PopSize       = 50  // 种群规模 20-100
+	PopSize       = 100 // 种群规模 20-100
 	SelectionSize = 50  // 选择操作 个体数量 选择的个体是原个体数量的一半
-	MaxGen        = 50  // 遗传代数 100-500
+	MaxGen        = 500 // 遗传代数 100-500
 	MaxStagnGen   = 100 // 停滞代数 连续n代没有改进, 当达到这个停滞代数时算法会停止运行
 	MutationRate  = 0.2 // 变异率 0.001-0.05
 	// CrossoverRate = 0.9                // 交叉率 0.4~0.9

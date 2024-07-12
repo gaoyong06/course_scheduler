@@ -175,27 +175,6 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 	// 已分配的课时数量
 	allocateCount := 0
 
-	// 优先分配连堂课
-	// for _, sc := range cm.SubjectClasses {
-
-	// 	sn := sc.SN.Generate()
-	// 	gradeID := sc.SN.GradeID
-	// 	classID := sc.SN.ClassID
-	// 	subjectID := sc.SN.SubjectID
-	// 	numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
-
-	// 	// 分配课时
-	// 	connectedCount := numConnectedClassesPerWeek
-	// 	for i := 0; i < connectedCount; i++ {
-	// 		if err := cm.allocateClass(sn, true, rules); err != nil {
-	// 			return allocateCount, err
-	// 		}
-	// 		allocateCount++
-	// 	}
-	// }
-
-	// 最后在分配普通课
-
 	// 课程分配
 	for _, sc := range cm.SubjectClasses {
 
@@ -204,13 +183,13 @@ func (cm *ClassMatrix) Allocate(rules []*Rule) (int, error) {
 		classID := sc.SN.ClassID
 		subjectID := sc.SN.SubjectID
 		numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
-		numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
+		// numConnectedClassesPerWeek := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, cm.TaskAllocs)
 
 		// 分配课时
-		normalCount := numClassesPerWeek - numConnectedClassesPerWeek*2
+		// normalCount := numClassesPerWeek - numConnectedClassesPerWeek*2
+		count := numClassesPerWeek
 
-		// 然后在分配普通课
-		for i := 0; i < normalCount; i++ {
+		for i := 0; i < count; i++ {
 			if err := cm.allocateClass(sn, rules); err != nil {
 				return allocateCount, err
 			}
