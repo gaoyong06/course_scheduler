@@ -121,7 +121,8 @@ func LoadTestData() (*ScheduleInput, error) {
 
 	// 添加配置文件搜索路径
 	// viper.AddConfigPath("../../testdata")
-	viper.AddConfigPath("/Users/gaoyong/Documents/work/course_scheduler/testdata")
+	// viper.AddConfigPath("/Users/gaoyong/Documents/work/course_scheduler/testdata")
+	viper.AddConfigPath("/Users/apple/Documents/work/my/course_scheduler/testdata")
 
 	// 为 viper 添加自定义解析函数
 	viper.SetConfigType("yaml")
