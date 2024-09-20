@@ -91,7 +91,8 @@ func (s *ScheduleInput) Check() error {
 	return nil
 }
 
-func (s *ScheduleInput) ConstraintToMap() map[string]interface{} {
+// 当前的约束条件
+func (s *ScheduleInput) Constraints() map[string]interface{} {
 
 	constraints := make(map[string]interface{})
 	constraints["Class"] = s.ClassConstraints

@@ -178,7 +178,7 @@ func getIndivid() *Individual {
 func TestResolveConflicts(t *testing.T) {
 
 	input, _ := base.LoadTestData()
-	constraintMap := input.ConstraintToMap()
+	constraintMap := input.Constraints()
 	schedule := input.Schedule
 	constr1 := constraintMap["Class"].([]*constraints.Class)
 	constr2 := constraintMap["Teacher"].([]*constraints.Teacher)

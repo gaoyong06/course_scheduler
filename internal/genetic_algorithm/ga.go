@@ -55,8 +55,10 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 	return nil, err
 	// }
 
+	// 约束条件
+	constraints := input.Constraints()
+
 	// 初始化当前种群
-	constraints := input.ConstraintToMap()
 	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
 		return bestIndividual, bestGen, err
