@@ -24,7 +24,7 @@ func (c *SubjectClass) String() string {
 }
 
 // 初始化课班
-func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject) ([]SubjectClass, error) {
+func InitSubjectClasses(teachingTasks []*models.TeachingTask, subjects []*models.Subject) ([]SubjectClass, error) {
 
 	// 测试
 	// fmt.Println("打印subjects START")
@@ -37,7 +37,7 @@ func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*m
 	var subjectClasses []SubjectClass
 
 	// 这里根据年级,班级,科目生成课班
-	for _, task := range teachAllocs {
+	for _, task := range teachingTasks {
 
 		subjectID := task.SubjectID
 		gradeID := task.GradeID
@@ -73,7 +73,7 @@ func InitSubjectClasses(teachAllocs []*models.TeachTaskAllocation, subjects []*m
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
 	var timeSlotStrs []string
 
@@ -94,7 +94,7 @@ func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
 	var timeSlotStrs []string
 

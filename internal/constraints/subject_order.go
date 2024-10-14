@@ -65,7 +65,7 @@ func loadSubjectOrderConstraintsFromDB() []*SubjectOrder {
 // 生成规则校验方法
 func (s *SubjectOrder) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
 
 		subjectAID := s.SubjectAID
 		subjectBID := s.SubjectBID

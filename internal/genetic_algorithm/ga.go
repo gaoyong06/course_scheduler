@@ -62,7 +62,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	constraints := input.Constraints()
 
 	// 初始化当前种群
-	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
 		return bestIndividual, bestGen, err
 	}
@@ -127,7 +127,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
 					return bestIndividual, bestGen, err
 				}
@@ -135,7 +135,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
 					return bestIndividual, bestGen, err
 				}

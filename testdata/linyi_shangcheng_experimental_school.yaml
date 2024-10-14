@@ -83,7 +83,7 @@ teachers:
     
 
 # 教学任务
-teach_task_allocations:
+teaching_tasks:
   # 语文
   - {id: 1, grade_id: 9, class_id: 1, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}
   - {id: 2, grade_id: 9, class_id: 2, subject_id: 1, teacher_id: 1, num_classes_per_week: 7, num_connected_classes_per_week: 2}

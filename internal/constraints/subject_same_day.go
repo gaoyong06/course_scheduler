@@ -25,7 +25,7 @@ var subjectSameDayRule = &types.Rule{
 
 // 如果上课次数和上课天数相同, 或者小于上课天数 则一天排一次课
 // 正常来讲,上课总次数,应该和上课天数相同
-func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlots := element.GetTimeSlots()

@@ -3,7 +3,9 @@
         "Alloc",
         "Allocs",
         "curr",
+        "mapstructure",
         "Stagn",
-        "Strs"
+        "Strs",
+        "unmarshaling"
     ]
 }

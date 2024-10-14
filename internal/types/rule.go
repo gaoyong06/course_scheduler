@@ -13,7 +13,7 @@ import "course_scheduler/internal/models"
 //	bool true: 满足前置条件, false: 不满足前置条件
 //	bool true: 满足约束,增加score, false: 不满足约束,增加penalty
 //	error 错误信息
-type ConstraintFn func(classMatrix *ClassMatrix, element Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error)
+type ConstraintFn func(classMatrix *ClassMatrix, element Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error)
 
 // Rule 表示评分规则
 type Rule struct {

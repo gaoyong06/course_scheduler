@@ -72,7 +72,7 @@ func loadSubjectConstraintsFromDB() []*Subject {
 
 // 生成规则校验方法
 func (s *Subject) genConstraintFn(subjects []*models.Subject) types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
 
 		subjectID := element.SubjectID
 		subject, err := models.FindSubjectByID(subjectID, subjects)
@@ -130,7 +130,7 @@ func (s *Subject) getPenalty() int {
 }
 
 // 判断subjectGroupID的课程是否已经排完
-func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, gradeID, classID, subjectGroupID int, subjects []*models.Subject, taskAllocs []*models.TeachTaskAllocation) (bool, error) {
+func isSubjectGroupScheduled(classMatrix *types.ClassMatrix, gradeID, classID, subjectGroupID int, subjects []*models.Subject, taskAllocs []*models.TeachingTask) (bool, error) {
 
 	// 根据科目分组得到所有的科目
 	subjects, err := models.FindSubjectsByGroupID(subjectGroupID, subjects)

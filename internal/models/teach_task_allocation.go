@@ -1,9 +1,10 @@
 package models
 
+// 教学任务
 // 课务安排课程
 // 每周的教学任务
 // x老师教y班,每周z节课
-type TeachTaskAllocation struct {
+type TeachingTask struct {
 	ID                         int    `json:"id" mapstructure:"id"`                                                             // 唯一id
 	GradeID                    int    `json:"grade_id" mapstructure:"grade_id"`                                                 // 年级id
 	ClassID                    int    `json:"class_id" mapstructure:"class_id"`                                                 // 班级id
@@ -17,10 +18,10 @@ type TeachTaskAllocation struct {
 	CourseType                 string `json:"course_type" mapstructure:"course_type"`                                           // 课程类型: class_specific 表示班级特殊课, grade_shared 表示年级统一课
 }
 
-// NewCourse 创建一个新的课程
+// NewTeachingTask 创建一个教学任务
 // 根据参数创建一个新的课程对象
-func NewTeachTaskAllocation(id, gradeID, classID, subjectID, teacherID, numClassesPerWeek, numConnectedClassesPerWeek int, weekType string, subjectIDForWeek, subjectIDOnDiffDay int, courseType string) *TeachTaskAllocation {
-	course := &TeachTaskAllocation{
+func NewTeachingTask(id, gradeID, classID, subjectID, teacherID, numClassesPerWeek, numConnectedClassesPerWeek int, weekType string, subjectIDForWeek, subjectIDOnDiffDay int, courseType string) *TeachingTask {
+	teachingTask := &TeachingTask{
 		ID:                         id,
 		GradeID:                    gradeID,
 		ClassID:                    classID,
@@ -33,14 +34,14 @@ func NewTeachTaskAllocation(id, gradeID, classID, subjectID, teacherID, numClass
 		SubjectIDOnDiffDay:         subjectIDOnDiffDay,
 		CourseType:                 courseType,
 	}
-	return course
+	return teachingTask
 }
 
 // 获取一个科目的周课时
-func GetNumClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) int {
+func GetNumClassesPerWeek(gradeID, classID, subjectID int, teachingTask []*TeachingTask) int {
 
 	count := 0
-	for _, task := range teachAllocs {
+	for _, task := range teachingTask {
 
 		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
 			count = task.NumClassesPerWeek
@@ -51,10 +52,10 @@ func GetNumClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachT
 }
 
 // 获取连堂课次数
-func GetNumConnectedClassesPerWeek(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) int {
+func GetNumConnectedClassesPerWeek(gradeID, classID, subjectID int, teachingTask []*TeachingTask) int {
 
 	count := 0
-	for _, task := range teachAllocs {
+	for _, task := range teachingTask {
 
 		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
 			count = task.NumConnectedClassesPerWeek
@@ -65,10 +66,10 @@ func GetNumConnectedClassesPerWeek(gradeID, classID, subjectID int, teachAllocs 
 }
 
 // 获取一个年级,一个班级，一个科目的所有老师
-func GetTeacherIDs(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllocation) []int {
+func GetTeacherIDs(gradeID, classID, subjectID int, teachingTask []*TeachingTask) []int {
 
 	var teacherIDs []int
-	for _, task := range teachAllocs {
+	for _, task := range teachingTask {
 
 		if task.GradeID == gradeID && task.ClassID == classID && task.SubjectID == subjectID {
 			teacherIDs = append(teacherIDs, task.TeacherID)
@@ -76,5 +77,3 @@ func GetTeacherIDs(gradeID, classID, subjectID int, teachAllocs []*TeachTaskAllo
 	}
 	return teacherIDs
 }
-
-// 

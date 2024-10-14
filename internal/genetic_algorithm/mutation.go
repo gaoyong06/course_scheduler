@@ -24,7 +24,7 @@ import (
 //	selected: 选择的个体
 //	mutationRate: 变异率
 //	schedule: 课表方案
-//	teachAllocs: 教学计划
+//	teachingTasks: 教学计划
 //	teachers: 教师信息
 //	grades: 年级信息
 //	subjectVenueMap: 科目与教学场地
@@ -34,7 +34,7 @@ import (
 //
 //	返回 交叉后的个体、准备交叉次数、实际交叉次数、错误信息
 
-func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, venueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
+func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachingTasks []*models.TeachingTask, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, venueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
 
 	prepared := 0
 	executed := 0
@@ -53,7 +53,7 @@ func Mutation(selected []*Individual, mutationRate float64, schedule *models.Sch
 			gene := chromosome.Genes[geneIndex]
 
 			// 基因变异和校验
-			err := mutationAndValidate(selected[i], chromosome, gene, schedule, teachAllocs, subjects, teachers, venueMap, constraintMap)
+			err := mutationAndValidate(selected[i], chromosome, gene, schedule, teachingTasks, subjects, teachers, venueMap, constraintMap)
 			if err != nil {
 				log.Printf("mutation failed. err: %v\n", err)
 			} else {
@@ -67,16 +67,16 @@ func Mutation(selected []*Individual, mutationRate float64, schedule *models.Sch
 }
 
 // mutationAndValidate 可行性验证 用于验证染色体上的基因在进行基因变异更换时是否符合基因的约束条件
-func mutationAndValidate(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int, constraintMap map[string]interface{}) error {
+func mutationAndValidate(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachingTasks []*models.TeachingTask, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int, constraintMap map[string]interface{}) error {
 
-	err := mutationGene(individual, chromosome, gene, schedule, teachAllocs, subjects, teachers, venueMap, constraintMap)
+	err := mutationGene(individual, chromosome, gene, schedule, teachingTasks, subjects, teachers, venueMap, constraintMap)
 
 	// 校验的过程...
 	return err
 }
 
 // 基因变异
-func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int, constraintMap map[string]interface{}) error {
+func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, schedule *models.Schedule, teachingTasks []*models.TeachingTask, subjects []*models.Subject, teachers []*models.Teacher, venueMap map[string][]int, constraintMap map[string]interface{}) error {
 
 	constr1 := constraintMap["Class"].([]*constraints.Class)
 	constr2 := constraintMap["Teacher"].([]*constraints.Teacher)
@@ -112,7 +112,7 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 	individual.sortChromosomes()
 
 	// 更新个体适应度
-	classMatrix, err := individual.toClassMatrix(schedule, teachAllocs, subjects, teachers, venueMap, constraintMap)
+	classMatrix, err := individual.toClassMatrix(schedule, teachingTasks, subjects, teachers, venueMap, constraintMap)
 	if err != nil {
 		return err
 	}

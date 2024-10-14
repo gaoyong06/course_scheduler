@@ -74,7 +74,7 @@ func loadClassConstraintsFromDB() []*Class {
 
 // 生成规则校验方法
 func (c *Class) genConstraintFn() types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 		SN, err := types.ParseSN(element.ClassSN)
 		if err != nil {

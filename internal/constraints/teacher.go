@@ -73,7 +73,7 @@ func loadTeacherConstraintsFromDB() []*Teacher {
 
 // 生成规则校验方法
 func (t *Teacher) genConstraintFn(teachers []*models.Teacher) types.ConstraintFn {
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
 
 		teacherGroupID := t.TeacherGroupID
 		teacherID := t.TeacherID

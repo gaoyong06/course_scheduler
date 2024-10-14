@@ -60,7 +60,7 @@ func loadTeacherMutexConstraintsFromDB() []*TeacherMutex {
 // 生成规则校验方法
 func (t *TeacherMutex) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachTaskAllocation) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
 
 		teacherAID := t.TeacherAID
 		teacherBID := t.TeacherBID
