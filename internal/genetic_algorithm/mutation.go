@@ -16,9 +16,24 @@ import (
 	"github.com/spf13/cast"
 )
 
-// 变异
+// 变异操作
 // 变异即是染色体基因位更改为其他结果，如替换老师或者时间或者教室，替换的老师或者时间或者教室从未出现在对应课班上，但是是符合老师或者教室的约束性条件，理论上可以匹配该课班
 // 每个课班是一个染色体
+// 参数:
+//
+//	selected: 选择的个体
+//	mutationRate: 变异率
+//	schedule: 课表方案
+//	teachAllocs: 教学计划
+//	teachers: 教师信息
+//	grades: 年级信息
+//	subjectVenueMap: 科目与教学场地
+//	constraintMap: 约束条件
+//
+// 返回值:
+//
+//	返回 交叉后的个体、准备交叉次数、实际交叉次数、错误信息
+
 func Mutation(selected []*Individual, mutationRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, venueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
 
 	prepared := 0

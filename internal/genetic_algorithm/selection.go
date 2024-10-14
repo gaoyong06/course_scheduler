@@ -10,15 +10,21 @@ import (
 )
 
 // 选择操作
-// population 种群
-// selectionSize 选择数量
-// bestRatio 保留最佳个体概率
+// 参数:
+//
+//	population: 种群
+//	selectionSize: 选择数量
+//	bestRatio: 保留最佳个体概率
+//
+// 返回值:
+//
+//	返回 选择的个体、错误信息
 func Selection(population []*Individual, selectionSize int, bestRatio float64) ([]*Individual, error) {
 
 	// 个体数量
 	popSize := len(population)
 
-	// 冲突个体数量
+	// 相同个体的数量
 	dupCount := CountDuplicates(population)
 
 	// 保留最佳个体

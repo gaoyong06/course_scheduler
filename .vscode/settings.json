@@ -3,6 +3,7 @@
         "Alloc",
         "Allocs",
         "curr",
+        "Stagn",
         "Strs"
     ]
 }

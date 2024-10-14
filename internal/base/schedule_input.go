@@ -14,10 +14,10 @@ import (
 
 // 排课输入信息
 type ScheduleInput struct {
-	Schedule             *models.Schedule              `json:"schedule" mapstructure:"schedule"`                             // 排课方案
-	TeachTaskAllocations []*models.TeachTaskAllocation `json:"teach_task_allocations" mapstructure:"teach_task_allocations"` // 教学任务
-	Teachers             []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                             // 教师信息
-	Subjects             []*models.Subject             `json:"subjects" mapstructure:"subjects"`                             // 科目信息
+	Schedule   *models.Schedule              `json:"schedule" mapstructure:"schedule"`                             // 排课方案
+	TaskAllocs []*models.TeachTaskAllocation `json:"teach_task_allocations" mapstructure:"teach_task_allocations"` // 教学任务
+	Teachers   []*models.Teacher             `json:"teachers" mapstructure:"teachers"`                             // 教师信息
+	Subjects   []*models.Subject             `json:"subjects" mapstructure:"subjects"`                             // 科目信息
 	// Venues                        []*models.Venue                  `json:"venues" mapstructure:"venues"`                                                             // 教学场地
 	SubjectVenueMap                map[string][]int                   `json:"subject_venue_map" mapstructure:"subject_venue_map"`                                 // 教学场地 key: sn(科目id_年级id_班级id) value: 教室id
 	Grades                         []*models.Grade                    `json:"grades"`                                                                             // 年级信息
@@ -43,7 +43,7 @@ func (s *ScheduleInput) Check() error {
 		return err
 	}
 
-	if len(s.TeachTaskAllocations) == 0 {
+	if len(s.TaskAllocs) == 0 {
 		return errors.New("classes cannot be empty")
 	}
 
@@ -67,7 +67,7 @@ func (s *ScheduleInput) Check() error {
 
 	// 按照年级、班级和科目统计上课次数
 	subjectCount := make(map[string]int)
-	for _, task := range s.TeachTaskAllocations {
+	for _, task := range s.TaskAllocs {
 		classKey := fmt.Sprintf("%d_%d", task.GradeID, task.ClassID)
 		classSubjectKey := fmt.Sprintf("%d_%d_%d", task.GradeID, task.ClassID, task.SubjectID)
 		classCount[classKey] += task.NumClassesPerWeek - task.NumConnectedClassesPerWeek
@@ -137,8 +137,8 @@ func LoadTestData() (*ScheduleInput, error) {
 	}
 
 	// 对 Courses 属性的值按照 NumClassesPerWeek 排序
-	sort.Slice(config.TeachTaskAllocations, func(i, j int) bool {
-		return config.TeachTaskAllocations[i].NumClassesPerWeek > config.TeachTaskAllocations[j].NumClassesPerWeek
+	sort.Slice(config.TaskAllocs, func(i, j int) bool {
+		return config.TaskAllocs[i].NumClassesPerWeek > config.TaskAllocs[j].NumClassesPerWeek
 	})
 
 	return &config, nil
@@ -155,8 +155,8 @@ func ParseScheduleInputFromJSON(jsonstr string) (*ScheduleInput, error) {
 	}
 
 	// 对 Courses 属性的值按照 NumClassesPerWeek 排序
-	sort.Slice(input.TeachTaskAllocations, func(i, j int) bool {
-		return input.TeachTaskAllocations[i].NumClassesPerWeek > input.TeachTaskAllocations[j].NumClassesPerWeek
+	sort.Slice(input.TaskAllocs, func(i, j int) bool {
+		return input.TaskAllocs[i].NumClassesPerWeek > input.TaskAllocs[j].NumClassesPerWeek
 	})
 
 	return &input, nil

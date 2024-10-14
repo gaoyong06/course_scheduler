@@ -9,14 +9,26 @@ import (
 	"math/rand"
 )
 
-// 交叉操作返回值
-
-// 交叉
+// 交叉操作
 // 每个课班是一个染色体
 // 交叉在不同个体的，相同课班的染色体之间进行
 // 交叉后个体的数量不变
-// 返回值: 交叉后的个体,准备交叉次数,实际交叉次数,错误信息
-func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachTaskAllocations []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, subjectVenueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
+// 参数:
+//
+//	selected: 选择的个体
+//	crossoverRate: 交叉率
+//	schedule: 课表方案
+//	teachAllocs: 教学计划
+//	teachers: 教师信息
+//	grades: 年级信息
+//	subjectVenueMap: 科目与教学场地
+//	constraintMap: 约束条件
+//
+// 返回值:
+//
+//	返回 交叉后的个体、准备交叉次数、实际交叉次数、错误信息
+
+func Crossover(selected []*Individual, crossoverRate float64, schedule *models.Schedule, teachAllocs []*models.TeachTaskAllocation, subjects []*models.Subject, teachers []*models.Teacher, grades []*models.Grade, subjectVenueMap map[string][]int, constraintMap map[string]interface{}) ([]*Individual, int, int, error) {
 
 	offspring := make([]*Individual, 0, len(selected))
 	prepared := 0
@@ -42,8 +54,8 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 
 				log.Printf("crossover and validate success. prepared: %d, executed: %d, err: %s", prepared, executed, err)
 				// 评估子代个体的适应度并赋值
-				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraintMap)
-				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachTaskAllocations, subjects, teachers, subjectVenueMap, constraintMap)
+				offspringClassMatrix1, err1 := offspring1.toClassMatrix(schedule, teachAllocs, subjects, teachers, subjectVenueMap, constraintMap)
+				offspringClassMatrix2, err2 := offspring2.toClassMatrix(schedule, teachAllocs, subjects, teachers, subjectVenueMap, constraintMap)
 				if err1 != nil || err2 != nil {
 					return offspring, prepared, executed, fmt.Errorf("ERROR: offspring evaluate fitness failed. err1: %s, err2: %s", err1.Error(), err2.Error())
 				}

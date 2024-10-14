@@ -73,9 +73,14 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 }
 
 // 评估种群中每个个体的适应度值，并更新当前找到的最佳个体
-// population 种群
-// bestIndividual 当前最佳个体
-// 返回值: 最佳个体,是否发生替换,错误信息
+// 参数:
+//
+//	population: 种群
+//	bestIndividual: 当前最佳个体
+//
+// 返回值:
+//
+//	返回 最佳个体、是否发生替换、错误信息
 func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individual, bool, error) {
 
 	replaced := false
@@ -93,7 +98,6 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 		}
 	}
 
-	// log.Printf("==== UpdateBest DONE! uniqueId: %s, fitness: %d\n", bestIndividual.UniqueId(), bestIndividual.Fitness)
 	return bestIndividual, replaced, nil
 }
 
@@ -158,13 +162,13 @@ func CalcAvgFitness(generation int, population []*Individual) float64 {
 
 // countDuplicates 种群中相同个体的数量
 func CountDuplicates(population []*Individual) int {
-	duplicates := checkDuplicates(population)
+	duplicates := findDuplicates(population)
 	return len(duplicates)
 }
 
 // hasDuplicates 种群中是否有相同的个体
 func HasDuplicates(population []*Individual) bool {
-	duplicates := checkDuplicates(population)
+	duplicates := findDuplicates(population)
 	return len(duplicates) > 0
 }
 
@@ -244,8 +248,9 @@ func allocateClassMatrix(classMatrix *types.ClassMatrix, schedule *models.Schedu
 	return classMatrix.Allocate(dynamicRules)
 }
 
-// checkDuplicates 种群中重复个体的映射，以其唯一ID为键
-func checkDuplicates(population []*Individual) map[string][]*Individual {
+// findDuplicates 种群中重复个体的映射，以其唯一ID为键
+func findDuplicates(population []*Individual) map[string][]*Individual {
+
 	duplicates := make(map[string][]*Individual)
 	ids := make(map[string]*Individual)
 

@@ -10,9 +10,15 @@ import (
 )
 
 // 遗传算法的实现
-// scheduleInput 排课输入数据
-// monitor 业务监控
-// startTime 当前时间
+// 参数:
+//
+//	scheduleInput: 排课输入数据
+//	monitor: 业务监控
+//	startTime: 当前时间
+//
+// 返回值:
+//
+//	返回 最佳个体、最佳个体所在的遗传代数、错误信息
 func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Time) (*Individual, int, error) {
 
 	// 种群大小
@@ -20,11 +26,13 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	// 选择操作,选择个体的数量
 	selectionSize := config.SelectionSize
 	// 变异率
-	// mutationRate := config.MutationRate
+	mutationRate := config.MutationRate
 	// 交叉率
 	crossoverRate := config.CrossoverRate
 	// 选择最佳个体百分比
 	bestRatio := config.BestRatio
+	// 最大停滞代数
+	maxStagnGen := config.MaxStagnGen
 	// 是否找到满意的解
 	foundSatIndividual := false
 	// 连续 n 代没有改进
@@ -49,23 +57,19 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 	// 初始化种群
 	log.Println("Population initialized")
-	// population, err := InitPopulation(scheduleInput, config.PopSize)
-	// if err != nil {
-	// 	log.Println("Population initialized failed. ", err)
-	// 	return nil, err
-	// }
 
 	// 约束条件
 	constraints := input.Constraints()
 
 	// 初始化当前种群
-	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
+	currentPopulation, err := InitPopulation(popSize, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.SubjectVenueMap, constraints)
 	if err != nil {
 		return bestIndividual, bestGen, err
 	}
 	initPopulationTime := time.Since(startTime)
 	log.Printf("Init population runtime: %v\n", initPopulationTime)
 
+	// 相同的个体数量过多可能意味着种群缺乏多样性，从而导致算法提前收敛，无法探索到更优解
 	// 当前种群内容重复的数量
 	dupCount := CountDuplicates(currentPopulation)
 	log.Printf("Population size %d: duplicates count %d\n", popSize, dupCount)
@@ -99,7 +103,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 			genWithoutImprovement = 0
 		} else {
 			genWithoutImprovement++
-			if genWithoutImprovement >= config.MaxStagnGen {
+			if genWithoutImprovement >= maxStagnGen {
 				log.Println("Termination condition met: No improvement for", genWithoutImprovement, "generations.")
 				break
 			}
@@ -123,7 +127,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 				// 交叉
 				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 				if err != nil {
 					return bestIndividual, bestGen, err
 				}
@@ -131,12 +135,12 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 				monitor.NumExecutedCrossover[gen] = executed
 
 				// 变异
-				// offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachTaskAllocations, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-				// if err != nil {
-				// 	return bestIndividual, bestGen, err
-				// }
-				// monitor.NumPreparedMutation[gen] = prepared
-				// monitor.NumExecutedMutation[gen] = executed
+				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TaskAllocs, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+				if err != nil {
+					return bestIndividual, bestGen, err
+				}
+				monitor.NumPreparedMutation[gen] = prepared
+				monitor.NumExecutedMutation[gen] = executed
 
 				// 更新种群
 				// 更新前后的个体数量不变
