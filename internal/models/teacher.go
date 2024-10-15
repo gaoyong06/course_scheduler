@@ -10,7 +10,7 @@ type Teacher struct {
 	TeacherID       int            `json:"teacher_id" mapstructure:"teacher_id"`               // 教室id
 	Name            string         `json:"name" mapstructure:"name"`                           // 教师姓名
 	TeacherGroupIDs []int          `json:"teacher_group_ids" mapstructure:"teacher_group_ids"` // 教师分组id, 一个老师会在多个分组中
-	ClassSubjects   []ClassSubject `json:"class_subjects" mapstructure:"class_subjects"`       // 教授科目id
+	ClassSubjects   []ClassSubject `json:"class_subjects" mapstructure:"class_subjects"`       // 老师教授科目信息
 }
 
 func GetTeachersFromDB() []*Teacher {
@@ -51,7 +51,7 @@ func FindTeacherByID(teacherID int, teachers []*Teacher) (*Teacher, error) {
 			return teacher, nil
 		}
 	}
-	return nil, fmt.Errorf("subject not found")
+	return nil, fmt.Errorf("teacher not found")
 }
 
 // 老师集合

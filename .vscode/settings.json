@@ -4,6 +4,7 @@
         "Allocs",
         "curr",
         "mapstructure",
+        "samber",
         "Stagn",
         "Strs",
         "unmarshaling"
