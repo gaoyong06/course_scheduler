@@ -25,7 +25,7 @@ var subjectSameDayRule = &types.Rule{
 
 // 如果上课次数和上课天数相同, 或者小于上课天数 则一天排一次课
 // 正常来讲,上课总次数,应该和上课天数相同
-func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
+func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 	timeSlots := element.GetTimeSlots()
@@ -38,8 +38,8 @@ func ssdRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *
 	subjectID := SN.SubjectID
 
 	// 科目周课时
-	total := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
-	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	total := models.GetNumClassesPerWeek(gradeID, classID, subjectID, teachingTasks)
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, teachingTasks)
 	count := total - connectedCount
 
 	preCheckPassed := count <= numWorkdays

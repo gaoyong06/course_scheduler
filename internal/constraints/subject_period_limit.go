@@ -23,7 +23,7 @@ var subjectPeriodLimitRule = &types.Rule{
 }
 
 // 相同节次的排课是否超过数量限制
-func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
+func splRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 	totalClassesPerDay := schedule.GetTotalClassesPerDay()
 	classSN := element.GetClassSN()

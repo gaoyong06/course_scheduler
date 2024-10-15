@@ -73,12 +73,12 @@ func InitSubjectClasses(teachingTasks []*models.TeachingTask, subjects []*models
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+func getConnectedTimeSlots(schedule *models.Schedule, teachingTasks []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
 	var timeSlotStrs []string
 
 	// 课班(科目班级)每周周连堂课次数
-	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, teachingTasks)
 	if connectedCount > 0 {
 
 		timeSlotStrs = utils.GetAllConnectedTimeSlots(schedule)
@@ -94,7 +94,7 @@ func getConnectedTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teach
 // 2024.4.29 从总可用的时间段列表内,过滤掉教师禁止时间,教室禁止时间
 // 如果多个老师,或者多个场地的禁止时间都不同,则返回类似map的结构体
 // 根据前一个逻辑选择的教师,和教室,给定可选的时间段
-func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
+func getNormalTimeSlots(schedule *models.Schedule, teachingTasks []*models.TeachingTask, gradeID, classID, subjectID int, teacherIDs []int, venueIDs []int) []string {
 
 	var timeSlotStrs []string
 
@@ -102,7 +102,7 @@ func getNormalTimeSlots(schedule *models.Schedule, taskAllocs []*models.Teaching
 	total := schedule.TotalClassesPerWeek()
 
 	// 课班(科目班级)每周周连堂课次数
-	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	connectedCount := models.GetNumConnectedClassesPerWeek(gradeID, classID, subjectID, teachingTasks)
 
 	normalCount := total - connectedCount*2
 	if normalCount > 0 {

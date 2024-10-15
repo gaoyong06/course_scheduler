@@ -23,7 +23,7 @@ var subjectConnectedRule = &types.Rule{
 }
 
 // 连堂课校验(科目课时数大于上课天数时, 禁止同一天排多次课是非连续的, 要排成连堂课)
-func scRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
+func scRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 	classSN := element.GetClassSN()
 
@@ -33,7 +33,7 @@ func scRuleFn(classMatrix *types.ClassMatrix, element types.Element, schedule *m
 	subjectID := SN.SubjectID
 
 	// 科目周课时
-	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, taskAllocs)
+	numClassesPerWeek := models.GetNumClassesPerWeek(gradeID, classID, subjectID, teachingTasks)
 
 	numWorkdays := schedule.NumWorkdays
 	preCheckPassed := numClassesPerWeek > numWorkdays

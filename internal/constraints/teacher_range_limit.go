@@ -67,7 +67,7 @@ func loadTeacherRangeLimitConstraintsFromDB() []*TeacherRangeLimit {
 // 生成规则校验方法
 func (t *TeacherRangeLimit) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 		// 规则参数

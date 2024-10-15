@@ -51,7 +51,7 @@ func (s *SubjectConnectedDay) genRule() *types.Rule {
 // 生成规则校验方法
 func (s *SubjectConnectedDay) genConstraintFn() types.ConstraintFn {
 
-	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, taskAllocs []*models.TeachingTask) (bool, bool, error) {
+	return func(classMatrix *types.ClassMatrix, element types.Element, schedule *models.Schedule, teachingTasks []*models.TeachingTask) (bool, bool, error) {
 
 		totalClassesPerDay := schedule.GetTotalClassesPerDay()
 		eleTeacherID := element.GetTeacherID()
