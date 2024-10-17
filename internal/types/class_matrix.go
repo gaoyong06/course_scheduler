@@ -32,6 +32,7 @@ type ClassMatrix struct {
 	Teachers []*models.Teacher
 
 	// 教学场地
+	// key: subjectID_gradeID_classID value: venueIDs
 	SubjectVenueMap map[string][]int
 
 	// key: [课班(科目_年级_班级)][教师][教室][时间段1_时间段2], value: Element

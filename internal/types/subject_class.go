@@ -4,19 +4,19 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/utils"
 	"fmt"
-	"log"
-	"sort"
+
+	"github.com/samber/lo"
 )
 
 // 课班
-// 表示科目班级如:美术一班, 如果增加年级如: 美术三年级一班
+// 表示科目班级， 例如:美术一班, 如果增加年级, 例如: 美术三年级一班
 type SubjectClass struct {
 	SN        SN     // 序列号
 	SubjectID int    // 科目id
 	GradeID   int    // 年级id
 	ClassID   int    // 班级id
 	Name      string // 名称
-	Priority  int    // 排课的优先级, 优先级高的优先排课
+	Priority  int    // 课班对应科目，排课的优先级, 优先级高的优先排课
 }
 
 func (c *SubjectClass) String() string {
@@ -60,8 +60,8 @@ func InitSubjectClasses(teachingTasks []*models.TeachingTask, subjects []*models
 		subjectClasses = append(subjectClasses, class)
 	}
 
-	shuffleSubjectClassesOrder(subjectClasses)
-
+	// 随机打乱课班排课顺序
+	subjectClasses = shuffleSubjectClassesOrder(subjectClasses)
 	return subjectClasses, nil
 }
 
@@ -124,11 +124,12 @@ func getNormalTimeSlots(schedule *models.Schedule, teachingTasks []*models.Teach
 // TODO: 下面的的方法,需要废弃掉
 
 // 先按照优先级排序，再随机打乱课程顺序
-func shuffleSubjectClassesOrder(subjectClasses []SubjectClass) {
+func shuffleSubjectClassesOrder(subjectClasses []SubjectClass) []SubjectClass {
 
-	sort.Slice(subjectClasses, func(i, j int) bool {
-		return subjectClasses[i].Priority > subjectClasses[j].Priority
-	})
+	// sort.Slice(subjectClasses, func(i, j int) bool {
+	// 	return subjectClasses[i].Priority > subjectClasses[j].Priority
+	// })
+
 	// for i := len(subjectClasses) - 1; i > 0; i-- {
 	// 	j := rand.Intn(i + 1)
 	// 	// 只有当优先级相同时，才随机打乱顺序
@@ -136,5 +137,7 @@ func shuffleSubjectClassesOrder(subjectClasses []SubjectClass) {
 	// 		subjectClasses[i], subjectClasses[j] = subjectClasses[j], subjectClasses[i]
 	// 	}
 	// }
-	log.Println("Class order shuffled  ")
+
+	randomOrder := lo.Shuffle(subjectClasses)
+	return randomOrder
 }

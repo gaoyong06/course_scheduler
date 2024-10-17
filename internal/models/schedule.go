@@ -8,8 +8,8 @@ import (
 	"github.com/samber/lo"
 )
 
-// 课程表结构
 // 课表方案
+// 课程表结构
 // 每周上课天数, 每天上课节数
 type Schedule struct {
 	Name                     string `json:"name" mapstructure:"name"`                                               // 课表名称, 如: 心远中学2023年第一学期课程表

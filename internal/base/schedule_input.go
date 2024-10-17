@@ -110,23 +110,13 @@ func (s *ScheduleInput) Constraints() map[string]interface{} {
 	return constraints
 }
 
-// 加载yaml测试数据
-func LoadTestData() (*ScheduleInput, error) {
+// LoadTestData 加载 YAML 测试数据
+func LoadTestData(configFilePath string) (*ScheduleInput, error) {
+
 	var config ScheduleInput
 
-	// 设置配置文件名和类型
-	viper.SetConfigType("yaml")
-	// viper.SetConfigName("testdata")
-	viper.SetConfigName("test1")
-	// viper.SetConfigName("wen_dao")
-
-	// 添加配置文件搜索路径
-	// viper.AddConfigPath("../../testdata")
-	// viper.AddConfigPath("/Users/gaoyong/Documents/work/course_scheduler/testdata")
-	viper.AddConfigPath("/Users/apple/Documents/work/my/course_scheduler/testdata")
-
-	// 为 viper 添加自定义解析函数
-	viper.SetConfigType("yaml")
+	// 设置配置文件路径
+	viper.SetConfigFile(configFilePath)
 
 	// 读取并解析配置文件
 	if err := viper.ReadInConfig(); err != nil {

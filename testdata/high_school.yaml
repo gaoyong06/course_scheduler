@@ -1,0 +1,23 @@
+# 高中课表
+# https://mp.weixin.qq.com/s/9NsOijcrXTbo4Cbk1vTI8Q
+
+schedule:
+  name: "高一课表"
+  num_workdays: 5
+  num_days_off: 2
+  num_morning_reading_classes: 0
+  num_forenoon_classes: 5
+  num_afternoon_classes: 3
+  num_night_classes: 0
+
+subjects:
+  - { subject_id: 1, name: "语", subject_group_ids: [1], priority: 1 }
+  - { subject_id: 2, name: "数", subject_group_ids: [1], priority: 2 }
+  - { subject_id: 3, name: "英", subject_group_ids: [1], priority: 3 }
+  - { subject_id: 4, name: "物", subject_group_ids: [1], priority: 4 }
+  - { subject_id: 5, name: "化", subject_group_ids: [1], priority: 5 }
+  - { subject_id: 6, name: "地", subject_group_ids: [2], priority: 6 }
+  - { subject_id: 7, name: "政", subject_group_ids: [2], priority: 7 }
+  - { subject_id: 8, name: "劳", subject_group_ids: [2], priority: 7 }
+  - { subject_id: 9, name: "自", subject_group_ids: [2], priority: 7 }
+  - { subject_id: 17, name: "班会", subject_group_ids: [5], priority: 8 }

@@ -177,7 +177,8 @@ func getIndivid() *Individual {
 
 func TestResolveConflicts(t *testing.T) {
 
-	input, _ := base.LoadTestData()
+	configFilePath := "/Users/apple/Documents/work/my/course_scheduler/testdata/test1.yaml"
+	input, _ := base.LoadTestData(configFilePath)
 	constraintMap := input.Constraints()
 	schedule := input.Schedule
 	constr1 := constraintMap["Class"].([]*constraints.Class)
