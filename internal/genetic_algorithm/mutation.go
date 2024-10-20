@@ -124,8 +124,7 @@ func mutationGene(individual *Individual, chromosome *Chromosome, gene *Gene, sc
 	individual.Fitness = newFitness
 
 	// 更新UniqueId
-	uniqueId := individual.genUniqueId()
-	individual.UniqueId = uniqueId
+	individual.genUniqueId()
 
 	return nil
 

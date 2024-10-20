@@ -7,8 +7,9 @@ import (
 	"course_scheduler/internal/models"
 	"course_scheduler/internal/types"
 	"course_scheduler/internal/utils"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
-	"hash/fnv"
 	"log"
 	"math"
 	"sort"
@@ -107,8 +108,9 @@ func newIndividual(classMatrix *types.ClassMatrix, schedule *models.Schedule, su
 	individual.Fitness = fitness
 
 	// 设置唯一标识符
-	uniqueId := individual.genUniqueId()
-	individual.UniqueId = uniqueId
+	individual.genUniqueId()
+	// uniqueId := individual.genUniqueId()
+	// individual.UniqueId = uniqueId
 
 	return individual, nil
 }
@@ -126,36 +128,32 @@ func (i *Individual) Copy() *Individual {
 	}
 }
 
-// calcUniqueId 生成唯一的标识符字符串
+// genUniqueId 生成唯一的标识符字符串
 func (i *Individual) genUniqueId() string {
 
-	// 为了确保生成的标识符是唯一的，我们首先对 Chromosomes 切片进行排序
-	sortedChromosomes := make([]*Chromosome, len(i.Chromosomes))
-	for i, chromosome := range i.Chromosomes {
-		sortedChromosomes[i] = chromosome.Copy() // 复制一份以保持原始不变
-	}
+	// 使用MD5哈希算法生成唯一的标识符
+	h := md5.New()
 
-	sort.Slice(sortedChromosomes, func(i, j int) bool {
-		return sortedChromosomes[i].ClassSN < sortedChromosomes[j].ClassSN
-	})
-
-	// 使用 FNV 哈希函数生成唯一标识符
-	h := fnv.New32a()
-	for _, chromosome := range sortedChromosomes {
-		h.Write([]byte(chromosome.ClassSN)) // 写入 ClassSN
-		for _, gene := range chromosome.Genes {
+	for _, chrom := range i.Chromosomes {
+		// 将每个染色体的唯一标识信息写入哈希
+		h.Write([]byte(chrom.ClassSN))
+		for _, gene := range chrom.Genes {
 			h.Write([]byte(gene.ClassSN))
 			h.Write([]byte(fmt.Sprintf("%d", gene.TeacherID)))
 			h.Write([]byte(fmt.Sprintf("%d", gene.VenueID)))
-			for _, t := range gene.TimeSlots {
-				h.Write([]byte(fmt.Sprintf("%d", t)))
-			}
-			// h.Write([]byte(fmt.Sprintf("%t", gene.IsConnected))) // 连堂课标志位的写入
+			h.Write([]byte(fmt.Sprintf("%v", gene.TimeSlots)))
+			h.Write([]byte(fmt.Sprintf("%v", gene.IsConnected)))
 		}
 	}
 
-	// 返回哈希值的字符串作为唯一标识符
-	return fmt.Sprintf("%x", h.Sum32())
+	// 将哈希值转换为字符串
+	hash := h.Sum(nil)
+	uniqueId := hex.EncodeToString(hash)
+
+	// 更新Individual的UniqueId
+	i.UniqueId = uniqueId
+
+	return uniqueId
 }
 
 // 将个体反向转换为科班适应性矩阵,计算矩阵中已占用元素的得分,矩阵的总得分

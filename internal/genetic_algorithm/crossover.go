@@ -75,16 +75,7 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 				offspring2.Fitness = fitness2
 
 				// 交叉后父代和子代的适应度
-				fmt.Printf("parent1.Fitness: %d, parent2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", parent1.Fitness, parent2.Fitness, offspring1.Fitness, offspring2.Fitness)
-
-				// 交叉后计算UniqueId
-				uniqueId1 := offspring1.genUniqueId()
-				uniqueId2 := offspring2.genUniqueId()
-
-				offspring1.UniqueId = uniqueId1
-				offspring2.UniqueId = uniqueId2
-
-				fmt.Printf("parent1.UniqueId: %s, parent2.UniqueId: %s, offspring1.UniqueId: %s, offspring2.UniqueId: %s\n", parent1.UniqueId, parent2.UniqueId, offspring1.UniqueId, offspring2.UniqueId)
+				fmt.Printf("crossover parent1.Fitness: %d, parent2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", parent1.Fitness, parent2.Fitness, offspring1.Fitness, offspring2.Fitness)
 
 				offspring = append(offspring, offspring1, offspring2)
 				executed++
@@ -241,6 +232,12 @@ func crossoverIndividuals(parent1, parent2 *Individual, crossPoint int, schedule
 	// 个体内基因排序
 	offspring1.sortChromosomes()
 	offspring2.sortChromosomes()
+
+	// 交叉后计算UniqueId
+	offspring1.genUniqueId()
+	offspring2.genUniqueId()
+
+	fmt.Printf("crossover parent1.UniqueId: %s, parent2.UniqueId: %s, offspring1.UniqueId: %s, offspring2.UniqueId: %s\n", parent1.UniqueId, parent2.UniqueId, offspring1.UniqueId, offspring2.UniqueId)
 
 	// 返回两个子代个体和nil错误
 	return offspring1, offspring2, nil

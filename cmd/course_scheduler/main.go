@@ -22,6 +22,7 @@ func main() {
 
 	// 加载测试数据
 	configFilePath := "/Users/apple/Documents/work/my/course_scheduler/testdata/grade_school.yaml"
+	// configFilePath := "/Users/apple/Documents/work/my/course_scheduler/testdata/test1.yaml"
 	scheduleInput, err := base.LoadTestData(configFilePath)
 	if err != nil {
 		log.Fatalf("load test data failed. %s", err)
