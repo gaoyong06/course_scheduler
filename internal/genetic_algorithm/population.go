@@ -28,7 +28,7 @@ func InitPopulation(populationSize int, schedule *models.Schedule, teachingTasks
 			}
 
 			population[i] = individual
-			log.Printf("Individual %d initialized\n", i)
+			log.Printf("Individual %d, uniqueId: %s, initialized\n", i, individual.UniqueId)
 
 			// 向 errChan 发送 nil 值，表示该 goroutine 执行成功
 			errChan <- nil

@@ -150,7 +150,7 @@ func (i *Individual) genUniqueId() string {
 			for _, t := range gene.TimeSlots {
 				h.Write([]byte(fmt.Sprintf("%d", t)))
 			}
-			h.Write([]byte(fmt.Sprintf("%t", gene.IsConnected))) // 连堂课标志位的写入
+			// h.Write([]byte(fmt.Sprintf("%t", gene.IsConnected))) // 连堂课标志位的写入
 		}
 	}
 

@@ -125,35 +125,36 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 		selectedCount := len(selectedPopulation)
 		log.Printf("Current population size: %d, selected count: %d, duplicates count: %d\n", popSize, selectedCount, dupCount)
 
-		if selectedCount > 0 {
-
-			// 交叉
-			// 交叉前后的个体数量不变
-			offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-			if err != nil {
-				return bestIndividual, bestGen, err
-			}
-			monitor.NumPreparedCrossover[gen] = prepared
-			monitor.NumExecutedCrossover[gen] = executed
-
-			// 变异
-			offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-			if err != nil {
-				return bestIndividual, bestGen, err
-			}
-			monitor.NumPreparedMutation[gen] = prepared
-			monitor.NumExecutedMutation[gen] = executed
-
-			// 更新种群
-			// 更新前后的个体数量不变
-			hasConflicts := CheckConflicts(currentPopulation)
-			if hasConflicts {
-				err = errors.New("population time slot conflicts")
-				return bestIndividual, bestGen, err
-			}
-			currentPopulation = UpdatePopulation(currentPopulation, offspring)
+		// 选择的数量不能为0
+		if selectedCount == 0 {
+			return bestIndividual, bestGen, errors.New("selected count cannot be zero")
 		}
-		// }
+
+		// 交叉
+		// 交叉前后的个体数量不变
+		offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+		if err != nil {
+			return bestIndividual, bestGen, err
+		}
+		monitor.NumPreparedCrossover[gen] = prepared
+		monitor.NumExecutedCrossover[gen] = executed
+
+		// 变异
+		offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+		if err != nil {
+			return bestIndividual, bestGen, err
+		}
+		monitor.NumPreparedMutation[gen] = prepared
+		monitor.NumExecutedMutation[gen] = executed
+
+		// 更新种群
+		// 更新前后的个体数量不变
+		hasConflicts := CheckConflicts(currentPopulation)
+		if hasConflicts {
+			err = errors.New("population time slot conflicts")
+			return bestIndividual, bestGen, err
+		}
+		currentPopulation = UpdatePopulation(currentPopulation, offspring)
 
 		// 在每次循环迭代时更新 gen 的值
 		gen++
