@@ -46,7 +46,7 @@ func main() {
 	log.Println("🍻 Best solution done!")
 
 	// 打印最好的个体
-	log.Printf("bestGen: %d, bestIndividual.Fitness: %d, uniqueId: %s\n", bestGen, bestIndividual.Fitness, bestIndividual.UniqueId())
+	log.Printf("bestGen: %d, bestIndividual.Fitness: %d, uniqueId: %s\n", bestGen, bestIndividual.Fitness, bestIndividual.UniqueId)
 	bestIndividual.PrintSchedule(scheduleInput.Schedule, scheduleInput.Subjects)
 
 	// 打印个体的约束状态信息

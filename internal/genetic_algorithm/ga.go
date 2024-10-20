@@ -77,7 +77,7 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 	for !stop {
 		log.Println("Current Generation:", gen)
 		// 获取当前最近个体标识符
-		uniqueId = bestIndividual.UniqueId()
+		uniqueId = bestIndividual.UniqueId
 
 		// 评估当前种群中每个个体的适应度值，并更新当前找到的最佳个体
 		// 下面的bestIndividual会发生更新,所以在这里复制一份
@@ -86,6 +86,8 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 		if err != nil {
 			return bestIndividual, bestGen, err
 		}
+
+		log.Printf("ga loop gen: %d, uniqueId: %s, replaced: %v\n", gen, uniqueId, replaced)
 
 		// 如果 bestIndividual 被替换，则记录当前 gen 值
 		if replaced {
@@ -111,47 +113,47 @@ func Execute(input *base.ScheduleInput, monitor *base.Monitor, startTime time.Ti
 
 		// 检查是否找到满意的解
 		foundSatIndividual = IsSatIndividual(currentPopulation)
-		if !foundSatIndividual {
+		// if !foundSatIndividual {
 
-			// 选择操作（锦标赛）
-			// 选择的个体是原个体数量的一半
-			selectedPopulation, err := Selection(currentPopulation, selectionSize, bestRatio)
+		// 选择操作（锦标赛）
+		// 选择的个体是原个体数量的一半
+		selectedPopulation, err := Selection(currentPopulation, selectionSize, bestRatio)
+		if err != nil {
+			return bestIndividual, bestGen, err
+		}
+
+		selectedCount := len(selectedPopulation)
+		log.Printf("Current population size: %d, selected count: %d, duplicates count: %d\n", popSize, selectedCount, dupCount)
+
+		if selectedCount > 0 {
+
+			// 交叉
+			// 交叉前后的个体数量不变
+			offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
 			if err != nil {
 				return bestIndividual, bestGen, err
 			}
+			monitor.NumPreparedCrossover[gen] = prepared
+			monitor.NumExecutedCrossover[gen] = executed
 
-			selectedCount := len(selectedPopulation)
-			log.Printf("Current population size: %d, duplicates count: %d, selected count: %d\n", popSize, dupCount, selectedCount)
-
-			if selectedCount > 0 {
-
-				// 交叉
-				// 交叉前后的个体数量不变
-				offspring, prepared, executed, err := Crossover(selectedPopulation, crossoverRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-				if err != nil {
-					return bestIndividual, bestGen, err
-				}
-				monitor.NumPreparedCrossover[gen] = prepared
-				monitor.NumExecutedCrossover[gen] = executed
-
-				// 变异
-				offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
-				if err != nil {
-					return bestIndividual, bestGen, err
-				}
-				monitor.NumPreparedMutation[gen] = prepared
-				monitor.NumExecutedMutation[gen] = executed
-
-				// 更新种群
-				// 更新前后的个体数量不变
-				hasConflicts := CheckConflicts(currentPopulation)
-				if hasConflicts {
-					err = errors.New("population time slot conflicts")
-					return bestIndividual, bestGen, err
-				}
-				currentPopulation = UpdatePopulation(currentPopulation, offspring)
+			// 变异
+			offspring, prepared, executed, err = Mutation(offspring, mutationRate, input.Schedule, input.TeachingTasks, input.Subjects, input.Teachers, input.Grades, input.SubjectVenueMap, constraints)
+			if err != nil {
+				return bestIndividual, bestGen, err
 			}
+			monitor.NumPreparedMutation[gen] = prepared
+			monitor.NumExecutedMutation[gen] = executed
+
+			// 更新种群
+			// 更新前后的个体数量不变
+			hasConflicts := CheckConflicts(currentPopulation)
+			if hasConflicts {
+				err = errors.New("population time slot conflicts")
+				return bestIndividual, bestGen, err
+			}
+			currentPopulation = UpdatePopulation(currentPopulation, offspring)
 		}
+		// }
 
 		// 在每次循环迭代时更新 gen 的值
 		gen++

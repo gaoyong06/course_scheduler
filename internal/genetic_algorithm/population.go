@@ -46,10 +46,11 @@ func InitPopulation(populationSize int, schedule *models.Schedule, teachingTasks
 	return population, nil
 }
 
-// 更新种群
 func UpdatePopulation(population []*Individual, offspring []*Individual) []*Individual {
-
 	size := len(population)
+
+	// 选择的个体去重
+	ids := make(map[string]bool)
 
 	// 将新生成的个体添加到种群中
 	population = append(population, offspring...)
@@ -59,13 +60,19 @@ func UpdatePopulation(population []*Individual, offspring []*Individual) []*Indi
 		return population[i].Fitness > population[j].Fitness
 	})
 
-	// Create a new slice to store non-nil individuals
 	newPopulation := make([]*Individual, 0, size)
 
-	// Copy non-nil individuals to the new slice
-	for _, individual := range population[:size] {
-		if individual != nil {
-			newPopulation = append(newPopulation, individual)
+	for _, individual := range population {
+		if len(newPopulation) < size && individual != nil {
+			id := individual.UniqueId
+			if !ids[id] {
+				newPopulation = append(newPopulation, individual)
+				ids[id] = true
+			}
+		}
+		// 提前结束循环
+		if len(newPopulation) == size {
+			break
 		}
 	}
 
@@ -86,7 +93,7 @@ func UpdateBest(population []*Individual, bestIndividual *Individual) (*Individu
 	replaced := false
 	for i, individual := range population {
 
-		log.Printf("update best individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId(), individual.Fitness)
+		log.Printf("update best individual(%d) uniqueId: %s, fitness: %d\n", i, individual.UniqueId, individual.Fitness)
 		// 在更新 bestIndividual 时，将当前的 individual 复制一份，然后将 bestIndividual 指向这个复制出来的对象
 		// 即使 individual 的值在下一次循环中发生变化，bestIndividual 指向的对象也不会变化
 		if individual.Fitness > (*bestIndividual).Fitness {
@@ -126,7 +133,6 @@ func GetWorstIndividual(population []*Individual) *Individual {
 
 // IsSatIndividual 检查是否找到满意的解
 func IsSatIndividual(population []*Individual) bool {
-	// 在这里实现你的检查逻辑
 	// 检查种群中是否有满意的解，根据具体的业务逻辑进行判断
 	// 如果找到满意的解则返回 true，否则返回 false
 	// 示例逻辑：如果种群中最优个体的适应度已经满足某个阈值，则认为找到了满意的解
@@ -255,7 +261,7 @@ func findDuplicates(population []*Individual) map[string][]*Individual {
 	ids := make(map[string]*Individual)
 
 	for _, individual := range population {
-		id := individual.UniqueId()
+		id := individual.UniqueId
 		if existing, ok := ids[id]; ok {
 			duplicates[id] = []*Individual{existing, individual}
 		} else {

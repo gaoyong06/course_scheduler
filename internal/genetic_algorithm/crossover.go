@@ -37,8 +37,12 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 	constr1 := constraintMap["Class"].([]*constraints.Class)
 	constr2 := constraintMap["Teacher"].([]*constraints.Teacher)
 
+	fmt.Printf("selected count: %d, crossoverRate: %f", len(selected), crossoverRate)
+
 	for i := 0; i < len(selected)-1; i += 2 {
 		if rand.Float64() < crossoverRate {
+
+			// 进行交叉和生成子代个体的逻辑
 			prepared++
 			crossPoint := rand.Intn(len(selected[i].Chromosomes))
 
@@ -73,11 +77,20 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 				// 交叉后父代和子代的适应度
 				fmt.Printf("parent1.Fitness: %d, parent2.Fitness: %d, offspring1.Fitness: %d, offspring2.Fitness: %d\n", parent1.Fitness, parent2.Fitness, offspring1.Fitness, offspring2.Fitness)
 
+				// 交叉后计算UniqueId
+				uniqueId1 := offspring1.genUniqueId()
+				uniqueId2 := offspring2.genUniqueId()
+
+				offspring1.UniqueId = uniqueId1
+				offspring2.UniqueId = uniqueId2
+
+				fmt.Printf("parent1.UniqueId: %s, parent2.UniqueId: %s, offspring1.UniqueId: %s, offspring2.UniqueId: %s\n", parent1.UniqueId, parent2.UniqueId, offspring1.UniqueId, offspring2.UniqueId)
+
 				offspring = append(offspring, offspring1, offspring2)
 				executed++
 
 				// 打印交叉明细
-				log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId(), parent2.UniqueId(), offspring1.UniqueId(), offspring2.UniqueId())
+				log.Printf("Crossover %s, %s ----> %s, %s\n", parent1.UniqueId, parent2.UniqueId, offspring1.UniqueId, offspring2.UniqueId)
 
 			} else {
 				log.Printf("undo the current crossover operation. prepared: %d, executed: %d, err: %s", prepared, executed, err)
@@ -85,6 +98,8 @@ func Crossover(selected []*Individual, crossoverRate float64, schedule *models.S
 			}
 
 		} else {
+
+			// 不进行交叉，直接保留父母个体
 			offspring = append(offspring, selected[i], selected[i+1])
 		}
 	}
